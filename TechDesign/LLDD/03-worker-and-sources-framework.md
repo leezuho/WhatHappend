@@ -53,14 +53,18 @@ runSource
 
 ## 3. Scheduler (`worker/index.ts`)
 
+- Khi khởi động, giành khóa `kv['worker:lock']` (`worker/lock.ts`, giá trị `{ pid, host }`). Nếu khóa còn heartbeat trong 60 giây gần nhất và tiến trình giữ khóa vẫn sống thì worker mới in `another worker is already running…` và thoát với mã 1. Khóa của worker đã chết (heartbeat cũ, hoặc cùng máy mà pid không còn) thì được giành lại ngay.
+- Mỗi tick làm mới heartbeat của khóa; nếu khóa đã bị worker khác giành (ví dụ sau khi máy ngủ lâu) thì worker thoát.
 - Khi khởi động, in danh sách nguồn bị bỏ qua vì thiếu env.
 - Gọi `tick()` ngay, sau đó lặp lại mỗi **`TICK_MS = 20 000`**.
 - `tick()` duyệt từng nguồn, bỏ qua nếu nguồn đang chạy (`running: Set`), thiếu env, hoặc chưa đến hạn. Ngược lại thì gọi `runSource` **không chờ**: các nguồn chạy song song, mỗi nguồn tối đa 1 lần chạy cùng lúc.
 - Log có dạng `HH:MM:SS ok <id> (<n> rows, <ms>ms)` hoặc `HH:MM:SS FAIL <id>: <error>`.
 - Thời điểm đến hạn tính theo DB (`last_run`), nên restart worker không làm mọi nguồn chạy lại cùng lúc.
+- Lỗi không làm chết worker: lỗi khi xét đến hạn (`isDue` riêng của nguồn) chỉ bỏ qua nguồn đó ở tick này; lỗi khi ghi `source_status`/`fetch_log` (ví dụ `SQLITE_BUSY` quá 5 giây) được bắt ở `.catch` của lần chạy; unhandled rejection còn sót được ghi log thay vì thoát tiến trình.
+- SIGINT/SIGTERM: dừng lịch, nhả khóa, đóng DB rồi thoát. Lần chạy đang dở bị bỏ; `last_run` của nó chưa đổi nên sẽ chạy lại ở lần khởi động sau.
 - Daily Brief (`lib/ai/brief.ts`) dùng `isDue(now, status, db)` riêng:
   - Nếu lần chạy gần nhất lỗi và chưa quá 30 phút → chưa đến hạn (tránh gọi lại liên tục).
-  - Đến hạn khi **một trong hai**: (a) bảng `briefs` chưa có bản cho ngày hôm nay (theo giờ Asia/Ho_Chi_Minh) và giờ hiện tại ≥ 06:00; (b) cờ `kv['brief:force']` (do nút "Viết lại" trên web đặt) mới hơn bản brief gần nhất.
+  - Đến hạn khi **một trong hai**: (a) bảng `briefs` chưa có bản cho ngày hôm nay (theo giờ Asia/Ho_Chi_Minh) và giờ hiện tại ≥ 06:00; (b) cờ `kv['brief:force']` (do nút "Viết lại" trên web đặt) mới hơn bản brief gần nhất **và** bản đó đã cũ ít nhất 10 phút (bấm nhiều lần cũng chỉ ra tối đa một brief mỗi 10 phút).
   - Thêm điều kiện: có ít nhất 15 bài trong 24 giờ qua.
 
 ## 4. CLI chạy tay (`scripts/fetch.ts`)
@@ -75,7 +79,7 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 - Id không tồn tại thì báo lỗi và exit 1.
 - Mỗi nguồn in ra `ok`, `skip` hoặc `FAIL`. Exit code là 1 nếu có ít nhất một nguồn FAIL.
 - CLI đi qua `runSource`, nên vẫn cập nhật `source_status` và `fetch_log` như worker.
-- Script npm khai báo trong `package.json`: `worker` = `node --env-file-if-exists=.env.local --import tsx worker/index.ts`, `fetch` = `node --env-file-if-exists=.env.local --import tsx scripts/fetch.ts`. Cả hai **nạp `.env.local`** (thiếu file chỉ in cảnh báo). Ngoài ra có `typecheck` (`tsc --noEmit`) và `dev:all` (worker + `next dev`).
+- Script npm khai báo trong `package.json`: `worker` = `node --env-file-if-exists=.env.local --import tsx worker/index.ts`, `fetch` = `node --env-file-if-exists=.env.local --import tsx scripts/fetch.ts`. Cả hai **nạp `.env.local`** (thiếu file chỉ in cảnh báo). Ngoài ra có `typecheck` (`tsc --noEmit`) và `dev:all` (worker + `npm run dev`). `dev` và `start` chạy Next với `-H 127.0.0.1`, chỉ nghe trên loopback.
 
 ## 5. HTTP helpers (`lib/sources/http.ts`)
 

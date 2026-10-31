@@ -132,7 +132,7 @@ z.object({ items: z.array(z.object({
 
 **`isDue(now, status, db)`** đúng khi đồng thời:
 - lần chạy trước không lỗi trong vòng 30 phút qua;
-- **hoặc** có cờ `kv['brief:force']` mới hơn brief gần nhất, **hoặc** chưa có brief cho ngày hôm nay (Asia/Ho_Chi_Minh) và giờ ≥ 06:00;
+- **hoặc** có cờ `kv['brief:force']` mới hơn brief gần nhất và brief đó đã cũ ít nhất 10 phút (`MIN_FORCE_GAP`; yêu cầu sớm hơn được giữ lại và chạy khi đủ 10 phút), **hoặc** chưa có brief cho ngày hôm nay (Asia/Ho_Chi_Minh) và giờ ≥ 06:00;
 - có ít nhất 15 bài trong 24 giờ qua.
 
 Nút "Viết lại" (`BriefRefresh`) gọi `POST /api/brief`. Route này chỉ ghi cờ `kv['brief:force']` (không xóa sau khi chạy; so sánh theo thời gian với `briefs.created_at`). Web server không gọi API AI nào (giữ nguyên tắc của ADR-04). Kiểu `StoredBrief` và `FORCE_KEY` nằm ở `lib/ai/brief-shared.ts` để web không import SDK.
@@ -178,7 +178,7 @@ Người không chuyên nhìn con số không hiểu nó nói gì, nên chỉ s�
 
 Điểm xếp hạng: `crit` 3, `warn` 2, `high`/`low` 1,5, `move` 0,6 × |z| (tối đa z = 5). Lấy 8 chỉ số đầu.
 
-**Khi nào viết lại:** chỉ số chưa có ghi chú, lý do (`basis`) đã đổi, hoặc ghi chú cũ hơn 12 giờ. Mọi chỉ số cần viết gộp vào **một** lần gọi model.
+**Khi nào viết lại** (`needsNote`): chỉ số chưa có ghi chú, có lý do mới chưa nằm trong `basis` đã lưu, hoặc ghi chú cũ hơn 12 giờ. Lý do chỉ mất đi (dao động mạnh nhạt dần trong phiên, `crit` lùi về `warn`) không kích hoạt viết lại, vì z-score lơ lửng quanh ngưỡng sẽ làm `basis` đổi qua lại và tốn một lần gọi model mỗi lượt. Mọi chỉ số cần viết gộp vào **một** lần gọi model.
 
 **Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief).
 

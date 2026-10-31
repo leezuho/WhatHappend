@@ -15,6 +15,8 @@ const TZ = "Asia/Ho_Chi_Minh";
 const BRIEF_HOUR = 6;
 const MIN_HEADLINES = 15;
 const MAX_HEADLINES = 90;
+/** A "Regenerate" request waits until the previous brief is this old, however often it is pressed. */
+const MIN_FORCE_GAP = 10 * 60_000;
 
 const BriefLang = z.object({
   headline: z.string(),
@@ -74,7 +76,8 @@ export const brief: Source = {
   isDue(now, status, db) {
     if (status && !status.ok && now - status.last_run < 30 * 60_000) return false;
     const latest = db.prepare("SELECT MAX(created_at) AS t FROM briefs").get() as { t: number | null };
-    const forced = forcedAt(db) > (latest.t ?? 0);
+    const last = latest.t ?? 0;
+    const forced = forcedAt(db) > last && now - last >= MIN_FORCE_GAP;
     const missingToday = !db.prepare("SELECT 1 FROM briefs WHERE date = ?").get(vnDate(now)) && vnHour(now) >= BRIEF_HOUR;
     if (!forced && !missingToday) return false;
     const n = db.prepare("SELECT COUNT(*) AS n FROM articles WHERE published_at >= ?").get(now - 24 * 3600_000) as { n: number };

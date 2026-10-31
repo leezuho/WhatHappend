@@ -111,9 +111,11 @@ Ghi chú hành vi từng panel:
 
 | Route | Hành vi |
 |---|---|
-| `POST /api/brief` | Chỉ ghi cờ `kv['brief:force']`. Worker thấy cờ ở tick kế tiếp và viết brief; web không gọi AI |
+| `POST /api/brief` | Chỉ ghi cờ `kv['brief:force']`. Worker thấy cờ ở tick kế tiếp và viết brief (tối đa một lần mỗi 10 phút); web không gọi AI |
 | `GET /api/series/[key]?days=` | Lịch sử một `SeriesKey` (7–3650 ngày, mặc định 730) cho hộp thoại chi tiết; khóa lạ → 404 |
 | `POST /api/watchlist` `{ key, on }` | Ghim/bỏ ghim một `SeriesKey` vào bảng `watchlist` (cột `series_id` lưu `SeriesKey`) |
+
+Hai route `POST` trả 403 cho request mà trình duyệt đánh dấu là từ origin khác (`Sec-Fetch-Site` khác `same-origin`/`none`, hoặc `Origin` khác host), xem `lib/same-origin.ts`. Next.js không chống CSRF cho route handler và ứng dụng không có đăng nhập, nên nếu thiếu bước này thì bất kỳ trang nào đang mở cũng gửi được `POST` tới localhost. Request không có hai header đó (curl, script trên máy) vẫn được nhận.
 
 Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu hình AI ở `lib/ai/config.ts`. Cả hai không import SDK, nên bundle web không kéo theo `@google/genai` hay `@anthropic-ai/sdk`. `getLatestBrief` trả `hasKey = isAiConfigured()`. Khi chưa cấu hình, panel Brief hiện hướng dẫn đặt `AI_API_KEY` (Gemini hoặc Claude). Chân panel Brief ghi tên model thật mà provider trả về, ví dụ `gemini-3.8-flash`.
 

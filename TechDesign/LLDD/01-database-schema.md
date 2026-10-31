@@ -161,7 +161,7 @@ Ghi bởi `POST /api/watchlist` (web). Đọc bởi `getWatchlist()`; khóa khô
 | Cột | Kiểu | Ý nghĩa |
 |---|---|---|
 | `key` | TEXT PK | **`SeriesKey`** (ví dụ `brent`, `cpi`) |
-| `basis` | TEXT NOT NULL | Các lý do lúc viết, sắp xếp và nối bằng `+` (ví dụ `crit+move`). Lý do đổi thì viết lại |
+| `basis` | TEXT NOT NULL | Các lý do lúc viết, sắp xếp và nối bằng `+` (ví dụ `crit+move`). Có lý do mới chưa nằm trong `basis` thì viết lại; lý do chỉ mất đi thì chờ lần làm mới 12 giờ |
 | `content` | TEXT NOT NULL | JSON `{ en, vi, sources: [{ title, url, source }], model }` (xem [05](05-ai-pipeline.md)) |
 | `created_at` | INTEGER NOT NULL | Thời điểm viết. Web chỉ hiện ghi chú dưới 24 giờ (`INSIGHT_MAX_AGE`) |
 

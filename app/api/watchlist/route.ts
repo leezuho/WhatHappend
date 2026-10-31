@@ -1,7 +1,9 @@
 import { SERIES } from "@/config/series";
 import { getDb } from "@/lib/db";
+import { forbidden, isCrossOrigin } from "@/lib/same-origin";
 
 export async function POST(request: Request) {
+  if (isCrossOrigin(request)) return forbidden();
   const body = (await request.json().catch(() => null)) as { key?: string; on?: boolean } | null;
   if (!body?.key || !(body.key in SERIES)) return Response.json({ error: "unknown series" }, { status: 400 });
   const db = getDb();

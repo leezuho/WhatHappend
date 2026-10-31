@@ -38,6 +38,20 @@ function basisOf(reasons: Reason[]): string {
     .join("+");
 }
 
+/**
+ * Rewrite when the indicator gains a reason its note does not cover. A reason
+ * that only lapses (a big move fading intraday, crit easing to warn) waits for
+ * the 12-hour refresh: a z-score hovering at the threshold would otherwise flip
+ * the basis, and pay for a rewrite, on every run.
+ */
+export function needsNote(reasons: Reason[], existing: { basis: string; created_at: number } | undefined, now: number): boolean {
+  if (!existing || now - existing.created_at > REFRESH_MS) return true;
+  const covered = new Set(existing.basis.split("+"));
+  // A note written past the danger level already covers the milder watch level.
+  if (covered.has("crit")) covered.add("warn");
+  return reasons.some((r) => !covered.has(r.kind));
+}
+
 function describe(n: Notable, r: Reason): string {
   const t = n.def.threshold;
   const side = t?.dir === "below" ? "below" : "above";
@@ -73,10 +87,7 @@ export const insights: Source = {
     const existing = new Map(
       (db.prepare("SELECT key, basis, created_at FROM insights").all() as unknown as { key: string; basis: string; created_at: number }[]).map((r) => [r.key, r]),
     );
-    const todo = notables.filter((n) => {
-      const e = existing.get(n.key);
-      return !e || e.basis !== basisOf(n.reasons) || now - e.created_at > REFRESH_MS;
-    });
+    const todo = notables.filter((n) => needsNote(n.reasons, existing.get(n.key), now));
     if (!todo.length) return 0;
 
     const headlines = recentHeadlines(db, now, MAX_HEADLINES);

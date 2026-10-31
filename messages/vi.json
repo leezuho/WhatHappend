@@ -149,7 +149,7 @@
     "needsKey": "Thêm AI_API_KEY (key Gemini hoặc Claude) vào .env.local rồi khởi động lại worker để có bản tin AI.",
     "watch": "Cần theo dõi",
     "regenerate": "Viết lại",
-    "requested": "Đã yêu cầu — worker sẽ viết trong vòng một phút.",
+    "requested": "Đã yêu cầu — worker sẽ viết trong vài phút (tối đa một lần mỗi 10 phút).",
     "basedOn": "Dựa trên {n} tin",
     "sources": "Nguồn"
   },

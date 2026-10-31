@@ -149,7 +149,7 @@
     "needsKey": "Add AI_API_KEY (a Gemini or Claude key) to .env.local and restart the worker to get an AI brief.",
     "watch": "Watch next",
     "regenerate": "Regenerate",
-    "requested": "Requested — the worker will write it within a minute.",
+    "requested": "Requested — the worker will write it in a few minutes (at most one rewrite every 10 minutes).",
     "basedOn": "Based on {n} headlines",
     "sources": "Sources"
   },

@@ -56,7 +56,7 @@ npm run dev                     # hoặc: npm run build && npm run start
 # Terminal 2 — worker
 npm run worker
 ```
-Mở `http://localhost:3000`.
+Mở `http://localhost:3000`. Web chỉ nghe trên `127.0.0.1` (script `dev`/`start` đặt `-H 127.0.0.1`) vì ứng dụng không có đăng nhập. Muốn xem từ máy khác trong mạng nhà thì chạy `npx next dev -H 0.0.0.0` và tự chịu việc mọi máy cùng mạng đều vào được.
 
 ### 2.3 Biến môi trường (`.env.local`)
 
@@ -115,13 +115,14 @@ Muốn buộc một nguồn chạy lại ngay khi worker đang chạy: `DELETE F
 | Panel "Lỗi nguồn" với `Unexpected response shape` | API đổi định dạng | Chạy `npm run fetch -- <id>` để xem lỗi, cập nhật zod schema và mapping trong `lib/sources/<id>.ts` |
 | `HTTP 403` / `HTTP 401` | Thiếu hoặc sai key, hoặc bị chặn UA | Kiểm tra `.env.local`; thử `browserUA: true` cho host đó |
 | `HTTP 429` lặp lại | Gọi quá nhiều | Tăng `intervalMs` trong `config/sources.ts` |
-| `database is locked` | Transaction dài hoặc 2 worker chạy cùng lúc | Chỉ chạy một worker; giữ transaction ngắn; `busy_timeout` là 5 giây |
+| `database is locked` | Transaction dài, hoặc `npm run fetch` chạy song song với worker | Giữ transaction ngắn; `busy_timeout` là 5 giây. Worker không chết vì lỗi này, lần chạy đó được ghi log `FAIL` |
+| Worker in `another worker is already running … exiting` | Đã có worker khác chạy trên cùng DB (ví dụ một terminal khác, hoặc `dev:all` cũ) | Dừng worker kia. Worker chết đột ngột thì khóa tự hết hạn sau 60 giây (cùng máy: giành lại ngay khi pid không còn) |
 | Chip "cần key" dù đã thêm key | Tiến trình chưa nạp lại env | Khởi động lại web và worker |
 | Số liệu không đổi dù worker chạy | Trang không làm mới | Kiểm tra `AutoRefresh`; tải lại trang; đảm bảo hàm query gọi `await connection()` |
 | Lỗi hydration ở đồng hồ | Render giờ phía server | `MarketClocks` đọc đồng hồ qua `useSyncExternalStore` với snapshot server = `null` (hiện `--:--`) |
 | Bản đồ chỉ có nền xám, console báo "Worker failed to load" | Worker MapLibre không được phục vụ (MapLibre 6 dùng `import.meta.url`, hỏng khi bundle bằng Turbopack) | Chạy `node scripts/copy-maplibre-worker.mjs` (tự chạy qua `predev`/`prebuild`), kiểm tra `GET /vendor/maplibre-gl-worker.mjs` trả 200; xem [HLDD ADR-09](../HLDD/HLDD.md#adr-09--tự-phục-vụ-worker-của-maplibre) |
 | ESLint báo hàng nghìn cảnh báo trong `public/vendor` | Quét nhầm file worker đã chép | `public/vendor/**` phải nằm trong `globalIgnores` của `eslint.config.mjs` |
-| Nút "Viết lại" Brief không có tác dụng | Worker không chạy, AI chưa cấu hình, hoặc lần chạy trước lỗi chưa quá 30 phút | Route chỉ ghi cờ `kv['brief:force']`. Worker phải chạy và in `AI: <provider>`. Xem `source_status` của `brief` |
+| Nút "Viết lại" Brief không có tác dụng | Worker không chạy, AI chưa cấu hình, lần chạy trước lỗi chưa quá 30 phút, hoặc brief gần nhất chưa cũ 10 phút | Route chỉ ghi cờ `kv['brief:force']`. Worker phải chạy và in `AI: <provider>`. Xem `source_status` của `brief` |
 | Brief lỗi `429 … limit: 0` (Gemini) | Model không có hạn mức ở gói miễn phí (ví dụ Pro) | Dùng model Flash (`AI_MODEL_BRIEF=gemini-flash-latest`, mặc định) hoặc nâng lên gói trả phí |
 | Brief hoặc dịch lỗi `429` sau khi đã chạy nhiều lần | Hết hạn mức theo phút hoặc ngày | Chờ; worker tự thử lại sau `max(1 phút, interval/4)` (brief: sau 30 phút) |
 | Lỗi `503 … high demand` | Provider quá tải tạm thời | SDK Gemini tự thử lại 4 lần (5 → 60 giây); nếu vẫn lỗi, bộ lập lịch sẽ thử lại sau |

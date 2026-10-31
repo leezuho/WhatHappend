@@ -57,3 +57,5 @@ Thêm một nguồn mới: tạo `lib/sources/<id>.ts`, khai báo chu kỳ trong
 
 - Một số endpoint là không chính thức (Yahoo Finance, SSI, vang.today, PNJ, Vietcombank), chỉ dùng cho mục đích cá nhân và có thể hỏng bất cứ lúc nào. Khi một nguồn lỗi, panel của nó hiện "Dữ liệu cũ" hoặc "Lỗi nguồn", phần còn lại của trang vẫn chạy bình thường.
 - Muốn xoá dữ liệu thì dừng worker rồi xoá thư mục `data/`.
+- Web chỉ nghe trên `127.0.0.1` vì không có đăng nhập. Muốn mở cho máy khác trong mạng nhà thì chạy `npx next dev -H 0.0.0.0`.
+- Chỉ một worker được chạy trên mỗi file DB; worker thứ hai sẽ báo lỗi và thoát.

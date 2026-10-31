@@ -73,13 +73,19 @@ async function enrichArticles(db: DatabaseSync, log: (m: string) => void): Promi
       continue;
     }
     const byId = new Map(res.data.items.map((i) => [i.id, i]));
+    let skipped = 0;
     tx(db, () => {
       for (const r of rows) {
         const o = byId.get(r.id);
         if (o) update.run(o.title_en, o.title_vi, o.region, o.topic, r.id);
-        else update.run(r.lang === "en" ? r.title : null, r.lang === "vi" ? r.title : null, "global", "other", r.id);
+        else {
+          // Leaving either title NULL would re-select this row on every batch of every run.
+          update.run(r.title, r.title, "global", "other", r.id);
+          skipped++;
+        }
       }
     });
+    if (skipped) log(`${skipped}/${rows.length} headlines missing from the model output; kept the original title`);
     done += rows.length;
   }
   return done;
