@@ -1,0 +1,201 @@
+import clsx from "clsx";
+import { SERIES } from "@/config/series";
+import { getDict, type Locale } from "@/lib/i18n";
+import { fmtDateTime, fmtNumber, fmtPct } from "@/lib/format";
+import { getLatestBrief, getMapEvents, getNews, getVietnam, requestNow } from "@/lib/queries";
+import { KpiTile } from "@/components/charts/KpiTile";
+import { EmptyState } from "@/components/ui/Panel";
+import { MapView } from "./MapView";
+import { NewsList } from "./NewsList";
+import { BriefRefresh } from "./BriefRefresh";
+
+// ---------------------------------------------------------------- brief
+
+export async function BriefBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const { view, hasKey, requestedAt } = await getLatestBrief(lang);
+  if (!view) {
+    return (
+      <div className="flex flex-col items-start gap-3 py-4 text-sm text-ink-2">
+        <p>{hasKey ? d.brief.empty : d.brief.needsKey}</p>
+        {hasKey && <BriefRefresh label={d.brief.regenerate} requestedLabel={d.brief.requested} pending={requestedAt !== null} />}
+      </div>
+    );
+  }
+  const b = view.brief;
+  return (
+    <article className="flex flex-1 flex-col gap-3">
+      <p className="font-display text-base font-semibold leading-snug text-ink">{b.headline}</p>
+      <ol className="flex flex-col gap-2.5">
+        {b.bullets.map((x, i) => (
+          <li key={i} className="text-sm leading-snug">
+            <span className="font-semibold text-ink">{x.title}.</span> <span className="text-ink-2">{x.body}</span>
+            {x.sources.length > 0 && (
+              <span className="ml-1 inline-flex flex-wrap gap-1 align-baseline">
+                {x.sources.map((s, j) => (
+                  <a key={j} href={s.url} target="_blank" rel="noreferrer" title={s.title} className="rounded bg-surface-2 px-1 text-[10px] text-ink-2 hover:text-ink">
+                    {s.source}
+                  </a>
+                ))}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+      {b.watch.length > 0 && (
+        <div>
+          <h3 className="mb-1 text-xs font-semibold text-ink-2">{d.brief.watch}</h3>
+          <ul className="list-disc pl-4 text-xs text-ink-2">
+            {b.watch.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-2 text-[11px] text-muted">
+        <span>
+          {d.brief.basedOn.replace("{n}", String(b.headlineCount))} · {fmtDateTime(view.createdAt, lang)} · {b.model}
+        </span>
+        {hasKey && <BriefRefresh label={d.brief.regenerate} requestedLabel={d.brief.requested} pending={requestedAt !== null} />}
+      </div>
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------- news
+
+export async function NewsBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const items = await getNews(lang);
+  if (!items.length) return <EmptyState lang={lang} />;
+  return <NewsList items={items} now={await requestNow()} labels={d.news} locale={lang} />;
+}
+
+// ---------------------------------------------------------------- map
+
+export async function MapBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const events = await getMapEvents(lang);
+  if (!events.length) return <EmptyState lang={lang} />;
+  return (
+    <MapView
+      events={events}
+      locale={lang}
+      labels={{ groups: { quake: d.map.quake, hazard: d.map.hazard, news: d.map.news }, alert: d.map.alert, list: d.map.list, map: d.map.map }}
+    />
+  );
+}
+
+// ---------------------------------------------------------------- Vietnam
+
+const GOLD_LABEL: Record<string, { en: string; vi: string }> = {
+  SJL1L10: { en: "SJC bar", vi: "Vàng miếng SJC" },
+  SJ9999: { en: "SJC ring 99.99", vi: "Nhẫn SJC 99,99" },
+  DOHNL: { en: "DOJI Hanoi", vi: "DOJI Hà Nội" },
+  BTSJC: { en: "Bao Tin SJC", vi: "Bảo Tín SJC" },
+  PNJ24K: { en: "PNJ 24K", vi: "PNJ 24K" },
+};
+
+export async function VietnamBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const v = await getVietnam(lang);
+  if (!v.vnindex && !v.gold.length && !v.vcb.length) return <EmptyState lang={lang} />;
+  const sjc = v.gold.find((g) => g.code === "SJL1L10");
+  const premium = sjc?.sell && v.worldGoldVnd ? sjc.sell - v.worldGoldVnd : null;
+  const mil = (n: number | null) => (n === null ? "—" : fmtNumber(n / 1_000_000, lang, 1));
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+      <div className="flex flex-col gap-2">
+        <KpiTile def={SERIES.vnindex} data={v.vnindex} locale={lang} />
+        {v.breadth && (
+          <p className="text-xs text-ink-2">
+            {d.vn.breadth}: <span className="text-up">▲ {v.breadth.advances ?? "—"}</span> · <span className="text-down">▼ {v.breadth.declines ?? "—"}</span> ·{" "}
+            <span className="text-muted">
+              {v.breadth.unchanged ?? "—"} {d.vn.unchanged}
+            </span>
+          </p>
+        )}
+        <KpiTile def={SERIES.usdvnd} data={v.usdvnd} locale={lang} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-xs font-semibold text-ink-2">{d.vn.gold}</h3>
+        <table className="tabular w-full text-xs">
+          <thead className="text-muted">
+            <tr>
+              <th className="py-1 text-left font-normal" />
+              <th className="py-1 text-right font-normal">{d.vn.buy}</th>
+              <th className="py-1 text-right font-normal">{d.vn.sell}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {v.gold.map((g) => (
+              <tr key={g.code} className="border-t border-line">
+                <td className="py-1 text-ink-2">{GOLD_LABEL[g.code]?.[lang] ?? g.name}</td>
+                <td className="py-1 text-right text-ink">{mil(g.buy)}</td>
+                <td className="py-1 text-right font-medium text-ink">
+                  {mil(g.sell)}
+                  {g.changeSell ? (
+                    <span className={clsx("ml-1 text-[10px]", g.changeSell > 0 ? "text-up" : "text-down")}>
+                      {g.changeSell > 0 ? "▲" : "▼"}
+                      {fmtNumber(Math.abs(g.changeSell) / 1_000_000, lang, 1)}
+                    </span>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+            {v.worldGoldVnd && (
+              <tr className="border-t border-line">
+                <td className="py-1 text-ink-2">{d.vn.worldGold}</td>
+                <td />
+                <td className="py-1 text-right text-ink">{mil(v.worldGoldVnd)}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {premium !== null && v.worldGoldVnd && (
+          <p className="text-xs text-ink-2">
+            {d.vn.premium}: <span className="font-semibold text-ink">{mil(premium)}</span> ({fmtPct((premium / v.worldGoldVnd) * 100, lang, 1)})
+          </p>
+        )}
+        <p className="text-[10px] text-muted">{lang === "vi" ? "Triệu đồng/lượng" : "Million VND per tael"} · {v.gold[0]?.source}</p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-xs font-semibold text-ink-2">{d.vn.vcb}</h3>
+        <table className="tabular w-full text-xs">
+          <thead className="text-muted">
+            <tr>
+              <th className="py-1 text-left font-normal" />
+              <th className="py-1 text-right font-normal">{d.vn.transfer}</th>
+              <th className="py-1 text-right font-normal">{d.vn.sell}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {v.vcb.map((x) => (
+              <tr key={x.code} className="border-t border-line">
+                <td className="py-1 text-ink-2">{x.code}</td>
+                <td className="py-1 text-right text-ink">{x.transfer === null ? "—" : fmtNumber(x.transfer, lang, x.transfer < 1000 ? 2 : 0)}</td>
+                <td className="py-1 text-right font-medium text-ink">{x.sell === null ? "—" : fmtNumber(x.sell, lang, x.sell < 1000 ? 2 : 0)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <h3 className="text-xs font-semibold text-ink-2">{d.vn.news}</h3>
+        <ul className="flex flex-col">
+          {v.news.map((n) => (
+            <li key={n.id} className="border-t border-line py-1.5 first:border-t-0">
+              <a href={n.url} target="_blank" rel="noreferrer" className="text-xs leading-snug text-ink hover:underline">
+                {n.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}

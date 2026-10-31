@@ -1,0 +1,242 @@
+{
+  "meta": {
+    "title": "WhatHappend — the world at a glance",
+    "description": "Personal dashboard of what is happening in the world: markets, macro, news, events."
+  },
+  "common": {
+    "updated": "Updated",
+    "stale": "Stale",
+    "sourceError": "Source error",
+    "noData": "No data yet. Start the worker: npm run worker",
+    "needsKey": "Needs API key",
+    "source": "Source",
+    "loading": "Loading…",
+    "showTable": "Table",
+    "showChart": "Chart",
+    "close": "Close",
+    "more": "More",
+    "all": "All"
+  },
+  "topbar": {
+    "tagline": "What is happening in the world",
+    "themeLight": "Light theme",
+    "themeDark": "Dark theme",
+    "open": "Open",
+    "closed": "Closed",
+    "break": "Lunch break",
+    "themeAnthropic": "Anthropic theme (warm cream)",
+    "themeGroup": "Theme"
+  },
+  "regime": {
+    "title": "Risk regime",
+    "riskOn": "Risk-on",
+    "neutral": "Neutral",
+    "riskOff": "Risk-off",
+    "unknown": "Not enough data",
+    "score": "Stress score",
+    "explain": "Average 1-year z-score of market stress gauges. Positive = more stress than usual."
+  },
+  "panels": {
+    "brief": {
+      "title": "Daily brief",
+      "subtitle": "AI summary of the last 24 hours"
+    },
+    "map": {
+      "title": "World map",
+      "subtitle": "Earthquakes, disasters and news hotspots"
+    },
+    "highlights": {
+      "title": "What stands out",
+      "subtitle": "Unusual readings, explained in plain words by AI"
+    },
+    "vitals": {
+      "title": "Vital signs",
+      "subtitle": "The dozen numbers professionals check first"
+    },
+    "yieldCurve": {
+      "title": "US yield curve",
+      "subtitle": "Treasury yields by maturity"
+    },
+    "inflationRates": {
+      "title": "Inflation vs policy rates",
+      "subtitle": "Major economies"
+    },
+    "stress": {
+      "title": "Market stress",
+      "subtitle": "Fear gauges and credit spreads"
+    },
+    "economy": {
+      "title": "US economy pulse",
+      "subtitle": "Jobs, growth nowcast and Fed liquidity"
+    },
+    "news": {
+      "title": "World news",
+      "subtitle": "Latest headlines by region and topic"
+    },
+    "calendar": {
+      "title": "Upcoming",
+      "subtitle": "Economic releases, elections and launches"
+    },
+    "trending": {
+      "title": "What the world is reading",
+      "subtitle": "Wikipedia and Hacker News"
+    },
+    "prediction": {
+      "title": "Prediction markets",
+      "subtitle": "Crowd-implied odds of big events"
+    },
+    "env": {
+      "title": "Planet & health",
+      "subtitle": "CO₂, temperature, air quality, outbreaks"
+    },
+    "vietnam": {
+      "title": "Vietnam corner",
+      "subtitle": "VN-Index, USD/VND, SJC gold, VnExpress"
+    }
+  },
+  "charts": {
+    "today": "Latest",
+    "monthAgo": "1 month ago",
+    "yearAgo": "1 year ago",
+    "inflation": "Inflation {year} (IMF est.)",
+    "policyRate": "Policy rate",
+    "realRate": "Real rate",
+    "noRateVn": "BIS publishes no policy rate for Vietnam",
+    "spread2s10s": "2s10s spread",
+    "inverted": "Inverted",
+    "normal": "Normal",
+    "lastYear": "Last 12 months"
+  },
+  "map": {
+    "quake": "Earthquakes",
+    "hazard": "Disasters & storms",
+    "news": "Conflict & protest hotspots",
+    "alert": "Orange/red alert",
+    "list": "List",
+    "map": "Map"
+  },
+  "news": {
+    "all": "All",
+    "alsoIn": "also",
+    "regions": {
+      "vietnam": "Vietnam",
+      "asia": "Asia",
+      "europe": "Europe",
+      "americas": "Americas",
+      "middle-east": "Middle East",
+      "africa": "Africa",
+      "oceania": "Oceania",
+      "global": "Global"
+    },
+    "topics": {
+      "politics": "Politics",
+      "conflict": "Conflict",
+      "economy": "Economy",
+      "markets": "Markets",
+      "business": "Business",
+      "tech": "Tech",
+      "science": "Science",
+      "climate": "Climate",
+      "health": "Health",
+      "society": "Society",
+      "sports": "Sports",
+      "other": "Other"
+    },
+    "untagged": "Topics appear once the AI pass runs (needs AI_API_KEY)"
+  },
+  "brief": {
+    "empty": "The brief is written each morning at 06:00 (Vietnam time) once there are enough headlines.",
+    "needsKey": "Add AI_API_KEY (a Gemini or Claude key) to .env.local and restart the worker to get an AI brief.",
+    "watch": "Watch next",
+    "regenerate": "Regenerate",
+    "requested": "Requested — the worker will write it within a minute.",
+    "basedOn": "Based on {n} headlines",
+    "sources": "Sources"
+  },
+  "highlights": {
+    "empty": "Nothing unusual in the indicators right now.",
+    "needsKey": "Add AI_API_KEY to .env.local to get an AI explanation for each one.",
+    "rules": "Picked when a reading passes a warning level, moves at least twice its usual amount, or hits a 1-year high or low. Click for history.",
+    "moveTip": "{z}× its usual move",
+    "reasons": {
+      "crit": "Danger",
+      "warn": "Watch",
+      "high": "1-year high",
+      "low": "1-year low",
+      "moveUp": "Unusual jump",
+      "moveDown": "Unusual drop"
+    }
+  },
+  "vn": {
+    "gold": "Gold (VND per tael)",
+    "buy": "Buy",
+    "sell": "Sell",
+    "worldGold": "World gold converted",
+    "premium": "SJC premium",
+    "vcb": "Vietcombank rates",
+    "cash": "Cash buy",
+    "transfer": "Transfer",
+    "breadth": "Breadth",
+    "up": "up",
+    "down": "down",
+    "unchanged": "flat",
+    "news": "VnExpress"
+  },
+  "calendar": {
+    "econ": "Econ",
+    "fomc": "Fed",
+    "launch": "Launch",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "empty": "Nothing scheduled in the next three weeks.",
+    "high": "High impact",
+    "medium": "Medium impact"
+  },
+  "trending": {
+    "wikiEn": "Wikipedia EN",
+    "wikiVi": "Wikipedia VI",
+    "hn": "Hacker News",
+    "views": "views",
+    "points": "points",
+    "comments": "comments"
+  },
+  "prediction": {
+    "fed": "Fed funds rate after the {date} meeting",
+    "fedNote": "Kalshi: probability the upper bound ends above each level",
+    "markets": "Polymarket",
+    "volume": "24h volume",
+    "geopolitics": "Geopolitics",
+    "economy": "Economy",
+    "ends": "ends"
+  },
+  "env": {
+    "co2": "CO₂ at Mauna Loa",
+    "co2Delta": "vs a year ago",
+    "temp": "Global temperature anomaly",
+    "tempNote": "vs 1951–1980 (NASA GISTEMP), 12-month average {avg}",
+    "air": "Air quality now (US AQI)",
+    "outbreaks": "WHO disease outbreak news",
+    "aqi": {
+      "good": "Good",
+      "moderate": "Moderate",
+      "usg": "Unhealthy for sensitive groups",
+      "unhealthy": "Unhealthy",
+      "veryUnhealthy": "Very unhealthy",
+      "hazardous": "Hazardous"
+    }
+  },
+  "detail": {
+    "pin": "Pin to vital signs",
+    "unpin": "Unpin",
+    "watchlist": "Pinned by you",
+    "open": "Show history",
+    "loading": "Loading…",
+    "ranges": {
+      "90": "3M",
+      "365": "1Y",
+      "730": "2Y",
+      "1825": "5Y"
+    },
+    "note": "Why it stands out (AI)"
+  }
+}

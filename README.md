@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WhatHappend
 
-## Getting Started
+Dashboard cá nhân "thế giới đang diễn ra gì": thị trường, vĩ mô, tin tức, bản đồ sự kiện, lịch, xu hướng, thị trường dự đoán, môi trường và góc Việt Nam. Giao diện song ngữ Việt/Anh, có ba giao diện: sáng, tối và Anthropic (nền kem, tiêu đề serif).
 
-First, run the development server:
+## Chạy
+
+Cần Node ≥ 22.13 (dùng `node:sqlite` có sẵn trong Node).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local      # tuỳ chọn: điền AI_API_KEY (Gemini hoặc Claude) để có bản tin AI, dịch tiêu đề và diễn giải chỉ số
+npm run fetch -- all            # lấy dữ liệu lần đầu (khoảng 1 phút)
+npm run dev:all                 # worker + web; mở http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Hai tiến trình chạy độc lập:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Lệnh | Việc |
+|---|---|
+| `npm run worker` | Bộ lập lịch: gọi các nguồn khi đến hạn, ghi vào `data/whathappend.db` |
+| `npm run dev` / `npm run build && npm start` | Web Next.js, chỉ đọc từ SQLite và không gọi API bên ngoài |
+| `npm run fetch -- <id…>` / `npm run fetch -- all` | Chạy một hoặc nhiều nguồn một lần (gõ `npm run fetch` để xem danh sách id) |
+| `npm run typecheck` / `npm run lint` | Kiểm tra kiểu và lint |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tất cả nguồn dữ liệu đều không cần key, trừ phần AI. Thiếu key AI thì tin hiển thị tiêu đề gốc và panel bản tin hướng dẫn cách bật.
 
-## Learn More
+## Cấu hình AI
 
-To learn more about Next.js, take a look at the following resources:
+Đặt trong `.env.local` (đã gitignore, không bao giờ gửi xuống trình duyệt):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Biến | Ý nghĩa |
+|---|---|
+| `AI_PROVIDER` | `gemini` hoặc `anthropic`. Bỏ trống thì tự đoán từ key: `sk-ant-…` là Claude, còn lại là Gemini |
+| `AI_API_KEY` | Key của provider. Cũng nhận `GEMINI_API_KEY` / `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` |
+| `AI_MODEL_BRIEF` | Model viết bản tin và diễn giải chỉ số. Mặc định `gemini-flash-latest` / `claude-sonnet-5-5` |
+| `AI_MODEL_FAST` | Model dịch và gắn nhãn tiêu đề. Mặc định `gemini-flash-lite-latest` / `claude-haiku-5-5` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Với key Gemini miễn phí, dòng Pro không có hạn mức (lỗi 429 `limit: 0`). Muốn dùng `gemini-pro-latest` cho bản tin thì cần gói trả phí. Sau khi sửa `.env.local`, khởi động lại cả worker lẫn web.
 
-## Deploy on Vercel
+## Cấu trúc
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/[lang]/            trang dashboard (vi | en), proxy.ts chuyển / → /vi
+app/api/               brief (yêu cầu viết lại), series/[key] (lịch sử), watchlist
+components/panels/     các panel; components/charts/ biểu đồ; components/ui/ khung chung
+config/                danh mục chỉ số (series.ts), lịch chạy (sources.ts), feed, quốc gia, FOMC, thành phố
+lib/sources/           mỗi nguồn một file: fetch → zod → upsert
+lib/ai/                lớp provider (Gemini / Claude), dịch + phân loại tiêu đề, bản tin hằng ngày, diễn giải chỉ số
+lib/queries.ts         lớp đọc cho UI; lib/signals/ chỉ báo Risk Regime và quy tắc chọn chỉ số đáng chú ý
+worker/, scripts/      bộ lập lịch và CLI fetch
+BRD/, TechDesign/      tài liệu nghiệp vụ, HLDD, LLDD
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Thêm một nguồn mới: tạo `lib/sources/<id>.ts`, khai báo chu kỳ trong `config/sources.ts`, đăng ký trong `lib/sources/index.ts`. Chi tiết xem `TechDesign/LLDD/03-worker-and-sources-framework.md`.
+
+## Lưu ý
+
+- Một số endpoint là không chính thức (Yahoo Finance, SSI, vang.today, PNJ, Vietcombank), chỉ dùng cho mục đích cá nhân và có thể hỏng bất cứ lúc nào. Khi một nguồn lỗi, panel của nó hiện "Dữ liệu cũ" hoặc "Lỗi nguồn", phần còn lại của trang vẫn chạy bình thường.
+- Muốn xoá dữ liệu thì dừng worker rồi xoá thư mục `data/`.

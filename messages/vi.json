@@ -1,0 +1,242 @@
+{
+  "meta": {
+    "title": "WhatHappend — toàn cảnh thế giới",
+    "description": "Dashboard cá nhân về những gì đang diễn ra trên thế giới: thị trường, vĩ mô, tin tức, sự kiện."
+  },
+  "common": {
+    "updated": "Cập nhật",
+    "stale": "Dữ liệu cũ",
+    "sourceError": "Lỗi nguồn",
+    "noData": "Chưa có dữ liệu. Hãy chạy worker: npm run worker",
+    "needsKey": "Cần API key",
+    "source": "Nguồn",
+    "loading": "Đang tải…",
+    "showTable": "Bảng",
+    "showChart": "Biểu đồ",
+    "close": "Đóng",
+    "more": "Thêm",
+    "all": "Tất cả"
+  },
+  "topbar": {
+    "tagline": "Thế giới đang diễn ra gì",
+    "themeLight": "Giao diện sáng",
+    "themeDark": "Giao diện tối",
+    "open": "Mở cửa",
+    "closed": "Đóng cửa",
+    "break": "Nghỉ trưa",
+    "themeAnthropic": "Giao diện Anthropic (vàng kem)",
+    "themeGroup": "Giao diện"
+  },
+  "regime": {
+    "title": "Trạng thái rủi ro",
+    "riskOn": "Ưa rủi ro",
+    "neutral": "Trung tính",
+    "riskOff": "Né rủi ro",
+    "unknown": "Chưa đủ dữ liệu",
+    "score": "Điểm căng thẳng",
+    "explain": "Trung bình z-score 1 năm của các thước đo căng thẳng thị trường. Dương = căng thẳng hơn bình thường."
+  },
+  "panels": {
+    "brief": {
+      "title": "Bản tin hôm nay",
+      "subtitle": "AI tóm tắt 24 giờ qua"
+    },
+    "map": {
+      "title": "Bản đồ thế giới",
+      "subtitle": "Động đất, thiên tai và điểm nóng tin tức"
+    },
+    "highlights": {
+      "title": "Điểm đáng chú ý",
+      "subtitle": "Chỉ số bất thường, AI giải thích dễ hiểu"
+    },
+    "vitals": {
+      "title": "Chỉ số sống còn",
+      "subtitle": "12 con số giới chuyên môn xem đầu tiên"
+    },
+    "yieldCurve": {
+      "title": "Đường cong lợi suất Mỹ",
+      "subtitle": "Lợi suất trái phiếu theo kỳ hạn"
+    },
+    "inflationRates": {
+      "title": "Lạm phát và lãi suất điều hành",
+      "subtitle": "Các nền kinh tế lớn"
+    },
+    "stress": {
+      "title": "Căng thẳng thị trường",
+      "subtitle": "Chỉ số sợ hãi và chênh lệch tín dụng"
+    },
+    "economy": {
+      "title": "Nhịp đập kinh tế Mỹ",
+      "subtitle": "Việc làm, dự báo tăng trưởng, thanh khoản Fed"
+    },
+    "news": {
+      "title": "Tin thế giới",
+      "subtitle": "Tin mới nhất theo khu vực và chủ đề"
+    },
+    "calendar": {
+      "title": "Sắp diễn ra",
+      "subtitle": "Lịch kinh tế, bầu cử và phóng tàu"
+    },
+    "trending": {
+      "title": "Thế giới đang đọc gì",
+      "subtitle": "Wikipedia và Hacker News"
+    },
+    "prediction": {
+      "title": "Thị trường dự đoán",
+      "subtitle": "Xác suất các sự kiện lớn theo đám đông"
+    },
+    "env": {
+      "title": "Hành tinh và sức khỏe",
+      "subtitle": "CO₂, nhiệt độ, không khí, dịch bệnh"
+    },
+    "vietnam": {
+      "title": "Góc Việt Nam",
+      "subtitle": "VN-Index, USD/VND, vàng SJC, VnExpress"
+    }
+  },
+  "charts": {
+    "today": "Mới nhất",
+    "monthAgo": "1 tháng trước",
+    "yearAgo": "1 năm trước",
+    "inflation": "Lạm phát {year} (IMF ước tính)",
+    "policyRate": "Lãi suất điều hành",
+    "realRate": "Lãi suất thực",
+    "noRateVn": "BIS không công bố lãi suất điều hành của Việt Nam",
+    "spread2s10s": "Chênh lệch 2s10s",
+    "inverted": "Đảo ngược",
+    "normal": "Bình thường",
+    "lastYear": "12 tháng qua"
+  },
+  "map": {
+    "quake": "Động đất",
+    "hazard": "Thiên tai & bão",
+    "news": "Điểm nóng xung đột & biểu tình",
+    "alert": "Cảnh báo cam/đỏ",
+    "list": "Danh sách",
+    "map": "Bản đồ"
+  },
+  "news": {
+    "all": "Tất cả",
+    "alsoIn": "cùng tin",
+    "regions": {
+      "vietnam": "Việt Nam",
+      "asia": "Châu Á",
+      "europe": "Châu Âu",
+      "americas": "Châu Mỹ",
+      "middle-east": "Trung Đông",
+      "africa": "Châu Phi",
+      "oceania": "Châu Đại Dương",
+      "global": "Toàn cầu"
+    },
+    "topics": {
+      "politics": "Chính trị",
+      "conflict": "Xung đột",
+      "economy": "Kinh tế",
+      "markets": "Thị trường",
+      "business": "Doanh nghiệp",
+      "tech": "Công nghệ",
+      "science": "Khoa học",
+      "climate": "Khí hậu",
+      "health": "Sức khỏe",
+      "society": "Xã hội",
+      "sports": "Thể thao",
+      "other": "Khác"
+    },
+    "untagged": "Chủ đề sẽ xuất hiện khi bước AI chạy (cần AI_API_KEY)"
+  },
+  "brief": {
+    "empty": "Bản tin được viết mỗi sáng lúc 06:00 (giờ Việt Nam) khi đã có đủ tin.",
+    "needsKey": "Thêm AI_API_KEY (key Gemini hoặc Claude) vào .env.local rồi khởi động lại worker để có bản tin AI.",
+    "watch": "Cần theo dõi",
+    "regenerate": "Viết lại",
+    "requested": "Đã yêu cầu — worker sẽ viết trong vòng một phút.",
+    "basedOn": "Dựa trên {n} tin",
+    "sources": "Nguồn"
+  },
+  "highlights": {
+    "empty": "Hiện chưa có chỉ số nào bất thường.",
+    "needsKey": "Thêm AI_API_KEY vào .env.local để AI giải thích từng chỉ số.",
+    "rules": "Chọn khi chỉ số vượt ngưỡng cảnh báo, biến động gấp 2 lần bình thường trở lên, hoặc lập đỉnh/đáy 1 năm. Bấm để xem lịch sử.",
+    "moveTip": "Biến động gấp {z} lần mức thường ngày",
+    "reasons": {
+      "crit": "Nguy hiểm",
+      "warn": "Lưu ý",
+      "high": "Cao nhất 1 năm",
+      "low": "Thấp nhất 1 năm",
+      "moveUp": "Tăng mạnh bất thường",
+      "moveDown": "Giảm mạnh bất thường"
+    }
+  },
+  "vn": {
+    "gold": "Vàng (VND/lượng)",
+    "buy": "Mua",
+    "sell": "Bán",
+    "worldGold": "Vàng thế giới quy đổi",
+    "premium": "Chênh SJC",
+    "vcb": "Tỷ giá Vietcombank",
+    "cash": "Mua tiền mặt",
+    "transfer": "Chuyển khoản",
+    "breadth": "Độ rộng",
+    "up": "tăng",
+    "down": "giảm",
+    "unchanged": "đứng",
+    "news": "VnExpress"
+  },
+  "calendar": {
+    "econ": "Kinh tế",
+    "fomc": "Fed",
+    "launch": "Phóng tàu",
+    "today": "Hôm nay",
+    "tomorrow": "Ngày mai",
+    "empty": "Không có sự kiện nào trong ba tuần tới.",
+    "high": "Tác động cao",
+    "medium": "Tác động vừa"
+  },
+  "trending": {
+    "wikiEn": "Wikipedia EN",
+    "wikiVi": "Wikipedia VI",
+    "hn": "Hacker News",
+    "views": "lượt xem",
+    "points": "điểm",
+    "comments": "bình luận"
+  },
+  "prediction": {
+    "fed": "Lãi suất Fed sau cuộc họp {date}",
+    "fedNote": "Kalshi: xác suất trần lãi suất cao hơn mỗi mức",
+    "markets": "Polymarket",
+    "volume": "KL 24h",
+    "geopolitics": "Địa chính trị",
+    "economy": "Kinh tế",
+    "ends": "kết thúc"
+  },
+  "env": {
+    "co2": "CO₂ tại Mauna Loa",
+    "co2Delta": "so với 1 năm trước",
+    "temp": "Dị thường nhiệt độ toàn cầu",
+    "tempNote": "so với 1951–1980 (NASA GISTEMP), trung bình 12 tháng {avg}",
+    "air": "Chất lượng không khí (US AQI)",
+    "outbreaks": "Tin dịch bệnh của WHO",
+    "aqi": {
+      "good": "Tốt",
+      "moderate": "Trung bình",
+      "usg": "Kém với nhóm nhạy cảm",
+      "unhealthy": "Có hại",
+      "veryUnhealthy": "Rất có hại",
+      "hazardous": "Nguy hại"
+    }
+  },
+  "detail": {
+    "pin": "Ghim vào chỉ số sống còn",
+    "unpin": "Bỏ ghim",
+    "watchlist": "Bạn đã ghim",
+    "open": "Xem lịch sử",
+    "loading": "Đang tải…",
+    "ranges": {
+      "90": "3T",
+      "365": "1N",
+      "730": "2N",
+      "1825": "5N"
+    },
+    "note": "Vì sao đáng chú ý (AI)"
+  }
+}
