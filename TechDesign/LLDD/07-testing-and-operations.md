@@ -18,7 +18,7 @@
 | V14 | AI chạy thật | `npm run fetch -- translate`, rồi `npm run fetch -- brief` | `ok`; bài báo có `title_vi`/`title_en`/`region`/`topic`; panel Brief có bản tin, chân panel ghi tên model |
 | V15 | Viết lại Brief end-to-end | Chạy worker, bấm "Viết lại" (hoặc `curl -X POST /api/brief`) | Ở tick kế tiếp worker viết brief mới; panel hiện bản mới |
 | V9 | Theme | Đổi theme, tải lại trang | Không bị nháy màu; lựa chọn được ghi nhớ |
-| V10 | Build và chất lượng mã | `npm run build`, `npm run lint`, `npm run typecheck` | Không lỗi |
+| V10 | Build và chất lượng mã | `npm run build`, `npm run lint`, `npm run typecheck`, `npm test` | Không lỗi, mọi test pass |
 | V11 | Reduced motion | Bật "Reduce motion" trong hệ điều hành | Ticker đứng yên |
 | V12 | Chi tiết và watchlist | Bấm một KPI tile, đổi khoảng 3T/1N/2N/5N, bấm "Ghim" | Hộp thoại hiện lịch sử (tải từ `/api/series/[key]`); sau khi ghim, tile xuất hiện ở hàng "Bạn đã ghim" |
 | V13 | Bản đồ | Mở panel bản đồ, xem console trình duyệt | Có nền bản đồ và các chấm; không có "Worker failed to load" |
@@ -39,6 +39,19 @@ Lưu ý chất lượng dữ liệu đã biết:
 - Điểm nóng GDELT khá nhiễu (địa điểm gán sai, URL không liên quan).
 - Top vi.wikipedia thường bị bot đẩy lượt xem (vì vậy tab mặc định là Wikipedia EN).
 - Các endpoint không chính thức (Yahoo, SSI, vang.today, PNJ, Vietcombank) có thể đổi hoặc bị chặn bất cứ lúc nào.
+
+### 1.2 Test tự động (`npm test`)
+
+Dùng `node:test` có sẵn trong Node, chạy qua `tsx` nên đọc được alias `@/`; không thêm thư viện. Test không gọi mạng và không đụng `data/`: hàm cần DB dùng `openDb(":memory:")`.
+
+| File | Phủ |
+|---|---|
+| `test/parsers.test.ts` | `parseCsv` (ngoặc kép, CRLF, dòng trống), `unzipFirst` (ZIP stored/deflate, extra field, comment), `normalizeUrl`, `titleKey` |
+| `test/signals.test.ts` | `alertOf`, `computeRegime` (thiếu dữ liệu, risk-on/off, VIX > 35), `findNotables` trên DB `:memory:` |
+| `test/ai-scheduling.test.ts` | `needsNote` của insights, `brief.isDue` (khoảng cách 10 phút, lỗi gần đây, thiếu tin) |
+| `test/web-and-worker.test.ts` | `isCrossOrigin`, khóa worker (`worker/lock.ts`), các hàm định dạng |
+
+Chưa phủ: các fetcher gọi mạng (kiểm bằng `npm run fetch -- <id>`) và lớp gọi AI (`translate`, `brief.run`, `insights.run`).
 
 ## 2. Runbook
 

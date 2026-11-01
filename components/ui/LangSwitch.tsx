@@ -3,9 +3,9 @@
 import { locales, type Locale } from "@/lib/i18n";
 import clsx from "clsx";
 
-export function LangSwitch({ current }: { current: Locale }) {
+export function LangSwitch({ current, label }: { current: Locale; label: string }) {
   return (
-    <div className="flex rounded-md border border-line p-0.5 text-xs" role="group" aria-label="Language">
+    <div className="flex rounded-md border border-line p-0.5 text-xs" role="group" aria-label={label}>
       {locales.map((l) => (
         <a
           key={l}

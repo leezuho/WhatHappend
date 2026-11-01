@@ -25,7 +25,9 @@
     "closed": "Đóng cửa",
     "break": "Nghỉ trưa",
     "themeAnthropic": "Giao diện Anthropic (vàng kem)",
-    "themeGroup": "Giao diện"
+    "themeGroup": "Giao diện",
+    "language": "Ngôn ngữ",
+    "ticker": "Bảng giá chạy"
   },
   "regime": {
     "title": "Trạng thái rủi ro",
@@ -34,7 +36,14 @@
     "riskOff": "Né rủi ro",
     "unknown": "Chưa đủ dữ liệu",
     "score": "Điểm căng thẳng",
-    "explain": "Trung bình z-score 1 năm của các thước đo căng thẳng thị trường. Dương = căng thẳng hơn bình thường."
+    "explain": "Trung bình z-score 1 năm của các thước đo căng thẳng thị trường. Dương = căng thẳng hơn bình thường.",
+    "components": {
+      "vix": "VIX",
+      "hy": "Chênh lệch HY",
+      "dxy": "USD thay đổi 1 tháng",
+      "curve": "Đường cong lợi suất (đảo ngược = +)",
+      "fsi": "Chỉ số căng thẳng tài chính"
+    }
   },
   "panels": {
     "brief": {
@@ -105,7 +114,9 @@
     "spread2s10s": "Chênh lệch 2s10s",
     "inverted": "Đảo ngược",
     "normal": "Bình thường",
-    "lastYear": "12 tháng qua"
+    "lastYear": "12 tháng qua",
+    "warnLine": "ngưỡng cảnh báo",
+    "last30d": "30 ngày qua"
   },
   "map": {
     "quake": "Động đất",
@@ -142,7 +153,9 @@
       "sports": "Thể thao",
       "other": "Khác"
     },
-    "untagged": "Chủ đề sẽ xuất hiện khi bước AI chạy (cần AI_API_KEY)"
+    "untagged": "Chủ đề sẽ xuất hiện khi bước AI chạy (cần AI_API_KEY)",
+    "regionGroup": "Khu vực",
+    "topicGroup": "Chủ đề"
   },
   "brief": {
     "empty": "Bản tin được viết mỗi sáng lúc 06:00 (giờ Việt Nam) khi đã có đủ tin.",
@@ -180,7 +193,15 @@
     "up": "tăng",
     "down": "giảm",
     "unchanged": "đứng",
-    "news": "VnExpress"
+    "news": "VnExpress",
+    "goldUnit": "Triệu đồng/lượng",
+    "goldProducts": {
+      "SJL1L10": "Vàng miếng SJC",
+      "SJ9999": "Nhẫn SJC 99,99",
+      "DOHNL": "DOJI Hà Nội",
+      "BTSJC": "Bảo Tín SJC",
+      "PNJ24K": "PNJ 24K"
+    }
   },
   "calendar": {
     "econ": "Kinh tế",
@@ -190,7 +211,11 @@
     "tomorrow": "Ngày mai",
     "empty": "Không có sự kiện nào trong ba tuần tới.",
     "high": "Tác động cao",
-    "medium": "Tác động vừa"
+    "medium": "Tác động vừa",
+    "forecast": "Dự báo",
+    "previous": "Kỳ trước",
+    "fomcTitle": "Fed họp chính sách (FOMC) {days}",
+    "fomcSep": "Kèm dự báo kinh tế (SEP, dot plot)"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",

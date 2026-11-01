@@ -48,7 +48,7 @@ async function fromPnj(): Promise<GoldQuote[]> {
     .map((x) => ({ code: x.masp === "SJC" ? "SJL1L10" : "PNJ24K", name: x.tensp, buy: x.giamua * 10_000, sell: x.giaban * 10_000, changeSell: null, source: "PNJ" }));
 }
 
-export const gold: Source = {
+export const sjc: Source = {
   id: "sjc",
   ...SOURCE_META.sjc,
   async run({ db, log }) {

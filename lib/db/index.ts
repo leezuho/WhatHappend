@@ -129,13 +129,19 @@ CREATE TABLE IF NOT EXISTS watchlist (
 
 const globalForDb = globalThis as unknown as { __whDb?: DatabaseSync };
 
-export function getDb(): DatabaseSync {
-  if (globalForDb.__whDb) return globalForDb.__whDb;
-  const file = process.env.DB_PATH || path.join(process.cwd(), "data", "whathappend.db");
-  mkdirSync(path.dirname(file), { recursive: true });
+/** Open a database (created if missing) with the pragmas and schema applied. Tests pass ":memory:". */
+export function openDb(file: string): DatabaseSync {
+  if (file !== ":memory:") mkdirSync(path.dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
   db.exec("PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL;");
   db.exec(SCHEMA);
+  return db;
+}
+
+/** The process-wide connection (cached on globalThis so it survives Next dev HMR). */
+export function getDb(): DatabaseSync {
+  if (globalForDb.__whDb) return globalForDb.__whDb;
+  const db = openDb(process.env.DB_PATH || path.join(process.cwd(), "data", "whathappend.db"));
   globalForDb.__whDb = db;
   return db;
 }

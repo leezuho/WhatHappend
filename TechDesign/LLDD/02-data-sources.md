@@ -267,7 +267,7 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
   - VNDirect: `api-finfo.vndirect.com.vn/v4/vnmarket_prices`
   - TCBS không dùng được vì bị Cloudflare chặn.
 
-### 7.2 `sjc` — Giá vàng (`lib/sources/gold.ts`)
+### 7.2 `sjc` — Giá vàng (`lib/sources/sjc.ts`)
 - **Lưu ý:** `sjc.com.vn` (cả `PriceService.ashx` và `/xml/tygiavang.xml`) trả **403 Cloudflare challenge**, nên không gọi trực tiếp được.
 - **Chính: `https://www.vang.today/api/prices`.**
   - Trả `prices[CODE] = { name, buy, sell, change_buy, change_sell }`, đơn vị VND/lượng.

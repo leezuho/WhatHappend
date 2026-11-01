@@ -9,18 +9,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 if (typeof window !== "undefined") setWorkerUrl("/vendor/maplibre-gl-worker.mjs");
 import clsx from "clsx";
 import { useTheme } from "@/lib/use-theme";
-
-export interface MapEvent {
-  id: string;
-  group: "quake" | "hazard" | "news";
-  title: string;
-  lat: number;
-  lng: number;
-  severity: number | null;
-  level: string | null;
-  url: string | null;
-  ts: number;
-}
+import type { MapEvent } from "@/lib/queries";
 
 // Maps are an all-pairs color context: at most three categorical slots.
 const GROUP_COLOR: Record<MapEvent["group"], string> = { quake: "--s1", hazard: "--s2", news: "--s3" };

@@ -25,7 +25,9 @@
     "closed": "Closed",
     "break": "Lunch break",
     "themeAnthropic": "Anthropic theme (warm cream)",
-    "themeGroup": "Theme"
+    "themeGroup": "Theme",
+    "language": "Language",
+    "ticker": "Market ticker"
   },
   "regime": {
     "title": "Risk regime",
@@ -34,7 +36,14 @@
     "riskOff": "Risk-off",
     "unknown": "Not enough data",
     "score": "Stress score",
-    "explain": "Average 1-year z-score of market stress gauges. Positive = more stress than usual."
+    "explain": "Average 1-year z-score of market stress gauges. Positive = more stress than usual.",
+    "components": {
+      "vix": "VIX",
+      "hy": "HY spread",
+      "dxy": "Dollar 1-month change",
+      "curve": "Yield curve (inverted = +)",
+      "fsi": "Financial stress index"
+    }
   },
   "panels": {
     "brief": {
@@ -105,7 +114,9 @@
     "spread2s10s": "2s10s spread",
     "inverted": "Inverted",
     "normal": "Normal",
-    "lastYear": "Last 12 months"
+    "lastYear": "Last 12 months",
+    "warnLine": "warning threshold",
+    "last30d": "last 30 days"
   },
   "map": {
     "quake": "Earthquakes",
@@ -142,7 +153,9 @@
       "sports": "Sports",
       "other": "Other"
     },
-    "untagged": "Topics appear once the AI pass runs (needs AI_API_KEY)"
+    "untagged": "Topics appear once the AI pass runs (needs AI_API_KEY)",
+    "regionGroup": "Region",
+    "topicGroup": "Topic"
   },
   "brief": {
     "empty": "The brief is written each morning at 06:00 (Vietnam time) once there are enough headlines.",
@@ -180,7 +193,15 @@
     "up": "up",
     "down": "down",
     "unchanged": "flat",
-    "news": "VnExpress"
+    "news": "VnExpress",
+    "goldUnit": "Million VND per tael",
+    "goldProducts": {
+      "SJL1L10": "SJC bar",
+      "SJ9999": "SJC ring 99.99",
+      "DOHNL": "DOJI Hanoi",
+      "BTSJC": "Bao Tin SJC",
+      "PNJ24K": "PNJ 24K"
+    }
   },
   "calendar": {
     "econ": "Econ",
@@ -190,7 +211,11 @@
     "tomorrow": "Tomorrow",
     "empty": "Nothing scheduled in the next three weeks.",
     "high": "High impact",
-    "medium": "Medium impact"
+    "medium": "Medium impact",
+    "forecast": "Forecast",
+    "previous": "Previous",
+    "fomcTitle": "Fed policy meeting (FOMC) {days}",
+    "fomcSep": "With projections (SEP, dot plot)"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",

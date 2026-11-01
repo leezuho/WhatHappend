@@ -3,8 +3,8 @@ import { connection } from "next/server";
 import { getDb } from "@/lib/db";
 import { sourceMeta, type SourceId } from "@/config/sources";
 import type { SourceStatusRow } from "@/lib/sources/types";
-import type { MapEvent } from "@/components/panels/MapView";
-import { pick, type Locale } from "@/lib/i18n";
+import type { GoldQuote } from "@/lib/sources/sjc";
+import { getDict, pick, type Locale } from "@/lib/i18n";
 import { SERIES, type SeriesDef, type SeriesKey } from "@/config/series";
 import { COUNTRIES } from "@/config/countries";
 import { FOMC_MEETINGS } from "@/config/fomc";
@@ -57,6 +57,17 @@ export async function getPanelStatus(ids: SourceId[]): Promise<PanelStatus> {
 
 // ---------------------------------------------------------------- map
 
+export interface MapEvent {
+  id: string;
+  group: "quake" | "hazard" | "news";
+  title: string;
+  lat: number;
+  lng: number;
+  severity: number | null;
+  level: string | null;
+  url: string | null;
+  ts: number;
+}
 
 const HAZARD_TYPES = new Set(["cyclone", "flood", "drought", "volcano", "wildfire", "storm", "tsunami", "landslide", "heat"]);
 
@@ -349,7 +360,7 @@ export interface VietnamData {
   vnindex: TileData | null;
   usdvnd: TileData | null;
   breadth: { advances: number | null; declines: number | null; unchanged: number | null } | null;
-  gold: { code: string; name: string; buy: number | null; sell: number | null; changeSell: number | null; source: string }[];
+  gold: GoldQuote[];
   goldTs: number | null;
   worldGoldVnd: number | null;
   vcb: { code: string; cash: number | null; transfer: number | null; sell: number | null }[];
@@ -373,7 +384,7 @@ export async function getVietnam(lang: Locale): Promise<VietnamData> {
     vnindex: getTile(db, SERIES.vnindex),
     usdvnd,
     breadth: breadth?.data ? JSON.parse(breadth.data) : null,
-    gold: goldRows.map((r) => JSON.parse(r.data ?? "{}")),
+    gold: goldRows.map((r) => JSON.parse(r.data ?? "{}") as GoldQuote),
     goldTs: goldRows[0]?.ts ?? null,
     worldGoldVnd: xau && usdvnd ? xau.value * usdvnd.value * OZ_PER_LUONG : null,
     vcb: items("vcb").map((r) => JSON.parse(r.data ?? "{}")),
@@ -423,7 +434,7 @@ export async function getCalendar(lang: Locale, days = 21): Promise<CalendarEntr
   const until = now + days * 24 * 3600_000;
   const econ = await getItems<{ country: string; impact: string; forecast: string | null; previous: string | null }>("calendar", lang);
   const launches = await getItems<{ provider: string; rocket: string; pad: string; status: string; precision: string | null }>("launch", lang);
-  const vi = lang === "vi";
+  const t = getDict(lang).calendar;
   const entries: CalendarEntry[] = [
     ...econ.flatMap((e) =>
       e.ts && e.ts >= now - 3 * 3600_000
@@ -432,15 +443,15 @@ export async function getCalendar(lang: Locale, days = 21): Promise<CalendarEntr
             ts: e.ts,
             title: `${e.data.country} · ${e.title}`,
             impact: e.data.impact,
-            detail: [e.data.forecast && `${vi ? "Dự báo" : "Forecast"} ${e.data.forecast}`, e.data.previous && `${vi ? "Kỳ trước" : "Previous"} ${e.data.previous}`].filter(Boolean).join(" · ") || null,
+            detail: [e.data.forecast && `${t.forecast} ${e.data.forecast}`, e.data.previous && `${t.previous} ${e.data.previous}`].filter(Boolean).join(" · ") || null,
           }]
         : [],
     ),
     ...FOMC_MEETINGS.map((m) => ({
       kind: "fomc" as const,
       ts: Date.parse(`${m.end}T18:00:00Z`), // decision at 2pm New York on the last day
-      title: vi ? `Fed họp chính sách (FOMC) ${m.start.slice(8)}–${m.end.slice(8)}` : `Fed policy meeting (FOMC) ${m.start.slice(8)}–${m.end.slice(8)}`,
-      detail: m.sep ? (vi ? "Kèm dự báo kinh tế (SEP, dot plot)" : "With projections (SEP, dot plot)") : null,
+      title: t.fomcTitle.replace("{days}", `${m.start.slice(8)}–${m.end.slice(8)}`),
+      detail: m.sep ? t.fomcSep : null,
       allDay: true,
     })),
     ...launches.flatMap((l) =>

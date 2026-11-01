@@ -10,6 +10,8 @@ interface Labels {
   regions: Record<string, string>;
   topics: Record<string, string>;
   untagged: string;
+  regionGroup: string;
+  topicGroup: string;
 }
 
 function ago(ts: number, now: number, locale: string) {
@@ -33,7 +35,7 @@ export function NewsList({ items, now, labels, locale }: { items: NewsItem[]; no
 
   return (
     <div className="flex min-h-0 flex-col gap-2">
-      <div className="flex flex-wrap gap-1" role="group" aria-label="Region">
+      <div className="flex flex-wrap gap-1" role="group" aria-label={labels.regionGroup}>
         <Chip active={!region} onClick={() => (setRegion(null), setTopic(null))}>
           {labels.all}
         </Chip>
@@ -44,7 +46,7 @@ export function NewsList({ items, now, labels, locale }: { items: NewsItem[]; no
         ))}
       </div>
       {tagged ? (
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Topic">
+        <div className="flex flex-wrap gap-1" role="group" aria-label={labels.topicGroup}>
           {topics.map(([t, n]) => (
             <Chip key={t} small active={topic === t} onClick={() => setTopic(t === topic ? null : t)}>
               {labels.topics[t] ?? t} <span className="text-muted">{n}</span>

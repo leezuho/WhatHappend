@@ -88,16 +88,9 @@ export async function MapBody({ lang }: { lang: Locale }) {
 
 // ---------------------------------------------------------------- Vietnam
 
-const GOLD_LABEL: Record<string, { en: string; vi: string }> = {
-  SJL1L10: { en: "SJC bar", vi: "Vàng miếng SJC" },
-  SJ9999: { en: "SJC ring 99.99", vi: "Nhẫn SJC 99,99" },
-  DOHNL: { en: "DOJI Hanoi", vi: "DOJI Hà Nội" },
-  BTSJC: { en: "Bao Tin SJC", vi: "Bảo Tín SJC" },
-  PNJ24K: { en: "PNJ 24K", vi: "PNJ 24K" },
-};
-
 export async function VietnamBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);
+  const goldProducts: Record<string, string> = d.vn.goldProducts;
   const v = await getVietnam(lang);
   if (!v.vnindex && !v.gold.length && !v.vcb.length) return <EmptyState lang={lang} />;
   const sjc = v.gold.find((g) => g.code === "SJL1L10");
@@ -132,7 +125,7 @@ export async function VietnamBody({ lang }: { lang: Locale }) {
           <tbody>
             {v.gold.map((g) => (
               <tr key={g.code} className="border-t border-line">
-                <td className="py-1 text-ink-2">{GOLD_LABEL[g.code]?.[lang] ?? g.name}</td>
+                <td className="py-1 text-ink-2">{goldProducts[g.code] ?? g.name}</td>
                 <td className="py-1 text-right text-ink">{mil(g.buy)}</td>
                 <td className="py-1 text-right font-medium text-ink">
                   {mil(g.sell)}
@@ -159,7 +152,7 @@ export async function VietnamBody({ lang }: { lang: Locale }) {
             {d.vn.premium}: <span className="font-semibold text-ink">{mil(premium)}</span> ({fmtPct((premium / v.worldGoldVnd) * 100, lang, 1)})
           </p>
         )}
-        <p className="text-[10px] text-muted">{lang === "vi" ? "Triệu đồng/lượng" : "Million VND per tael"} · {v.gold[0]?.source}</p>
+        <p className="text-[10px] text-muted">{d.vn.goldUnit} · {v.gold[0]?.source}</p>
       </div>
 
       <div className="flex flex-col gap-2">

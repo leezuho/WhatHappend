@@ -1,18 +1,14 @@
 import clsx from "clsx";
 import type { SeriesDef } from "@/config/series";
-import { pick, type Locale } from "@/lib/i18n";
+import { getDict, pick, type Locale } from "@/lib/i18n";
 import { fmtDelta, fmtValue } from "@/lib/format";
 import type { TileData } from "@/lib/data/series";
 import { alertOf } from "@/lib/signals/notable";
 import { Sparkline } from "./Sparkline";
 
-const ALERT_TEXT = {
-  warn: { en: "Watch", vi: "Lưu ý" },
-  crit: { en: "Danger", vi: "Nguy hiểm" },
-};
-
 export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData | null; locale: Locale }) {
   const name = pick(def.name, locale);
+  const d = getDict(locale);
   if (!data) {
     return (
       <div className="flex min-h-[104px] flex-col justify-between rounded-lg bg-surface-2/60 p-3">
@@ -39,7 +35,7 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
         {alert && (
           <span className="flex shrink-0 items-center gap-1 text-[10px] font-medium text-ink-2">
             <span aria-hidden className={clsx("inline-block size-2 rounded-full", alert === "crit" ? "bg-critical" : "bg-warning")} />
-            {pick(ALERT_TEXT[alert], locale)}
+            {d.highlights.reasons[alert]}
           </span>
         )}
       </div>
@@ -59,7 +55,7 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
             </div>
           )}
         </div>
-        <Sparkline points={data.spark} width={96} height={30} label={`${name} 30d`} />
+        <Sparkline points={data.spark} width={96} height={30} label={`${name}, ${d.charts.last30d}`} />
       </div>
     </div>
   );

@@ -8,7 +8,7 @@
 
 - **Engine:** SQLite 3.53 qua `node:sqlite` (`DatabaseSync`) có sẵn trong Node 26.
 - **File:** `process.env.DB_PATH`, mặc định `./data/whathappend.db`. Thư mục được tạo tự động.
-- **Khởi tạo:** `getDb()` mở DB một lần, lưu singleton vào `globalThis.__whDb` (để sống sót qua HMR của Next dev), chạy PRAGMA rồi `CREATE TABLE IF NOT EXISTS`. Không có migration framework; muốn đổi schema thì sửa SQL tập trung trong `lib/db/index.ts`.
+- **Khởi tạo:** `openDb(file)` mở một file (hoặc `:memory:` cho test), chạy PRAGMA rồi `CREATE TABLE IF NOT EXISTS`. `getDb()` gọi `openDb` một lần cho `DB_PATH` (mặc định `data/whathappend.db`) và lưu singleton vào `globalThis.__whDb` (để sống sót qua HMR của Next dev). Không có migration framework; muốn đổi schema thì sửa SQL tập trung trong `lib/db/index.ts`.
 - **PRAGMA:**
 
 | PRAGMA | Giá trị | Lý do |

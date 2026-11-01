@@ -16,7 +16,7 @@ export function TopBar({ lang, regime, ticker }: { lang: Locale; regime?: ReactN
         <MarketClocks labels={{ open: t.open, closed: t.closed, break: t.break }} />
         <div className="ml-auto flex items-center gap-2">
           {regime}
-          <LangSwitch current={lang} />
+          <LangSwitch current={lang} label={t.language} />
           <ThemeToggle labels={{ light: t.themeLight, dark: t.themeDark, anthropic: t.themeAnthropic, group: t.themeGroup }} />
         </div>
       </div>

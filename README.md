@@ -21,6 +21,7 @@ Hai tiến trình chạy độc lập:
 | `npm run dev` / `npm run build && npm start` | Web Next.js, chỉ đọc từ SQLite và không gọi API bên ngoài |
 | `npm run fetch -- <id…>` / `npm run fetch -- all` | Chạy một hoặc nhiều nguồn một lần (gõ `npm run fetch` để xem danh sách id) |
 | `npm run typecheck` / `npm run lint` | Kiểm tra kiểu và lint |
+| `npm test` | Test tự động (`node:test`, file trong `test/`, DB `:memory:`, không gọi mạng) |
 
 Tất cả nguồn dữ liệu đều không cần key, trừ phần AI. Thiếu key AI thì tin hiển thị tiêu đề gốc và panel bản tin hướng dẫn cách bật.
 
@@ -47,7 +48,8 @@ config/                danh mục chỉ số (series.ts), lịch chạy (sources
 lib/sources/           mỗi nguồn một file: fetch → zod → upsert
 lib/ai/                lớp provider (Gemini / Claude), dịch + phân loại tiêu đề, bản tin hằng ngày, diễn giải chỉ số
 lib/queries.ts         lớp đọc cho UI; lib/signals/ chỉ báo Risk Regime và quy tắc chọn chỉ số đáng chú ý
-worker/, scripts/      bộ lập lịch và CLI fetch
+worker/, scripts/      bộ lập lịch (kèm khóa một worker) và CLI fetch
+test/                  test tự động cho parser, tín hiệu, lịch AI, khóa worker, chặn cross-origin
 BRD/, TechDesign/      tài liệu nghiệp vụ, HLDD, LLDD
 ```
 

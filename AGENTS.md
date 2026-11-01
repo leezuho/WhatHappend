@@ -14,7 +14,7 @@ Dashboard cá nhân song ngữ (vi/en): worker Node gọi các nguồn dữ li�
 
 ## Kiểm tra trước khi báo xong
 
-- `npm run typecheck` và `npm run lint`. Repo chưa có test tự động.
+- `npm run typecheck`, `npm run lint` và `npm test` (`node:test` chạy qua tsx, file trong `test/`). Hàm cần DB thì test trên `openDb(":memory:")` từ `lib/db`, không đụng `data/`.
 - Sửa một nguồn: chạy thử bằng `npm run fetch -- <id>`, xem log và số bản ghi.
 - Sửa giao diện: `npm run dev`, xem cả `/vi` lẫn `/en`, cả chế độ sáng lẫn tối.
 

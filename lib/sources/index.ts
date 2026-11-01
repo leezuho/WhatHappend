@@ -10,7 +10,6 @@ import { fred } from "./fred";
 import { gdacs } from "./gdacs";
 import { gdelt } from "./gdelt";
 import { gistemp } from "./gistemp";
-import { gold } from "./gold";
 import { gpr } from "./gpr";
 import { gscpi } from "./gscpi";
 import { hackernews } from "./hackernews";
@@ -19,6 +18,7 @@ import { kalshi } from "./kalshi";
 import { launches } from "./launches";
 import { polymarket } from "./polymarket";
 import { rss } from "./rss";
+import { sjc } from "./sjc";
 import type { Source } from "./types";
 import { usgs } from "./usgs";
 import { vcb } from "./vcb";
@@ -60,6 +60,6 @@ export const sources: Source[] = [
   who,
   // Vietnam
   vnindex,
-  gold,
+  sjc,
   vcb,
 ];

@@ -194,6 +194,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 ## 10. i18n và định dạng
 
 - `messages/en.json` là hình mẫu kiểu (`Dict`). `messages/vi.json` được gán kiểu `Dict`, nên thiếu khóa là lỗi TypeScript.
+- Mọi chuỗi giao diện (kể cả `aria-label`, nhãn sản phẩm vàng, tên thành phần Risk Regime, tiêu đề FOMC trong `getCalendar`) lấy từ `getDict(lang)`. Không viết `lang === "vi" ? … : …` hay bảng `{ en, vi }` trong component. Component client nhận chuỗi qua props từ server component.
 - `lib/i18n.ts`:
   - `locales = ["vi", "en"]`, `defaultLocale = "vi"`;
   - `hasLocale`, `getDict`;

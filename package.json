@@ -10,6 +10,7 @@
     "start": "next start -H 127.0.0.1",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "worker": "node --env-file-if-exists=.env.local --import tsx worker/index.ts",
     "fetch": "node --env-file-if-exists=.env.local --import tsx scripts/fetch.ts",
     "dev:all": "npm run worker & npm run dev"

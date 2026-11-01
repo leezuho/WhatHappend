@@ -289,7 +289,7 @@ export async function StressPanel({ lang }: { lang: Locale }) {
           </div>
         );
       })}
-      <p className="text-[11px] text-muted sm:col-span-2">{d.charts.lastYear}. ─ = {lang === "vi" ? "ngưỡng cảnh báo" : "warning threshold"}.</p>
+      <p className="text-[11px] text-muted sm:col-span-2">{d.charts.lastYear}. ─ = {d.charts.warnLine}.</p>
     </div>
   );
 }
@@ -302,14 +302,6 @@ const REGIME_STYLE = {
   "risk-off": "bg-critical",
   unknown: "bg-surface-2",
 } as const;
-
-const COMPONENT_NAME: Record<string, { en: string; vi: string }> = {
-  vix: { en: "VIX", vi: "VIX" },
-  hy: { en: "HY spread", vi: "Chênh lệch HY" },
-  dxy: { en: "Dollar 1-month change", vi: "USD thay đổi 1 tháng" },
-  curve: { en: "Yield curve (inverted = +)", vi: "Đường cong lợi suất (đảo ngược = +)" },
-  fsi: { en: "Financial stress index", vi: "Chỉ số căng thẳng tài chính" },
-};
 
 export async function RegimeBadge({ lang }: { lang: Locale }) {
   const t = getDict(lang).regime;
@@ -333,7 +325,7 @@ export async function RegimeBadge({ lang }: { lang: Locale }) {
         <ul className="flex flex-col gap-1">
           {r.components.map((c) => (
             <li key={c.key} className="flex items-center justify-between gap-2">
-              <span className="text-ink-2">{pick(COMPONENT_NAME[c.key], lang)}</span>
+              <span className="text-ink-2">{t.components[c.key]}</span>
               <span className={clsx("tabular font-medium", c.z > 0.5 ? "text-down" : c.z < -0.5 ? "text-up" : "text-ink")}>
                 z {c.z > 0 ? "+" : ""}
                 {fmtNumber(c.z, lang, 2)}
@@ -363,7 +355,7 @@ export async function Ticker({ lang }: { lang: Locale }) {
     </span>
   ));
   return (
-    <div className="overflow-hidden border-t border-line text-xs" aria-label="Market ticker">
+    <div className="overflow-hidden border-t border-line text-xs" aria-label={getDict(lang).topbar.ticker}>
       <div className="ticker-track flex w-max py-1.5">
         {row}
         <span aria-hidden className="flex">
