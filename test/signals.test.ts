@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { SERIES } from "@/config/series";
 import { openDb } from "@/lib/db";
+import { getTile } from "@/lib/data/series";
 import { dayTs, upsertSeries, type Point } from "@/lib/sources/store";
 import { alertOf, findNotables } from "@/lib/signals/notable";
 import { computeRegime } from "@/lib/signals/risk-regime";
@@ -54,4 +55,20 @@ test("findNotables: a VIX spike is flagged as danger, unusual move and 1-year hi
   assert.ok(vix, "vix should be notable");
   assert.deepEqual(vix.reasons.map((r) => r.kind).sort(), ["crit", "high", "move"]);
   assert.equal(notables.find((n) => n.key === "spx"), undefined);
+});
+
+test("tile range: 1-year low/high including the live value, only with a year of history", () => {
+  const db = openDb(":memory:");
+  const def = SERIES.vix;
+  // A full year of daily points from 30 down to 12.
+  upsertSeries(db, def.id, "test", ramp(30, 12, 365));
+  assert.deepEqual(getTile(db, def)?.range, { lo: 12, hi: 30 });
+  // A live quote outside the stored range widens it.
+  db.prepare("INSERT INTO quotes (series_id, price, change, change_pct, ts) VALUES (?, ?, ?, ?, ?)").run(def.id, 40, 1, 2.5, Date.now());
+  assert.deepEqual(getTile(db, def)?.range, { lo: 12, hi: 40 });
+
+  // Three months of history is not a year: no range bar.
+  const young = SERIES.hy;
+  upsertSeries(db, young.id, "test", daily(90, (i) => 3 + i / 100));
+  assert.equal(getTile(db, young)?.range, undefined);
 });

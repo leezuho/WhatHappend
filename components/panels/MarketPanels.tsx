@@ -8,7 +8,7 @@ import type { SeriesDef } from "@/config/series";
 import { KpiTile } from "@/components/charts/KpiTile";
 import { alertOf } from "@/lib/signals/notable";
 import { LineChart } from "@/components/charts/LineChart";
-import { BarChart } from "@/components/charts/BarChart";
+import { DumbbellChart } from "@/components/charts/DumbbellChart";
 import { EmptyState } from "@/components/ui/Panel";
 
 // ---------------------------------------------------------------- tiles
@@ -180,6 +180,7 @@ export async function YieldCurvePanel({ lang }: { lang: Locale }) {
           { key: "m1", label: label(d.charts.monthAgo, curve.asOf.m1), color: "var(--s2)" },
           { key: "y1", label: label(d.charts.yearAgo, curve.asOf.y1), color: "var(--s3)" },
         ]}
+        area
         yDigits={2}
         ySuffix="%"
         height={210}
@@ -206,35 +207,17 @@ export async function InflationRatesPanel({ lang }: { lang: Locale }) {
   const d = getDict(lang);
   const { year, rows } = await getCountryMacro(lang);
   if (rows.every((r) => r.inflation === null && r.rate === null)) return <EmptyState lang={lang} />;
-  const data = rows.map((r) => ({ short: r.short, name: r.name, inflation: r.inflation, rate: r.rate }));
   return (
     <div className="flex flex-col gap-2">
-      <BarChart
-        data={data}
-        xKey="short"
-        xLabelKey="name"
-        series={[
-          { key: "inflation", label: d.charts.inflation.replace("{year}", String(year)), color: "var(--s1)" },
-          { key: "rate", label: d.charts.policyRate, color: "var(--s2)" },
-        ]}
-        height={210}
+      <DumbbellChart
+        rows={rows.map((r) => ({ key: r.short, label: r.name, a: r.inflation, b: r.rate }))}
+        a={{ label: d.charts.inflation.replace("{year}", String(year)), color: "var(--s1)" }}
+        b={{ label: d.charts.policyRate, color: "var(--s2)" }}
+        gapLabel={d.charts.realRate}
+        gapHint={d.charts.realRateHint}
         locale={lang}
         tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
       />
-      <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-ink-2">
-        {rows
-          .filter((r) => r.rate !== null && r.inflation !== null)
-          .map((r) => {
-            const real = (r.rate as number) - (r.inflation as number);
-            return (
-              <li key={r.short} title={d.charts.realRate}>
-                <span className="text-muted">{r.short}</span>{" "}
-                <span className={clsx("tabular font-medium", real < 0 ? "text-down" : "text-ink")}>{fmtPct(real, lang, 1)}</span>
-              </li>
-            );
-          })}
-        <li className="text-muted">← {d.charts.realRate}</li>
-      </ul>
       <p className="text-[11px] text-muted">VN: {d.charts.noRateVn}.</p>
     </div>
   );
@@ -280,7 +263,7 @@ export async function StressPanel({ lang }: { lang: Locale }) {
               xFormat="month"
               series={[{ key: "v", label: def.short, color: "var(--s1)" }]}
               area
-              refY={def.threshold?.warn}
+              zones={def.threshold}
               yDigits={def.digits > 1 ? 1 : def.digits}
               height={96}
               locale={lang}
@@ -289,7 +272,20 @@ export async function StressPanel({ lang }: { lang: Locale }) {
           </div>
         );
       })}
-      <p className="text-[11px] text-muted sm:col-span-2">{d.charts.lastYear}. ─ = {d.charts.warnLine}.</p>
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted sm:col-span-2">
+        <span>{d.charts.lastYear}.</span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="inline-block h-2.5 w-3 rounded-sm border-t border-warning bg-warning/15" />
+          {d.highlights.reasons.warn}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="inline-block h-2.5 w-3 rounded-sm bg-critical/15" />
+          {d.highlights.reasons.crit}
+        </span>
+        <span>
+          ─ = {d.charts.warnLine}
+        </span>
+      </p>
     </div>
   );
 }

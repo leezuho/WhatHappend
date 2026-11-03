@@ -10,6 +10,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  ReferenceArea,
   ReferenceLine,
   type TooltipContentProps,
 } from "recharts";
@@ -33,10 +34,12 @@ interface Props {
   yDigits?: number;
   ySuffix?: string;
   locale: "vi" | "en";
-  /** Soft ~10% wash under a single series. */
+  /** Soft ~10% wash under the first series (the one the story is about). */
   area?: boolean;
   /** Horizontal reference line, e.g. 0 for the yield-curve spread. */
   refY?: number;
+  /** Watch / danger bands behind the line, in the reserved status colors (the footnote names them). */
+  zones?: { dir: "above" | "below"; warn: number; crit?: number };
   tableLabels: { table: string; chart: string };
 }
 
@@ -47,10 +50,21 @@ function fmtX(v: number | string, f: XFormat, locale: string) {
   return new Intl.DateTimeFormat(locale, { ...opts, timeZone: "UTC" }).format(v);
 }
 
-export function LineChart({ data, xKey, series, height = 200, xFormat, yDigits = 2, ySuffix = "", locale, area, refY, tableLabels }: Props) {
+export function LineChart({ data, xKey, series, height = 200, xFormat, yDigits = 2, ySuffix = "", locale, area, refY, zones, tableLabels }: Props) {
   const [table, setTable] = useState(false);
   const loc = locale === "vi" ? "vi-VN" : "en-US";
   const fmtY = (v: number) => `${new Intl.NumberFormat(loc, { maximumFractionDigits: yDigits, minimumFractionDigits: yDigits }).format(v)}${ySuffix}`;
+  // Open-ended bands need an explicit far edge: Recharts reads an omitted y1/y2 as the bottom of the plot,
+  // not "to the edge in that direction". Anything past the data is clipped away by ifOverflow="hidden".
+  const far = (() => {
+    if (!zones) return { lo: 0, hi: 0 };
+    const vals = data.flatMap((r) => series.map((s) => r[s.key])).filter((v): v is number => typeof v === "number");
+    const marks = [zones.warn, zones.crit ?? zones.warn];
+    const lo = Math.min(...vals, ...marks);
+    const hi = Math.max(...vals, ...marks);
+    const pad = hi - lo || 1;
+    return { lo: lo - pad, hi: hi + pad };
+  })();
 
   return (
     <figure className="flex flex-col gap-2">
@@ -122,6 +136,30 @@ export function LineChart({ data, xKey, series, height = 200, xFormat, yDigits =
                 width={48}
                 domain={["auto", "auto"]}
               />
+              {zones && (
+                <>
+                  {/* "hidden" clips a band that only partly fits and drops one that is off the plot. */}
+                  <ReferenceArea
+                    y1={zones.dir === "above" ? zones.warn : (zones.crit ?? far.lo)}
+                    y2={zones.dir === "above" ? (zones.crit ?? far.hi) : zones.warn}
+                    fill="var(--warning)"
+                    fillOpacity={0.1}
+                    stroke="none"
+                    ifOverflow="hidden"
+                  />
+                  {zones.crit !== undefined && (
+                    <ReferenceArea
+                      y1={zones.dir === "above" ? zones.crit : far.lo}
+                      y2={zones.dir === "above" ? far.hi : zones.crit}
+                      fill="var(--critical)"
+                      fillOpacity={0.1}
+                      stroke="none"
+                      ifOverflow="hidden"
+                    />
+                  )}
+                  <ReferenceLine y={zones.warn} stroke="var(--warning)" strokeWidth={1} ifOverflow="hidden" />
+                </>
+              )}
               {refY !== undefined && <ReferenceLine y={refY} stroke="var(--axis)" strokeWidth={1} />}
               <Tooltip
                 cursor={{ stroke: "var(--axis)", strokeWidth: 1 }}
@@ -129,7 +167,7 @@ export function LineChart({ data, xKey, series, height = 200, xFormat, yDigits =
                   <ChartTooltip {...props} series={series} fmtY={fmtY} fmtXLabel={(v) => fmtX(v, xFormat, loc)} />
                 )}
               />
-              {area && series.length === 1 && (
+              {area && (
                 <Area dataKey={series[0].key} fill={series[0].color} fillOpacity={0.1} stroke="none" isAnimationActive={false} />
               )}
               {series.map((s) => (

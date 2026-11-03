@@ -105,6 +105,10 @@ export async function MapBody({ lang }: { lang: Locale }) {
         alerts: d.map.alerts,
         alertsHint: d.map.alertsHint,
         world: d.map.world,
+        globe: d.map.globe,
+        flat: d.map.flat,
+        fade: d.map.fade,
+        pulse: d.map.pulse,
         levels: d.map.levels,
       }}
     />

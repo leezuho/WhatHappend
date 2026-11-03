@@ -46,7 +46,7 @@ flowchart LR
 │   Panel (frame tĩnh) ─► <Suspense> ─► Server Component ─► lib/queries.ts         │
 │                                         (await connection() + SQL đồng bộ)       │
 │   Client: MarketClocks, ThemeToggle, LangSwitch, AutoRefresh, Tabs, NewsList,    │
-│           MapView, LineChart/BarChart, TileDetail, BriefRefresh                  │
+│           MapView, LineChart/DumbbellChart, TileDetail, BriefRefresh             │
 │   Route handlers: POST /api/brief (cờ kv) · GET /api/series/[key] ·              │
 │                   POST /api/watchlist   (chỉ đọc/ghi SQLite cục bộ)              │
 └──────────────────────────────────────────────────────────────────────────────────┘
@@ -70,7 +70,7 @@ flowchart LR
 | AI provider | `lib/ai/provider.ts`, `lib/ai/providers/{gemini,anthropic}.ts` | `generateJson({ tier, system, user, schema })`, kết quả kiểm bằng zod; adapter Gemini (`@google/genai`) và Claude (`@anthropic-ai/sdk`) |
 | AI pipeline | `lib/ai/{translate,brief,brief-shared,taxonomy}.ts` | Nguồn `translate`: dịch và phân loại tiêu đề (tier `fast`). Nguồn `brief`: Daily Brief (tier `brief`) |
 | Signals | `lib/signals/risk-regime.ts` | Tính Risk Regime từ các series (xem [LLDD 06](../LLDD/06-risk-regime.md)) |
-| UI | `app/[lang]/*`, `components/panels/{MarketPanels,ContentPanels,WorldPanels}.tsx` (+ client `MapView`, `NewsList`, `BriefRefresh`), `components/ui/{Panel,Tabs,MarketClocks,ThemeToggle,LangSwitch,AutoRefresh}.tsx`, `components/charts/{KpiTile,Sparkline,LineChart,BarChart,TileDetail}.tsx` | Layout, Panel, các panel nghiệp vụ, biểu đồ, bản đồ, hộp thoại chi tiết + watchlist |
+| UI | `app/[lang]/*`, `components/panels/{MarketPanels,ContentPanels,WorldPanels}.tsx` (+ client `MapView`, `NewsList`, `BriefRefresh`), `components/ui/{Panel,Tabs,MarketClocks,ThemeToggle,LangSwitch,AutoRefresh}.tsx`, `components/charts/{KpiTile,Sparkline,LineChart,DumbbellChart,TileDetail}.tsx` | Layout, Panel, các panel nghiệp vụ, biểu đồ, bản đồ, hộp thoại chi tiết + watchlist |
 | Theme hook | `lib/use-theme.ts` | `useSyncExternalStore` trên `<html data-theme>` |
 | Build helper | `scripts/copy-maplibre-worker.mjs` | Chép worker MapLibre vào `public/vendor/` (hook `predev`/`prebuild`, xem ADR-09) |
 | i18n | `lib/i18n.ts`, `messages/{vi,en}.json` | Từ điển, `hasLocale`, `getDict`, `intlLocale` |

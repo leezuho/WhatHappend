@@ -149,7 +149,10 @@
     "normal": "Bình thường",
     "lastYear": "12 tháng qua",
     "warnLine": "ngưỡng cảnh báo",
-    "last30d": "30 ngày qua"
+    "last30d": "30 ngày qua",
+    "range1y": "Biên độ 1 năm: thấp → cao",
+    "range1yShort": "1N",
+    "realRateHint": "lãi suất − lạm phát"
   },
   "map": {
     "quake": "Động đất",
@@ -164,7 +167,11 @@
     "levels": {
       "red": "Cảnh báo đỏ",
       "orange": "Cảnh báo cam"
-    }
+    },
+    "globe": "Quả cầu",
+    "flat": "Phẳng",
+    "fade": "Càng mờ càng cũ",
+    "pulse": "Nhấp nháy = cảnh báo hoặc động đất ≥ 6"
   },
   "news": {
     "all": "Tất cả",

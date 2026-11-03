@@ -9,6 +9,8 @@ export interface TileData {
   changePct: number | null;
   ts: number;
   spark: Point[];
+  /** Low and high of the last year, current value included; absent when history is shorter than ~10 months. */
+  range?: { lo: number; hi: number };
 }
 
 // Plain SQL readers shared by the UI (via lib/queries.ts) and the worker (brief).
@@ -35,14 +37,35 @@ interface QuoteDb {
   ts: number;
 }
 
-/** Latest value + day change + 30-day sparkline. Live quote wins over the last observation. */
+/** A history that starts this long ago counts as "a year" for the range bar. */
+const RANGE_MIN_SPAN = 300 * DAY;
+
+/** One-year low/high around `current`, or undefined when the series is too young to have one. */
+export function yearRange(db: DatabaseSync, seriesId: string, current: number, now = Date.now()): TileData["range"] {
+  const r = db
+    .prepare("SELECT MIN(value) AS lo, MAX(value) AS hi, MIN(ts) AS first FROM observations WHERE series_id = ? AND ts >= ?")
+    .get(seriesId, now - 365 * DAY) as { lo: number | null; hi: number | null; first: number | null } | undefined;
+  if (!r || r.lo === null || r.hi === null || r.first === null || r.first > now - RANGE_MIN_SPAN) return undefined;
+  const lo = Math.min(r.lo, current);
+  const hi = Math.max(r.hi, current);
+  return hi > lo ? { lo, hi } : undefined;
+}
+
+/** Latest value + day change + 30-day sparkline + 1-year range. Live quote wins over the last observation. */
 export function getTile(db: DatabaseSync, def: SeriesDef, now = Date.now()): TileData | null {
   const spark = getPoints(db, def.id, now - 45 * DAY).slice(-30);
   const q = db.prepare("SELECT price, change, change_pct, ts FROM quotes WHERE series_id = ?").get(def.id) as QuoteDb | undefined;
   if (q) {
     // Make the sparkline end at the live price.
     const tail = spark.length && spark[spark.length - 1].ts >= q.ts - DAY / 2 ? spark.slice(0, -1) : spark;
-    return { value: q.price, change: q.change, changePct: q.change_pct, ts: q.ts, spark: [...tail, { ts: q.ts, value: q.price }] };
+    return {
+      value: q.price,
+      change: q.change,
+      changePct: q.change_pct,
+      ts: q.ts,
+      spark: [...tail, { ts: q.ts, value: q.price }],
+      range: yearRange(db, def.id, q.price, now),
+    };
   }
   const last = getLastPoints(db, def.id, 2);
   if (!last.length) return null;
@@ -54,6 +77,7 @@ export function getTile(db: DatabaseSync, def: SeriesDef, now = Date.now()): Til
     changePct: prev && prev.value ? (cur.value / prev.value - 1) * 100 : null,
     ts: cur.ts,
     spark: spark.length ? spark : last,
+    range: yearRange(db, def.id, cur.value, now),
   };
 }
 
@@ -64,7 +88,9 @@ export function getCpiYoyTile(db: DatabaseSync): TileData | null {
   if (!yoy.length) return null;
   const cur = yoy[yoy.length - 1];
   const prev = yoy.length > 1 ? yoy[yoy.length - 2] : null;
-  return { value: cur.value, change: prev ? cur.value - prev.value : null, changePct: null, ts: cur.ts, spark: yoy.slice(-24) };
+  const year = yoy.slice(-12).map((p) => p.value);
+  const range = year.length >= 10 && Math.max(...year) > Math.min(...year) ? { lo: Math.min(...year), hi: Math.max(...year) } : undefined;
+  return { value: cur.value, change: prev ? cur.value - prev.value : null, changePct: null, ts: cur.ts, spark: yoy.slice(-24), range };
 }
 
 /** The tile for a key as displayed (CPI as y/y inflation). */

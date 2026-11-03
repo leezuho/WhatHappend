@@ -24,7 +24,7 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
   return (
     <div
       className={clsx(
-        "@container relative flex min-h-[104px] flex-col justify-between gap-1 rounded-lg p-3",
+        "relative flex min-h-[104px] flex-col gap-1.5 rounded-lg p-3",
         alert ? "bg-surface-2 ring-1 ring-inset" : "bg-surface-2/60",
         alert === "crit" ? "ring-critical" : alert === "warn" ? "ring-warning" : "",
       )}
@@ -39,24 +39,34 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
           </span>
         )}
       </div>
-      <div className="flex flex-col gap-1 @[200px]:flex-row @[200px]:items-end @[200px]:justify-between @[200px]:gap-2">
-        <div className="min-w-0">
-          <div className="text-xl font-semibold whitespace-nowrap text-ink">{fmtValue(def, data.value, locale)}</div>
-          {delta && (
-            <div
-              className={clsx(
-                "tabular text-xs font-medium",
-                dir === 0 || good === null ? "text-ink-2" : good ? "text-up" : "text-down",
-              )}
-            >
-              <span className="whitespace-nowrap">
-                {dir > 0 ? "▲" : dir < 0 ? "▼" : ""} {delta}
-              </span>
-            </div>
-          )}
-        </div>
-        <Sparkline points={data.spark} width={96} height={30} label={`${name}, ${d.charts.last30d}`} />
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <span className="text-xl font-semibold whitespace-nowrap text-ink">{fmtValue(def, data.value, locale)}</span>
+        {delta && (
+          <span className={clsx("tabular text-xs font-medium whitespace-nowrap", dir === 0 || good === null ? "text-ink-2" : good ? "text-up" : "text-down")}>
+            {dir > 0 ? "▲" : dir < 0 ? "▼" : ""} {delta}
+          </span>
+        )}
       </div>
+      <Sparkline points={data.spark} height={34} fluid label={`${name}, ${d.charts.last30d}`} />
+      {data.range && <RangeBar def={def} value={data.value} range={data.range} locale={locale} />}
+    </div>
+  );
+}
+
+/** Where today sits between the 1-year low and high; the dot is the same accent as the sparkline's last point. */
+function RangeBar({ def, value, range, locale }: { def: SeriesDef; value: number; range: { lo: number; hi: number }; locale: Locale }) {
+  const t = getDict(locale).charts;
+  const pos = Math.min(100, Math.max(0, ((value - range.lo) / (range.hi - range.lo)) * 100));
+  const lo = fmtValue(def, range.lo, locale);
+  const hi = fmtValue(def, range.hi, locale);
+  return (
+    <div className="flex items-center gap-1.5 text-[10px] leading-none text-muted" title={`${t.range1y}: ${lo} → ${hi}`}>
+      <span className="font-medium text-ink-2">{t.range1yShort}</span>
+      <span className="tabular whitespace-nowrap">{lo}</span>
+      <span className="relative h-1 min-w-6 flex-1 rounded-full bg-grid" role="img" aria-label={`${t.range1y}: ${lo} → ${hi}, ${Math.round(pos)}%`}>
+        <span aria-hidden className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-s1 ring-2 ring-surface" style={{ left: `${pos.toFixed(1)}%` }} />
+      </span>
+      <span className="tabular whitespace-nowrap">{hi}</span>
     </div>
   );
 }

@@ -117,7 +117,7 @@ Hàng 4  Tin crypto [xl:12] (2 cột từ md)
 | Hàm | Trả về |
 |---|---|
 | `getPanelStatus(ids)` | `{ lastOk, stale, failing[], missingKey[] }` |
-| `getTiles(keys)` | KPI tile: giá trị, thay đổi, sparkline 30 ngày. **CPI** được đổi sang lạm phát so cùng kỳ (YoY) |
+| `getTiles(keys)` | KPI tile: giá trị, thay đổi, sparkline 30 ngày, biên độ 1 năm (`range`, có thể vắng). **CPI** được đổi sang lạm phát so cùng kỳ (YoY) |
 | `getYieldCurve()` | 11 kỳ hạn × (mới nhất, 1 tháng trước, 1 năm trước) |
 | `getCountryMacro(lang)` | Lạm phát/tăng trưởng IMF năm hiện tại + lãi suất BIS mới nhất |
 | `getHistory(ids, days)` | Lịch sử cho small multiples |
@@ -162,31 +162,33 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `MapView` | Xem §9 |
 | `BriefRefresh` | POST `/api/brief`, rồi `router.refresh()`; hiện "Đã yêu cầu…" khi đang chờ |
 | `TileDetail` | Bọc KPI tile thành nút; mở `<dialog>` với lịch sử 3T/1N/2N/5N tải từ `/api/series/[key]`, và nút ghim/bỏ ghim (POST `/api/watchlist`). Series đã ghim hiện ở hàng "Bạn đã ghim" dưới Vital Signs |
-| `LineChart`, `BarChart` | Recharts, nhận dữ liệu đã serialize; có nút chuyển sang **chế độ xem bảng** |
+| `LineChart` | Recharts, nhận dữ liệu đã serialize; có nút chuyển sang **chế độ xem bảng**. `area` tô mờ dưới series đầu; `zones` vẽ dải "Lưu ý"/"Nguy hiểm" theo `Threshold` của series |
+| `DumbbellChart` | HTML/CSS thuần (client): mỗi thực thể một hàng, hai chấm trên cùng trục, đường nối giữa hai chấm; cột phải ghi hiệu b − a. Rê chuột hoặc focus bàn phím hiện tooltip, có chế độ xem bảng |
+| `Sparkline` (server) | SVG thuần: đường màu `--muted` trên lớp tô gradient, điểm cuối chấm `--s1`. `fluid` giãn theo bề rộng thẻ (`preserveAspectRatio="none"` + `vector-effect: non-scaling-stroke`), chấm cuối là phần tử HTML để luôn tròn |
 
 ## 7. Đặc tả biểu đồ (Recharts, theo phương pháp dataviz)
 
 - **Chọn dạng biểu đồ:**
   - Một con số quan trọng → KPI tile, không vẽ chart.
   - Diễn biến theo thời gian → line chart.
-  - So sánh giữa các quốc gia → cột nhóm (lạm phát vs lãi suất), lãi suất thực ghi bằng chữ bên dưới.
+  - So sánh hai thước đo cùng đơn vị giữa các quốc gia → dumbbell (lạm phát vs lãi suất): độ dài đường nối chính là lãi suất thực, hàng xếp theo lãi suất thực giảm dần, cột phải ghi số. Việt Nam (BIS không công bố lãi suất) chỉ có một chấm, nằm cuối.
   - Nhiều thước đo khác đơn vị → small multiples (panel Căng thẳng), không gộp trục.
 - **Nét vẽ:**
   - Line 2px, đầu và chỗ nối bo tròn.
   - Area fill khoảng 10% opacity.
   - Grid và trục là hairline 1px, nét liền, màu `--grid` / `--axis`.
-  - Bar dày tối đa 24px, đầu bo 4px.
   - Marker tối thiểu 8px, có viền 2px màu surface.
 - **Tương tác:**
   - Line/area có crosshair dọc và một tooltip liệt kê **mọi series** tại điểm X đó; giá trị in đậm trước tên series.
-  - Bar có tooltip riêng cho từng cột.
+  - Dumbbell có tooltip riêng cho từng hàng (cả khi focus bằng bàn phím).
 - **Nhận diện:**
   - Từ 2 series trở lên luôn có legend; nếu ≤ 4 series thì thêm nhãn trực tiếp ở cuối đường.
   - Màu series cố định theo thực thể, không theo thứ hạng.
 - **Không dùng biểu đồ hai trục tung.** Hai đơn vị khác nhau thì tách 2 chart hoặc quy về cùng gốc (index).
 - **Chữ** dùng token ink (`text-ink`, `text-ink-2`, `text-muted`), không dùng màu series.
-- **KPI tile** gồm `label` · `value` · `delta` có dấu (giá: %, lợi suất/spread: bp), màu = hướng × "tăng là tốt hay xấu" (ví dụ VIX tăng = `--down`) · sparkline 30 ngày · trạng thái ngưỡng (chấm + nhãn "Lưu ý"/"Nguy hiểm", viền `warning`/`critical`). Tile là **container query** (`@container`): hẹp hơn 200px thì sparkline xếp xuống dưới giá trị, giá trị không bị cắt.
-- **Chế độ xem bảng:** mọi `LineChart`/`BarChart` có nút "Bảng"/"Biểu đồ".
+- **KPI tile** gồm `label` · `value` và `delta` cùng một dòng (delta có dấu, giá: %, lợi suất/spread: bp; màu = hướng × "tăng là tốt hay xấu", ví dụ VIX tăng = `--down`) · sparkline 30 ngày giãn hết bề rộng thẻ · **thanh biên độ 1 năm** (`RangeBar`: nhãn "1N"/"1Y", thấp và cao 1 năm, chấm `--s1` ở vị trí hiện tại, cùng màu chấm cuối sparkline) · trạng thái ngưỡng (chấm + nhãn "Lưu ý"/"Nguy hiểm", viền `warning`/`critical`). Thanh biên độ chỉ hiện khi lịch sử dài ≥ 300 ngày (`yearRange` trong `lib/data/series.ts`); CPI dùng 12 tháng YoY gần nhất.
+- **Dải ngưỡng** (panel Căng thẳng): `ReferenceArea` màu `--warning` (từ `warn` tới `crit`) và `--critical` (vượt `crit`), 10% opacity, `ifOverflow="hidden"`; dải mở được cho cạnh xa tính từ dữ liệu, vì Recharts hiểu cạnh bỏ trống là đáy trục. Đường `warn` màu `--warning`. Chú thích dưới panel ghi tên hai dải bằng chữ.
+- **Chế độ xem bảng:** mọi `LineChart`/`DumbbellChart` có nút "Bảng"/"Biểu đồ".
 
 ## 8. Token màu (`app/globals.css`)
 
@@ -209,20 +211,26 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 
 ## 9. Bản đồ (`components/panels/MapView.tsx`)
 
-- MapLibre GL qua `react-map-gl/maplibre`, tile vector OpenFreeMap (không cần key): style `positron` khi sáng, `dark` khi tối, theo `useTheme()`.
+- MapLibre GL qua `react-map-gl/maplibre`, tile vector OpenFreeMap (không cần key): style `positron` khi sáng, `dark` khi tối, theo `useTheme()`. `styleDiffing={false}` để đổi theme là tải lại style đầy đủ (phát `style.load`).
+- **Hai phép chiếu**, nút "Quả cầu | Phẳng" (lưu `localStorage["map-projection"]`, đọc qua `useSyncExternalStore`, server luôn render quả cầu). Phép chiếu **không** truyền qua prop `projection` của react-map-gl: prop này gọi `setProjection` ngay khi đổi, và MapLibre ném "Style is not done loading" nếu style chưa tải xong (xảy ra ngay sau hydrate khi đã lưu "Phẳng", hoặc khi bấm nút lúc đang đổi theme). `trySetProjection` áp nó trong `onLoad`, sau mỗi `style.load` (đổi theme làm mất phép chiếu), và khi nút được bấm; nếu style chưa sẵn sàng thì đợi `style.load`.
+  - **Quả cầu** (mặc định): `projection="globe"`, khí quyển qua `sky.atmosphere-blend` (tắt dần từ zoom 4 tới 6), nền ngoài quả cầu là lớp CSS `.wh-space` (bầu trời nhạt ở theme sáng, nền sâu có sao ở theme tối; canvas trong suốt ngoài quả cầu). Mở ở Đông Nam Á (kinh độ 105), zoom tính theo chiều thấp của khung (`globeZoom`). **Tự xoay** 2°/giây theo chiều Trái Đất thật (kinh độ tâm giảm) bằng `requestAnimationFrame` + `jumpTo`; dừng khi con trỏ trong bản đồ (chạy lại sau 3 giây kể từ khi rời), khi đang chọn một sự kiện, khi zoom > 3, khi panel ra khỏi màn hình (`IntersectionObserver`), khi tab ẩn, và không bao giờ chạy khi `prefers-reduced-motion`.
+  - **Phẳng**: Mercator, `renderWorldCopies={false}`. Chỉ tắt world copies ở chế độ phẳng: lúc khởi tạo nó kẹp tâm vào một bề rộng thế giới, làm quả cầu mở sai kinh độ.
+- **Nhãn nền gọn:** khi style tải xong (`tuneLabels`), mọi lớp chữ chỉ hiện một ngôn ngữ (`name:vi` → `name:en` → `name` ở trang vi; `name:en` → `name` ở trang en) thay vì "Latin\nchữ bản địa", và chỉ tên quốc gia hiện ở mọi mức zoom; thành phố, biển, đường chỉ hiện từ zoom 3.
 - **Worker của MapLibre:** MapLibre 6 tìm file worker qua `import.meta.url`, cách này hỏng khi bundle bằng Turbopack ("Worker failed to load"). `scripts/copy-maplibre-worker.mjs` (chạy qua hook `predev`/`prebuild`) chép `maplibre-gl-worker.mjs` vào `public/vendor/`, và `MapView` gọi `setWorkerUrl("/vendor/maplibre-gl-worker.mjs")`. Xem [HLDD ADR-09](../HLDD/HLDD.md#adr-09--tự-phục-vụ-worker-của-maplibre).
 - **Tối đa 3 màu phân loại** (bản đồ là ngữ cảnh "all-pairs" nên chỉ 3 slot đầu đạt chuẩn):
   - `quake` (`--s1`): `type = earthquake` (USGS, GDACS EQ, EONET);
   - `hazard` (`--s2`): cyclone, flood, drought, volcano, wildfire, storm, tsunami, landslide, heat;
   - `news` (`--s3`): điểm nóng GDELT (conflict, protest).
 - **Hai source GeoJSON:**
-  - `news`: điểm nóng GDELT. Ở zoom thấp là lớp mật độ (`heatmap`), **một hue `--s3`** đi từ trong suốt tới đậm, vì mật độ là độ lớn chứ không phải một nhóm mới. Trọng số theo `severity` (số lần GDELT nhắc tới). Từ zoom 3,5 (`NEWS_POINTS_ZOOM`) lớp mật độ mờ dần và hiện chấm rê chuột được.
+  - `news`: điểm nóng GDELT. Ở zoom thấp là các **đốm sáng**, **một hue `--s3`**: quầng `circle-blur: 1` cỡ theo `severity` (số lần GDELT nhắc tới) và một lõi nhỏ là bậc sáng hơn (theme tối) hoặc đậm hơn (theme sáng) của cùng hue. Chỗ nhiều điểm thì quầng chồng lên nhau sáng hơn, nên mật độ vẫn đọc là độ lớn. Không dùng lớp `heatmap`: trên quả cầu, điểm mạnh bị bão hoà thành ô vuông. Từ zoom 3,5 (`NEWS_POINTS_ZOOM`) đốm sáng mờ dần và hiện chấm rê chuột được.
   - `events`: động đất và thiên tai luôn là chấm. `circle-sort-key` đưa cảnh báo đỏ/cam và trận động đất mạnh lên trên, để chúng không bị các chấm yếu che.
 - Bán kính: động đất theo độ lớn (4,5 → 4px, 8 → 13px), các loại khác theo `level`. **Mức cảnh báo là vòng viền** màu trạng thái (`red` → `--critical`, `orange` → `--serious`), có chú giải "Cảnh báo cam/đỏ".
-- **Khung nhìn ban đầu:** `bounds` kinh độ −170…180, vĩ độ −50…72, tự khớp theo kích thước panel. Có nút +/− (`NavigationControl`).
-- **Cột "Cảnh báo & động đất lớn"** (`topAlerts`, tối đa 6): cảnh báo đỏ, rồi cam, rồi động đất từ M6 trở lên, mạnh trước. Điểm nóng GDELT không vào danh sách, vì số lần nhắc quá nhiễu để xếp hạng. Mỗi dòng ghi nhãn mức cảnh báo bằng chữ, không chỉ dựa vào màu viền. Bấm vào thì bản đồ `flyTo` tới vị trí đó (zoom ≥ 4,5) và giữ popup. "Toàn cầu" quay về khung nhìn ban đầu. Khi bật `prefers-reduced-motion` thì chuyển ngay, không có hiệu ứng bay. Ở `lg` cột nằm bên phải bản đồ, nhỏ hơn thì nằm bên dưới.
+- **Độ cũ:** `age` (giờ, tính từ sự kiện mới nhất nên không cần đồng hồ) làm mờ động đất/thiên tai: 0,95 → 0,85 sau 24 giờ → 0,5 sau 7 ngày → 0,3 sau 14 ngày. Cảnh báo đỏ/cam không mờ. Chú giải ghi "Càng mờ càng cũ".
+- **Quầng nhấp nháy:** các sự kiện trong `topAlerts` có thêm `Marker` HTML với hai vòng CSS (`.map-pulse`) nở ra lệch pha, màu theo mức cảnh báo (hoặc màu nhóm cho động đất M6+). `opacityWhenCovered={0}` ẩn chúng ở mặt khuất của quả cầu; `pointer-events: none` để rê chuột vẫn trúng lớp chấm. Khi `prefers-reduced-motion` thì là một vòng tĩnh.
+- **Khung nhìn ban đầu (phẳng):** `bounds` kinh độ −170…180, vĩ độ −50…72, tự khớp theo kích thước panel. Có nút +/− (`NavigationControl`).
+- **Cột "Cảnh báo & động đất lớn"** (`topAlerts`, tối đa 6): cảnh báo đỏ, rồi cam, rồi động đất từ M6 trở lên, mạnh trước. Điểm nóng GDELT không vào danh sách, vì số lần nhắc quá nhiễu để xếp hạng. Mỗi dòng ghi nhãn mức cảnh báo bằng chữ, không chỉ dựa vào màu viền. Bấm vào thì bản đồ `flyTo` tới vị trí đó (zoom ≥ 4,5) và giữ popup. "Toàn cầu" quay về khung nhìn ban đầu của phép chiếu đang dùng và cho quả cầu xoay lại. Khi bật `prefers-reduced-motion` thì chuyển ngay, không có hiệu ứng bay. Ở `lg` cột nằm bên phải bản đồ, nhỏ hơn thì nằm bên dưới.
 - Hàng chip lọc theo nhóm (kèm số lượng) phía trên bản đồ, áp dụng cho cả cột cảnh báo. Nút "Danh sách" chuyển sang bảng sự kiện (tương đương chế độ xem bảng).
-- Rê chuột hiện popup (tiêu đề theo locale + thời gian); click mở link nguồn, click chỗ trống thì bỏ chọn.
+- Rê chuột hiện popup (chấm màu nhóm, tiêu đề theo locale, mức cảnh báo, thời gian); click mở link nguồn, click chỗ trống thì bỏ chọn. Popup, nút +/− và dòng bản quyền dùng token của dashboard (`.wh-map …` trong `globals.css`), nên theme tối không còn hộp trắng.
 
 ## 10. i18n và định dạng
 

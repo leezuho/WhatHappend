@@ -149,7 +149,10 @@
     "normal": "Normal",
     "lastYear": "Last 12 months",
     "warnLine": "warning threshold",
-    "last30d": "last 30 days"
+    "last30d": "last 30 days",
+    "range1y": "1-year range: low → high",
+    "range1yShort": "1Y",
+    "realRateHint": "policy rate − inflation"
   },
   "map": {
     "quake": "Earthquakes",
@@ -164,7 +167,11 @@
     "levels": {
       "red": "Red alert",
       "orange": "Orange alert"
-    }
+    },
+    "globe": "Globe",
+    "flat": "Flat",
+    "fade": "Fainter = older",
+    "pulse": "Pulsing = alert or M6+ quake"
   },
   "news": {
     "all": "All",
