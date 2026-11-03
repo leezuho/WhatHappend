@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+data
+public/vendor
+.env*
+!.env.example
+*.tsbuildinfo
+.DS_Store

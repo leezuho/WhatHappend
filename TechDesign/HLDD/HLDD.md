@@ -120,7 +120,8 @@ flowchart LR
   - Sau khi sửa `.env.local` phải khởi động lại **cả worker lẫn web**. Mọi nguồn dữ liệu khác đều không cần key: FRED dùng CSV công khai, chất lượng không khí dùng Open-Meteo.
 - **Build hooks:** `predev`/`prebuild` chạy `scripts/copy-maplibre-worker.mjs`; `public/vendor/` nằm trong `.gitignore` và được ESLint bỏ qua.
 - **Không dùng:** Frankfurter (Yahoo đã có tỷ giá), World Bank (IMF đủ, World Bank rất chậm khi chưa có cache), Reddit (bị chặn khi không đăng nhập). Xem [LLDD 02](../LLDD/02-data-sources.md) §Nguồn đã loại.
-- **Không có** container, đám mây hay CI ở phiên bản này.
+- **Docker (tùy chọn, chạy trên một máy):** `Dockerfile` dựng một image (`npm ci` + `next build`) dùng cho cả hai service trong `compose.yaml`: `web` (`next start`, cổng `127.0.0.1:3000`) và `worker` (`node --import tsx worker/index.ts`). Hai service dùng chung volume `data` chứa file SQLite. Dùng volume thay cho bind mount `./data` vì WAL cần mọi tiến trình trên cùng một filesystem. `.env.local` được nạp lúc chạy qua `env_file`, không nằm trong image.
+- **Không có** đám mây hay CI ở phiên bản này.
 
 ## 8. Các vấn đề xuyên suốt
 

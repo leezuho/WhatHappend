@@ -1,0 +1,35 @@
+# Run the dashboard on this machine: `docker compose up -d --build`, then open
+# http://localhost:3000. Web and worker share the SQLite file through the `data`
+# volume (WAL needs both processes on the same filesystem, so a named volume
+# rather than a bind mount of ./data on macOS).
+#
+# Only one worker may run per database: stop `npm run worker` before starting this.
+
+x-app: &app
+  build: .
+  image: whathappend:local
+  init: true
+  restart: unless-stopped
+  env_file:
+    - path: .env.local
+      required: false
+  environment:
+    DB_PATH: /app/data/whathappend.db
+  volumes:
+    - data:/app/data
+
+services:
+  worker:
+    <<: *app
+    command: ["node", "--import", "tsx", "worker/index.ts"]
+
+  web:
+    <<: *app
+    # No login: reachable from this machine only. Use "3000:3000" to open it to the home network.
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - worker
+
+volumes:
+  data:

@@ -25,6 +25,18 @@ Hai tiến trình chạy độc lập:
 
 Tất cả nguồn dữ liệu đều không cần key, trừ phần AI. Thiếu key AI thì tin hiển thị tiêu đề gốc và panel bản tin hướng dẫn cách bật.
 
+### Chạy nền bằng Docker
+
+`compose.yaml` chạy web (bản production) và worker từ cùng một image, tự bật lại khi Docker khởi động. DB nằm trong volume `whathappend_data` (không phải `./data`), key AI đọc từ `.env.local` lúc chạy, không đóng vào image.
+
+```bash
+docker compose up -d --build     # build và chạy; mở http://localhost:3000
+docker compose logs -f worker    # xem worker
+docker compose down              # dừng (dữ liệu vẫn giữ trong volume)
+```
+
+Dừng `npm run worker` và `npm run dev` trước khi chạy: mỗi DB chỉ một worker, và web Docker dùng cổng 3000. Sau khi sửa code hoặc `.env.local` thì chạy lại `docker compose up -d --build`.
+
 ## Cấu hình AI
 
 Đặt trong `.env.local` (đã gitignore, không bao giờ gửi xuống trình duyệt):
