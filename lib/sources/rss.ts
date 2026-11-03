@@ -6,13 +6,20 @@ import { fetchText } from "./http";
 import { hashId } from "./store";
 import type { Source } from "./types";
 
+type Media = { $?: { url?: string; medium?: string; width?: string } };
 type MediaItem = {
-  "media:content"?: { $?: { url?: string; medium?: string } };
-  "media:thumbnail"?: { $?: { url?: string } };
+  "media:content"?: Media[];
+  "media:thumbnail"?: Media[];
 };
 
+// keepArray: The Guardian lists the same photo at 140, 460 and 700 px; the first is too small for a card.
 const parser: Parser<object, MediaItem> = new Parser({
-  customFields: { item: ["media:content", "media:thumbnail"] },
+  customFields: {
+    item: [
+      ["media:content", "media:content", { keepArray: true }],
+      ["media:thumbnail", "media:thumbnail", { keepArray: true }],
+    ],
+  },
 });
 
 const MAX_AGE = 3 * 24 * 3600_000;
@@ -42,6 +49,33 @@ export function titleKey(title: string): string {
     .slice(0, 80);
 }
 
+/** Absolute http(s) URL, resolving feed-relative paths (Coin68 links "/slug/"); null if unusable. */
+export function absoluteUrl(raw: string | undefined, base: string): string | null {
+  if (!raw?.trim()) return null;
+  try {
+    const u = new URL(raw.trim(), base);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The widest image among media:content / media:thumbnail / enclosure, as an absolute https URL. */
+export function pickImage(item: { media?: Media[]; thumbs?: Media[]; enclosure?: { url?: string; type?: string } }, base: string): string | null {
+  const candidates = [...(item.media ?? []), ...(item.thumbs ?? [])]
+    .filter((m) => !m.$?.medium || m.$.medium === "image")
+    .map((m) => ({ url: m.$?.url, width: Number(m.$?.width) || 0 }));
+  if (item.enclosure?.url && (!item.enclosure.type || item.enclosure.type.startsWith("image/"))) candidates.push({ url: item.enclosure.url, width: 0 });
+  // Widest first; a missing width sorts last but still beats nothing.
+  candidates.sort((a, b) => b.width - a.width);
+  for (const c of candidates) {
+    const url = absoluteUrl(c.url, base);
+    // The browser loads these straight from the outlet; plain http would be blocked as mixed content.
+    if (url) return url.startsWith("http:") ? url.replace(/^http:/, "https:") : url;
+  }
+  return null;
+}
+
 function stripHtml(s: string | undefined): string | null {
   if (!s) return null;
   const text = s.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
@@ -54,11 +88,11 @@ async function readFeed(feed: Feed) {
   const now = Date.now();
   return parsed.items.flatMap((it) => {
     const title = it.title?.replace(/\s+/g, " ").trim();
-    const link = it.link?.trim();
+    const link = absoluteUrl(it.link, feed.url);
     if (!title || !link) return [];
     const published = Date.parse(it.isoDate ?? it.pubDate ?? "") || now;
     if (now - published > MAX_AGE) return [];
-    const image = it["media:content"]?.$?.url ?? it["media:thumbnail"]?.$?.url ?? it.enclosure?.url ?? null;
+    const image = pickImage({ media: it["media:content"], thumbs: it["media:thumbnail"], enclosure: it.enclosure }, feed.imageBase ?? feed.url);
     const url = normalizeUrl(link);
     return [
       {
@@ -87,6 +121,8 @@ export const rss: Source = {
       `INSERT OR IGNORE INTO articles (id, url, source, lang, region, title, title_en, title_vi, title_key, summary, image, published_at, fetched_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
+    // Keep the image current for stories already stored (feeds swap or enlarge photos after publishing).
+    const setImage = db.prepare("UPDATE articles SET image = ? WHERE id = ? AND image IS NOT ?");
     const now = Date.now();
     let added = 0;
     tx(db, () => {
@@ -103,6 +139,7 @@ export const rss: Source = {
             a.titleKey, a.summary, a.image, a.published, now,
           );
           added += Number(res.changes);
+          if (!res.changes && a.image) setImage.run(a.image, a.id, a.image);
         }
       });
       db.prepare("DELETE FROM articles WHERE published_at < ?").run(now - RETENTION);

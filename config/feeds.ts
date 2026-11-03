@@ -12,6 +12,8 @@ export interface Feed {
   crypto?: boolean;
   /** Host rejects non-browser user agents. */
   browserUA?: boolean;
+  /** Where relative image paths resolve when it is not the feed's own host. */
+  imageBase?: string;
 }
 
 export const FEEDS: Feed[] = [
@@ -33,7 +35,7 @@ export const FEEDS: Feed[] = [
   { name: "Cointelegraph", url: "https://cointelegraph.com/rss", lang: "en", crypto: true },
   { name: "The Block", url: "https://www.theblock.co/rss.xml", lang: "en", crypto: true },
   { name: "Decrypt", url: "https://decrypt.co/feed", lang: "en", crypto: true },
-  { name: "Coin68", url: "https://coin68.com/rss/tin-moi-nhat.rss", lang: "vi", crypto: true },
+  { name: "Coin68", url: "https://coin68.com/rss/tin-moi-nhat.rss", lang: "vi", crypto: true, imageBase: "https://cdn.coin68.com/" },
 ];
 
 /** Outlet names of the crypto-only feeds (`articles.source`). */

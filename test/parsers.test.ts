@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { deflateRawSync } from "node:zlib";
 import { parseCsv } from "@/lib/sources/http";
 import { unzipFirst } from "@/lib/sources/gdelt";
-import { normalizeUrl, titleKey } from "@/lib/sources/rss";
+import { absoluteUrl, normalizeUrl, pickImage, titleKey } from "@/lib/sources/rss";
 
 test("parseCsv: quoted commas, escaped quotes, CRLF, blank lines", () => {
   const csv = 'a,b\r\n"x, y","he said ""hi"""\n\n1,\n2,3';
@@ -75,4 +75,24 @@ test("titleKey: matches the same story across outlets and languages' diacritics"
   assert.equal(titleKey("Đà Nẵng: Bão số 5 đổ bộ!"), "da nang bao so 5 do bo");
   assert.equal(titleKey("Fed holds rates — again"), titleKey("FED HOLDS RATES: again!"));
   assert.ok(titleKey("word ".repeat(40)).length <= 80);
+});
+
+test("absoluteUrl: resolves feed-relative links, rejects non-web schemes", () => {
+  assert.equal(absoluteUrl("/den-luot-lisk/", "https://coin68.com/rss/tin-moi-nhat.rss"), "https://coin68.com/den-luot-lisk/");
+  assert.equal(absoluteUrl(" https://a.example/x ", "https://b.example/feed"), "https://a.example/x");
+  assert.equal(absoluteUrl("javascript:alert(1)", "https://b.example/feed"), null);
+  assert.equal(absoluteUrl("", "https://b.example/feed"), null);
+  assert.equal(absoluteUrl(undefined, "https://b.example/feed"), null);
+});
+
+test("pickImage: widest media wins, relative paths resolve, http upgrades, non-images skipped", () => {
+  const base = "https://news.example/rss";
+  const m = (url: string, width?: number, medium?: string) => ({ $: { url, width: width === undefined ? undefined : String(width), medium } });
+  // The Guardian: same photo at 140 / 460 / 700 px.
+  assert.equal(pickImage({ media: [m("https://i.example/p?w=140", 140), m("https://i.example/p?w=700", 700), m("https://i.example/p?w=460", 460)] }, base), "https://i.example/p?w=700");
+  assert.equal(pickImage({ media: [m("/images/og.png", 1200)] }, "https://coin68.com/rss/x.rss"), "https://coin68.com/images/og.png");
+  assert.equal(pickImage({ thumbs: [m("http://cdn.example/t.jpg")] }, base), "https://cdn.example/t.jpg");
+  assert.equal(pickImage({ media: [m("https://v.example/clip.mp4", 1920, "video")], enclosure: { url: "https://i.example/e.jpg", type: "image/jpeg" } }, base), "https://i.example/e.jpg");
+  assert.equal(pickImage({ enclosure: { url: "https://a.example/pod.mp3", type: "audio/mpeg" } }, base), null);
+  assert.equal(pickImage({}, base), null);
 });

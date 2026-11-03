@@ -166,6 +166,7 @@ function collapseStories(rows: ArticleRow[], lang: Locale): NewsItem[] {
     const existing = seen.get(r.title_key);
     if (existing) {
       if (r.source !== existing.source && !existing.alsoIn.includes(r.source)) existing.alsoIn.push(r.source);
+      existing.image ??= r.image;
       continue;
     }
     const translated = lang === "vi" ? r.title_vi : r.title_en;
@@ -315,6 +316,8 @@ export interface BriefView {
   date: string;
   createdAt: number;
   brief: StoredBrief;
+  /** Article photo by source URL, for the bullets' thumbnails. */
+  images: Record<string, string>;
 }
 
 export async function getLatestBrief(lang: Locale): Promise<{ view: BriefView | null; hasKey: boolean; requestedAt: number | null }> {
@@ -325,11 +328,21 @@ export async function getLatestBrief(lang: Locale): Promise<{ view: BriefView | 
     | undefined;
   const req = db.prepare("SELECT updated_at FROM kv WHERE key = ?").get(FORCE_KEY) as { updated_at: number } | undefined;
   const requestedAt = req && (!row || req.updated_at > row.created_at) ? req.updated_at : null;
+  const brief = row ? (JSON.parse(row.content) as StoredBrief) : null;
   return {
-    view: row ? { date: row.date, createdAt: row.created_at, brief: JSON.parse(row.content) as StoredBrief } : null,
+    view: brief && row ? { date: row.date, createdAt: row.created_at, brief, images: articleImages(db, brief.bullets.flatMap((b) => b.sources.map((s) => s.url))) } : null,
     hasKey: isAiConfigured(),
     requestedAt,
   };
+}
+
+/** Photo of each cited article, by URL (brief sources are copied from `articles.url`). */
+function articleImages(db: ReturnType<typeof getDb>, urls: string[]): Record<string, string> {
+  if (!urls.length) return {};
+  const rows = db
+    .prepare(`SELECT url, image FROM articles WHERE image IS NOT NULL AND url IN (${urls.map(() => "?").join(",")})`)
+    .all(...urls) as unknown as { url: string; image: string }[];
+  return Object.fromEntries(rows.map((r) => [r.url, r.image]));
 }
 
 // ---------------------------------------------------------------- what stands out

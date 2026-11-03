@@ -157,7 +157,14 @@
     "news": "Conflict & protest hotspots",
     "alert": "Orange/red alert",
     "list": "List",
-    "map": "Map"
+    "map": "Map",
+    "alerts": "Alerts & big quakes",
+    "alertsHint": "Click one to zoom in on the map.",
+    "world": "Whole world",
+    "levels": {
+      "red": "Red alert",
+      "orange": "Orange alert"
+    }
   },
   "news": {
     "all": "All",
@@ -198,7 +205,9 @@
     "regenerate": "Regenerate",
     "requested": "Requested — the worker will write it in a few minutes (at most one rewrite every 10 minutes).",
     "basedOn": "Based on {n} headlines",
-    "sources": "Sources"
+    "sources": "Sources",
+    "more": "Show {n} more",
+    "less": "Show less"
   },
   "highlights": {
     "empty": "Nothing unusual in the indicators right now.",

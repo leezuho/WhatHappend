@@ -5,11 +5,15 @@ import { fmtDateTime, fmtNumber, fmtPct } from "@/lib/format";
 import { getLatestBrief, getMapEvents, getNews, getVietnam, requestNow } from "@/lib/queries";
 import { KpiTile } from "@/components/charts/KpiTile";
 import { EmptyState } from "@/components/ui/Panel";
+import { Thumb } from "@/components/ui/Thumb";
 import { MapView } from "./MapView";
 import { NewsList } from "./NewsList";
 import { BriefRefresh } from "./BriefRefresh";
 
 // ---------------------------------------------------------------- brief
+
+/** Bullets shown before "Show more"; the brief has 5–6, a full wall of text above the fold. */
+const BRIEF_SHOWN = 3;
 
 export async function BriefBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);
@@ -23,25 +27,37 @@ export async function BriefBody({ lang }: { lang: Locale }) {
     );
   }
   const b = view.brief;
+  const bullet = (x: (typeof b.bullets)[number], i: number) => (
+    <li key={i} className="flex items-start gap-3 text-sm leading-snug">
+      <div className="min-w-0 flex-1">
+        <span className="font-semibold text-ink">{x.title}.</span> <span className="text-ink-2">{x.body}</span>
+        {x.sources.length > 0 && (
+          <span className="ml-1 inline-flex flex-wrap gap-1 align-baseline">
+            {x.sources.map((s, j) => (
+              <a key={j} href={s.url} target="_blank" rel="noreferrer" title={s.title} className="rounded bg-surface-2 px-1 text-[10px] text-ink-2 hover:text-ink">
+                {s.source}
+              </a>
+            ))}
+          </span>
+        )}
+      </div>
+      <Thumb src={x.sources.map((s) => view.images[s.url]).find(Boolean)} className="mt-0.5 h-14 w-20" />
+    </li>
+  );
+  const rest = b.bullets.slice(BRIEF_SHOWN);
   return (
     <article className="flex flex-1 flex-col gap-3">
       <p className="font-display text-base font-semibold leading-snug text-ink">{b.headline}</p>
-      <ol className="flex flex-col gap-2.5">
-        {b.bullets.map((x, i) => (
-          <li key={i} className="text-sm leading-snug">
-            <span className="font-semibold text-ink">{x.title}.</span> <span className="text-ink-2">{x.body}</span>
-            {x.sources.length > 0 && (
-              <span className="ml-1 inline-flex flex-wrap gap-1 align-baseline">
-                {x.sources.map((s, j) => (
-                  <a key={j} href={s.url} target="_blank" rel="noreferrer" title={s.title} className="rounded bg-surface-2 px-1 text-[10px] text-ink-2 hover:text-ink">
-                    {s.source}
-                  </a>
-                ))}
-              </span>
-            )}
-          </li>
-        ))}
-      </ol>
+      <ol className="flex flex-col gap-3">{b.bullets.slice(0, BRIEF_SHOWN).map(bullet)}</ol>
+      {rest.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer list-none text-xs [&::-webkit-details-marker]:hidden font-medium text-ink-2 hover:text-ink">
+            <span className="group-open:hidden">{d.brief.more.replace("{n}", String(rest.length))} ▾</span>
+            <span className="hidden group-open:inline">{d.brief.less} ▴</span>
+          </summary>
+          <ol className="mt-3 flex flex-col gap-3">{rest.map((x, i) => bullet(x, i + BRIEF_SHOWN))}</ol>
+        </details>
+      )}
       {b.watch.length > 0 && (
         <div>
           <h3 className="mb-1 text-xs font-semibold text-ink-2">{d.brief.watch}</h3>
@@ -81,7 +97,16 @@ export async function MapBody({ lang }: { lang: Locale }) {
     <MapView
       events={events}
       locale={lang}
-      labels={{ groups: { quake: d.map.quake, hazard: d.map.hazard, news: d.map.news }, alert: d.map.alert, list: d.map.list, map: d.map.map }}
+      labels={{
+        groups: { quake: d.map.quake, hazard: d.map.hazard, news: d.map.news },
+        alert: d.map.alert,
+        list: d.map.list,
+        map: d.map.map,
+        alerts: d.map.alerts,
+        alertsHint: d.map.alertsHint,
+        world: d.map.world,
+        levels: d.map.levels,
+      }}
     />
   );
 }

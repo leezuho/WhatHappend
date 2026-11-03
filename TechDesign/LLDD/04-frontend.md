@@ -1,6 +1,6 @@
 # LLDD 04 — Frontend
 
-> Phiên bản 0.3 · Ngày 2026-10-31 · Trạng thái: Đã triển khai (M1–M7)
+> Phiên bản 0.4 · Ngày 2026-11-03 · Trạng thái: Đã triển khai (M1–M7)
 > Liên quan: [HLDD](../HLDD/HLDD.md) · [01 Database schema](01-database-schema.md) · [06 Risk Regime](06-risk-regime.md) · [BRD 02](../../BRD/02-business-requirements.md)
 > Mã nguồn: `proxy.ts`, `app/[lang]/{layout,page}.tsx`, `app/api/{brief,series/[key],watchlist}/route.ts`, `app/globals.css`, `components/{TopBar.tsx,ui,panels,charts}`, `lib/{queries,i18n,format,use-theme}.ts`, `lib/data/series.ts`, `messages/{vi,en}.json`, `scripts/copy-maplibre-worker.mjs`
 
@@ -30,14 +30,14 @@ Lưới `grid-cols-1` → `md:grid-cols-2` → `xl:grid-cols-12`, `max-w-[1600px
 ```
 TopBar: MarketClocks · RegimeBadge · LangSwitch · ThemeToggle      (sticky)
         Ticker (dải giá chạy ngang)
-Hàng 1  Brief [xl:5]                     │ Bản đồ [xl:7]
-                                         │ Điểm đáng chú ý [xl:7]
-Hàng 2  Vital Signs [xl:12] (+ hàng "Bạn đã ghim" nếu có watchlist)
-Hàng 3  Yield curve [xl:6]               │ Lạm phát vs lãi suất [xl:6]      (lưới 2×2)
+Hàng 1  Bản đồ [xl:12]: bản đồ + cột "Cảnh báo & động đất lớn"
+Hàng 2  Brief [xl:5]                     │ Điểm đáng chú ý [xl:7]
+Hàng 3  Vital Signs [xl:12] (+ hàng "Bạn đã ghim" nếu có watchlist)
+Hàng 4  Yield curve [xl:6]               │ Lạm phát vs lãi suất [xl:6]      (lưới 2×2)
         Căng thẳng thị trường [xl:6]     │ Nhịp đập kinh tế Mỹ [xl:6]
-Hàng 4  Tin tức [xl:8]                   │ Lịch sắp tới [xl:4]
-Hàng 5  Trending [xl:4] │ Prediction [xl:4] │ Hành tinh & sức khỏe [xl:4]
-Hàng 6  Góc Việt Nam [xl:12]
+Hàng 5  Tin tức [xl:8]                   │ Lịch sắp tới [xl:4]
+Hàng 6  Trending [xl:4] │ Prediction [xl:4] │ Hành tinh & sức khỏe [xl:4]
+Hàng 7  Góc Việt Nam [xl:12]
 ```
 
 | Panel | Component (thân) | Nguồn (`sources`) dùng để tính trạng thái |
@@ -58,7 +58,10 @@ Hàng 6  Góc Việt Nam [xl:12]
 | Việt Nam | `VietnamBody` | `vnindex`, `sjc`, `vcb` |
 
 Ghi chú hành vi từng panel:
-- **Hàng 1:** Bản đồ và Điểm đáng chú ý xếp chồng trong một cột. Ở `xl`, khung bản đồ (`h-0 flex-1`, tối thiểu 240px) giãn ra lấp phần chiều cao còn lại so với Brief, còn danh sách Điểm đáng chú ý tối đa 264px rồi cuộn. Chân Brief (`mt-auto`) luôn nằm đáy panel.
+- **Hàng 1:** bản đồ chiếm cả hàng, cao 360 / 440 / 520px (mobile / `md` / `xl`), xem §9.
+- **Hàng 2:** Brief và Điểm đáng chú ý nằm cạnh nhau. Điểm đáng chú ý có tối đa 8 thẻ (`findNotables`), nên hiện hết mà không cần cuộn. Chân Brief (`mt-auto`) luôn nằm đáy panel.
+- **Brief:** hiện tiêu đề chính và 3 ý đầu (`BRIEF_SHOWN`), các ý còn lại nằm trong `<details>` "Xem thêm N ý" (không cần JS). Mỗi ý có ảnh nhỏ của bài báo đầu tiên được trích dẫn mà có ảnh. `getLatestBrief` tra ảnh theo URL nguồn trong `articles` (`BriefView.images`).
+- **Ảnh bài báo** (`components/ui/Thumb.tsx`): dùng `<img>` thường, `loading="lazy"`, `referrerPolicy="no-referrer"`, `alt=""` vì tiêu đề bên cạnh đã là chữ. Chỉ nhận URL `https://`; ảnh lỗi thì tự ẩn. Không dùng `next/image`, vì bộ tối ưu ảnh của Next sẽ bắt server web tải URL bên ngoài, trái quy tắc "web không gọi ra ngoài". Ảnh do trình duyệt tải thẳng từ báo, giống tile bản đồ.
 - **Điểm đáng chú ý:** chỉ số do `findNotables` chọn (xem [05 §3a](05-ai-pipeline.md)), mỗi thẻ có giá trị, thay đổi, chip lý do (Nguy hiểm, Lưu ý, Tăng/Giảm mạnh bất thường, Cao/Thấp nhất 1 năm) và ghi chú AI (hoặc `explain` khi chưa có). Ghi chú AI cũng hiện trong hộp thoại của các tile Vital Signs và Nhịp đập kinh tế.
 - **Lịch:** gộp ForexFactory (`items.calendar`, sự kiện từ 3 giờ trước trở đi), lịch FOMC từ `config/fomc.ts` và `items.launch`, cửa sổ 21 ngày, nhóm theo ngày (Asia/Ho_Chi_Minh). **Cuộc họp FOMC kế tiếp luôn hiển thị** dù nằm ngoài cửa sổ.
 - **Trending:** tab mặc định là Wikipedia EN, vì top của vi.wikipedia thường bị bot đẩy lượt xem.
@@ -155,7 +158,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `Ticker` (server) | Hai bản sao danh sách trượt ngang với CSS `@keyframes ticker` 90 giây; dừng khi rê chuột; tắt khi `prefers-reduced-motion` |
 | `RegimeBadge` (server) | `<details>` hiện nhãn regime; mở ra thấy điểm, z-score từng thành phần và ngưỡng |
 | `Tabs` | Tab phía client bọc các pane đã render ở server (dùng cho Trending) |
-| `NewsList` | Lọc theo region rồi topic (chip có `aria-pressed`), hiện tối đa 40 tin, "x phút trước" tính từ `now` do server truyền vào |
+| `NewsList` | Lọc theo region rồi topic (chip có `aria-pressed`), hiện tối đa 40 tin, "x phút trước" tính từ `now` do server truyền vào. Trên cùng là tối đa 3 thẻ ảnh lớn (`pickFeatured`): trong 15 tin đầu, lấy tin có ảnh được nhiều báo đưa nhất (`alsoIn`), hòa thì lấy tin mới hơn. Các tin còn lại có ảnh nhỏ bên phải. Khi gộp cùng câu chuyện, tin thiếu ảnh mượn ảnh của bản ở báo khác. Tin crypto (`CryptoNewsBody`) cũng có ảnh nhỏ |
 | `MapView` | Xem §9 |
 | `BriefRefresh` | POST `/api/brief`, rồi `router.refresh()`; hiện "Đã yêu cầu…" khi đang chờ |
 | `TileDetail` | Bọc KPI tile thành nút; mở `<dialog>` với lịch sử 3T/1N/2N/5N tải từ `/api/series/[key]`, và nút ghim/bỏ ghim (POST `/api/watchlist`). Series đã ghim hiện ở hàng "Bạn đã ghim" dưới Vital Signs |
@@ -212,9 +215,14 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
   - `quake` (`--s1`): `type = earthquake` (USGS, GDACS EQ, EONET);
   - `hazard` (`--s2`): cyclone, flood, drought, volcano, wildfire, storm, tsunami, landslide, heat;
   - `news` (`--s3`): điểm nóng GDELT (conflict, protest).
+- **Hai source GeoJSON:**
+  - `news`: điểm nóng GDELT. Ở zoom thấp là lớp mật độ (`heatmap`), **một hue `--s3`** đi từ trong suốt tới đậm, vì mật độ là độ lớn chứ không phải một nhóm mới. Trọng số theo `severity` (số lần GDELT nhắc tới). Từ zoom 3,5 (`NEWS_POINTS_ZOOM`) lớp mật độ mờ dần và hiện chấm rê chuột được.
+  - `events`: động đất và thiên tai luôn là chấm. `circle-sort-key` đưa cảnh báo đỏ/cam và trận động đất mạnh lên trên, để chúng không bị các chấm yếu che.
 - Bán kính: động đất theo độ lớn (4,5 → 4px, 8 → 13px), các loại khác theo `level`. **Mức cảnh báo là vòng viền** màu trạng thái (`red` → `--critical`, `orange` → `--serious`), có chú giải "Cảnh báo cam/đỏ".
-- Hàng chip lọc theo nhóm (kèm số lượng) phía trên bản đồ; nút "Danh sách" chuyển sang bảng sự kiện (tương đương chế độ xem bảng).
-- Rê chuột hiện popup (tiêu đề theo locale + thời gian); click mở link nguồn.
+- **Khung nhìn ban đầu:** `bounds` kinh độ −170…180, vĩ độ −50…72, tự khớp theo kích thước panel. Có nút +/− (`NavigationControl`).
+- **Cột "Cảnh báo & động đất lớn"** (`topAlerts`, tối đa 6): cảnh báo đỏ, rồi cam, rồi động đất từ M6 trở lên, mạnh trước. Điểm nóng GDELT không vào danh sách, vì số lần nhắc quá nhiễu để xếp hạng. Mỗi dòng ghi nhãn mức cảnh báo bằng chữ, không chỉ dựa vào màu viền. Bấm vào thì bản đồ `flyTo` tới vị trí đó (zoom ≥ 4,5) và giữ popup. "Toàn cầu" quay về khung nhìn ban đầu. Khi bật `prefers-reduced-motion` thì chuyển ngay, không có hiệu ứng bay. Ở `lg` cột nằm bên phải bản đồ, nhỏ hơn thì nằm bên dưới.
+- Hàng chip lọc theo nhóm (kèm số lượng) phía trên bản đồ, áp dụng cho cả cột cảnh báo. Nút "Danh sách" chuyển sang bảng sự kiện (tương đương chế độ xem bảng).
+- Rê chuột hiện popup (tiêu đề theo locale + thời gian); click mở link nguồn, click chỗ trống thì bỏ chọn.
 
 ## 10. i18n và định dạng
 

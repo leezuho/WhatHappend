@@ -113,7 +113,11 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không
   - Chỉ lấy bài trong 3 ngày gần nhất; xóa bài cũ hơn 14 ngày.
   - `id = sha1(URL đã chuẩn hóa)`, trong đó URL đã bỏ `utm_*`, `at_*` và hash.
   - `title_key` là tiêu đề đã bỏ dấu và ký tự đặc biệt, dùng để gộp cùng một câu chuyện từ nhiều báo.
-- **Ảnh minh họa:** lấy theo thứ tự `media:content` → `media:thumbnail` → `enclosure`.
+- **Link tương đối:** link và ảnh được giải theo host của feed (Coin68 ghi link dạng `/slug/`). Bài không giải ra được URL `http(s)` thì bỏ qua.
+- **Ảnh minh họa** (`pickImage`): gom mọi `media:content` và `media:thumbnail` (đọc với `keepArray`) cùng `enclosure` dạng ảnh, chọn ảnh **rộng nhất**. The Guardian liệt kê cùng một ảnh ở 140/460/700 px, còn ảnh đầu tiên thì quá nhỏ để làm thẻ.
+  - Ảnh `http:` được đổi sang `https:`, vì trình duyệt tải ảnh thẳng từ báo và sẽ chặn nội dung hỗn hợp.
+  - Feed lưu ảnh ở host khác thì khai báo `imageBase` trong `config/feeds.ts`. Ví dụ Coin68 ghi `/images/…`, nhưng ảnh nằm ở `cdn.coin68.com`.
+  - Bài đã có trong DB vẫn được cập nhật cột `image` khi feed đổi ảnh. Số bản ghi trả về chỉ đếm bài mới.
 - **Lỗi:** feed lỗi được log lại; nguồn chỉ FAIL khi **mọi** feed đều lỗi.
 - **Đã kiểm tra nhưng không dùng:**
   - AP: tất cả feed trả 403.

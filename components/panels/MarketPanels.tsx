@@ -92,7 +92,7 @@ export async function HighlightsBody({ lang }: { lang: Locale }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <ul className="scroll-thin grid grid-cols-1 gap-2 overflow-auto sm:grid-cols-2 xl:max-h-[264px]">
+      <ul className="scroll-thin grid grid-cols-1 gap-2 sm:grid-cols-2">
         {items.map((it) => {
           const name = pick(it.def.name, lang);
           const delta = fmtDelta(it.def, it.data, lang);

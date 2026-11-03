@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import clsx from "clsx";
 import type { NewsItem } from "@/lib/queries";
+import { Thumb } from "@/components/ui/Thumb";
 
 interface Labels {
   all: string;
@@ -30,7 +31,9 @@ export function NewsList({ items, now, labels, locale }: { items: NewsItem[]; no
 
   const regions = useMemo(() => countBy(items, (i) => i.region), [items]);
   const topics = useMemo(() => countBy(items.filter((i) => !region || i.region === region), (i) => i.topic), [items, region]);
-  const shown = items.filter((i) => (!region || i.region === region) && (!topic || i.topic === topic)).slice(0, 40);
+  const filtered = items.filter((i) => (!region || i.region === region) && (!topic || i.topic === topic)).slice(0, 40);
+  const featured = pickFeatured(filtered);
+  const shown = filtered.filter((i) => !featured.includes(i));
   const tagged = items.some((i) => i.topic);
 
   return (
@@ -56,27 +59,61 @@ export function NewsList({ items, now, labels, locale }: { items: NewsItem[]; no
       ) : (
         <p className="text-[11px] text-muted">{labels.untagged}</p>
       )}
+      {featured.length > 0 && (
+        <ul className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-3">
+          {featured.map((n) => (
+            <li key={n.id} className="min-w-0">
+              <a href={n.url} target="_blank" rel="noreferrer" className="group flex flex-col gap-1.5">
+                <Thumb src={n.image} className="aspect-video w-full" />
+                <span className="line-clamp-3 text-sm leading-snug font-medium text-ink group-hover:underline">{n.title}</span>
+              </a>
+              <Meta n={n} now={now} loc={loc} labels={labels} />
+            </li>
+          ))}
+        </ul>
+      )}
       <ul className="scroll-thin max-h-[520px] overflow-auto pr-1">
         {shown.map((n) => (
-          <li key={n.id} className="border-t border-line py-2 first:border-t-0">
-            <a href={n.url} target="_blank" rel="noreferrer" className="text-sm leading-snug text-ink hover:underline">
-              {n.title}
-            </a>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
-              <span className="font-medium text-ink-2">{n.source}</span>
-              <span className="tabular">{ago(n.publishedAt, now, loc)}</span>
-              {n.topic && <span>{labels.topics[n.topic] ?? n.topic}</span>}
-              {n.alsoIn.length > 0 && (
-                <span>
-                  {labels.alsoIn}: {n.alsoIn.join(", ")}
-                </span>
-              )}
+          <li key={n.id} className="flex items-start gap-3 border-t border-line py-2 first:border-t-0">
+            <div className="min-w-0 flex-1">
+              <a href={n.url} target="_blank" rel="noreferrer" className="text-sm leading-snug text-ink hover:underline">
+                {n.title}
+              </a>
+              <Meta n={n} now={now} loc={loc} labels={labels} />
             </div>
+            <Thumb src={n.image} className="h-12 w-[72px]" />
           </li>
         ))}
       </ul>
     </div>
   );
+}
+
+function Meta({ n, now, loc, labels }: { n: NewsItem; now: number; loc: string; labels: Labels }) {
+  return (
+    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
+      <span className="font-medium text-ink-2">{n.source}</span>
+      <span className="tabular">{ago(n.publishedAt, now, loc)}</span>
+      {n.topic && <span>{labels.topics[n.topic] ?? n.topic}</span>}
+      {n.alsoIn.length > 0 && (
+        <span>
+          {labels.alsoIn}: {n.alsoIn.join(", ")}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Up to three stories with a photo for the card row: the most widely carried first (more outlets =
+ * bigger story), newest breaking ties. Only from the first 15 so the cards stay fresh.
+ */
+function pickFeatured(items: NewsItem[], n = 3): NewsItem[] {
+  return items
+    .slice(0, 15)
+    .filter((i) => i.image?.startsWith("https://"))
+    .sort((a, b) => b.alsoIn.length - a.alsoIn.length || b.publishedAt - a.publishedAt)
+    .slice(0, n);
 }
 
 function countBy(items: NewsItem[], key: (i: NewsItem) => string | null): [string, number][] {

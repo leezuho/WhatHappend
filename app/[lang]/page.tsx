@@ -30,26 +30,25 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         }
       />
       <main className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-12">
-        {/* Row 1: the story of the day */}
+        {/* Row 1: the world at a glance */}
+        <Panel lang={lang} title={p.map.title} subtitle={p.map.subtitle} sources={["usgs", "gdacs", "eonet", "gdelt"]} className="md:col-span-2 xl:col-span-12">
+          <MapBody lang={lang} />
+        </Panel>
+
+        {/* Row 2: the story of the day */}
         <Panel lang={lang} title={p.brief.title} subtitle={p.brief.subtitle} sources={["brief"]} className="md:col-span-2 xl:col-span-5">
           <BriefBody lang={lang} />
         </Panel>
-        {/* The map takes whatever height the brief leaves after "What stands out". */}
-        <div className="flex min-w-0 flex-col gap-4 md:col-span-2 xl:col-span-7">
-          <Panel lang={lang} title={p.map.title} subtitle={p.map.subtitle} sources={["usgs", "gdacs", "eonet", "gdelt"]} className="xl:flex-1">
-            <MapBody lang={lang} />
-          </Panel>
-          <Panel lang={lang} title={p.highlights.title} subtitle={p.highlights.subtitle} sources={["insights", "yahoo", "fred"]}>
-            <HighlightsBody lang={lang} />
-          </Panel>
-        </div>
+        <Panel lang={lang} title={p.highlights.title} subtitle={p.highlights.subtitle} sources={["insights", "yahoo", "fred"]} className="md:col-span-2 xl:col-span-7">
+          <HighlightsBody lang={lang} />
+        </Panel>
 
-        {/* Row 2: vital signs */}
+        {/* Row 3: vital signs */}
         <Panel lang={lang} title={p.vitals.title} subtitle={p.vitals.subtitle} sources={["yahoo", "fred", "vnindex"]} className="md:col-span-2 xl:col-span-12">
           <VitalSigns lang={lang} />
         </Panel>
 
-        {/* Row 3: context */}
+        {/* Row 4: context */}
         <Panel lang={lang} title={p.yieldCurve.title} subtitle={p.yieldCurve.subtitle} sources={["fred"]} className="xl:col-span-6">
           <YieldCurvePanel lang={lang} />
         </Panel>
@@ -63,7 +62,7 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <EconomyPulse lang={lang} />
         </Panel>
 
-        {/* Row 4: news + calendar */}
+        {/* Row 5: news + calendar */}
         <Panel lang={lang} title={p.news.title} subtitle={p.news.subtitle} sources={["rss", "translate"]} className="md:col-span-2 xl:col-span-8">
           <NewsBody lang={lang} />
         </Panel>
@@ -71,7 +70,7 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <CalendarBody lang={lang} />
         </Panel>
 
-        {/* Row 5: attention, odds, planet */}
+        {/* Row 6: attention, odds, planet */}
         <Panel lang={lang} title={p.trending.title} subtitle={p.trending.subtitle} sources={["wikipedia", "hackernews"]} className="xl:col-span-4">
           <TrendingBody lang={lang} />
         </Panel>
@@ -82,7 +81,7 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <EnvBody lang={lang} />
         </Panel>
 
-        {/* Row 6: Vietnam */}
+        {/* Row 7: Vietnam */}
         <Panel lang={lang} title={p.vietnam.title} subtitle={p.vietnam.subtitle} sources={["vnindex", "sjc", "vcb"]} className="md:col-span-2 xl:col-span-12">
           <VietnamBody lang={lang} />
         </Panel>

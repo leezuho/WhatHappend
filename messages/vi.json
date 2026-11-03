@@ -157,7 +157,14 @@
     "news": "Điểm nóng xung đột & biểu tình",
     "alert": "Cảnh báo cam/đỏ",
     "list": "Danh sách",
-    "map": "Bản đồ"
+    "map": "Bản đồ",
+    "alerts": "Cảnh báo & động đất lớn",
+    "alertsHint": "Bấm để phóng tới vị trí trên bản đồ.",
+    "world": "Toàn cầu",
+    "levels": {
+      "red": "Cảnh báo đỏ",
+      "orange": "Cảnh báo cam"
+    }
   },
   "news": {
     "all": "Tất cả",
@@ -198,7 +205,9 @@
     "regenerate": "Viết lại",
     "requested": "Đã yêu cầu — worker sẽ viết trong vài phút (tối đa một lần mỗi 10 phút).",
     "basedOn": "Dựa trên {n} tin",
-    "sources": "Nguồn"
+    "sources": "Nguồn",
+    "more": "Xem thêm {n} ý",
+    "less": "Thu gọn"
   },
   "highlights": {
     "empty": "Hiện chưa có chỉ số nào bất thường.",
