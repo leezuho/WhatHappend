@@ -15,7 +15,7 @@ const BATCH = 40;
 const MAX_BATCHES_PER_RUN = 4;
 
 /** Item kinds whose titles are worth translating (others are names or already short codes). */
-const TRANSLATED_ITEM_KINDS = ["polymarket", "who"];
+const TRANSLATED_ITEM_KINDS = ["polymarket", "polymarket_crypto", "who"];
 
 const ArticleOut = z.object({
   items: z.array(

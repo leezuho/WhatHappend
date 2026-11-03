@@ -16,7 +16,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `bis` | Lãi suất điều hành | BIS SDMX `WS_CBPOL` | 12 giờ | `observations` `bis:<area>` |
 | `gpr` | Rủi ro địa chính trị | `data_gpr_daily_recent.xls` | 24 giờ | `observations` `gpr:GPRD`, `gpr:GPRD_MA7` |
 | `gscpi` | Chuỗi cung ứng | NY Fed GSCPI CSV | 24 giờ | `observations` `nyfed:GSCPI` |
-| `rss` | Tin tức | 13 feed (`config/feeds.ts`) | 10 phút | `articles` |
+| `rss` | Tin tức | 18 feed (`config/feeds.ts`), 5 trong đó là báo crypto | 10 phút | `articles` |
 | `translate` | AI | Gemini hoặc Claude (tier `fast`) | 5 phút | cột `title_*`, `region`, `topic` |
 | `brief` | AI | Gemini hoặc Claude (tier `brief`) | hằng ngày 06:00 VN | `briefs` |
 | `usgs` | Bản đồ | USGS GeoJSON `4.5_week` | 10 phút | `events` (`earthquake`) |
@@ -27,7 +27,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `hackernews` | Xu hướng | HN Algolia `front_page` | 20 phút | `items` `hn` |
 | `calendar` | Lịch | ForexFactory this-week JSON | 3 giờ | `items` `calendar` |
 | `launches` | Lịch | Launch Library 2 `2.3.0` | 3 giờ | `items` `launch` |
-| `polymarket` | Dự đoán | Polymarket Gamma `events` | 15 phút | `items` `polymarket` |
+| `polymarket` | Dự đoán | Polymarket Gamma `events` | 15 phút | `items` `polymarket`, `polymarket_crypto` |
 | `kalshi` | Dự đoán | Kalshi trade-api v2 (`KXFED`) | 15 phút | `items` `kalshi_fed` |
 | `co2` | Môi trường | NOAA GML Mauna Loa CSV | 24 giờ | `observations` `noaa:co2`, `noaa:co2:monthly` |
 | `gistemp` | Môi trường | NASA GISTEMP v4 CSV | 24 giờ | `observations` `giss:global` |
@@ -36,6 +36,12 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `vnindex` | Việt Nam | SSI iBoard | 3 phút | `quotes`, `observations` `vn:VNINDEX`, `items` `vn_breadth` |
 | `sjc` | Việt Nam | vang.today (dự phòng: PNJ) | 30 phút | `items` `gold_vn`, `observations` `goldvn:<code>:sell` |
 | `vcb` | Việt Nam | Vietcombank exchange-rates JSON | 1 giờ | `items` `vcb`, `observations` `vcb:USD:sell` |
+| `coingecko` | Crypto | CoinGecko `global`, `coins/markets`, `search/trending` | 5 phút | `quotes`/`observations` `cg:*`, `items` `crypto_global`, `crypto_top`, `crypto_trending` |
+| `fng` | Crypto | alternative.me Fear & Greed | 1 giờ | `observations` `fng:crypto`, `items` `crypto_fng` |
+| `deribit` | Crypto | Deribit DVOL (BTC) | 1 giờ | `observations` `deribit:DVOL-BTC` |
+| `defillama` | Crypto | DefiLlama stablecoin charts | 6 giờ | `observations` `llama:stablecoins` |
+| `mempool` | Crypto | mempool.space | 10 phút | `items` `btc_network` |
+| `binance` | Crypto | Binance USDⓈ-M futures + P2P | 15 phút | `items` `crypto_perps`, `usdt_p2p`, `observations` `binance:USDTVND` |
 
 Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không lấy từ API mà đặt trong `config/fomc.ts` (§5.2).
 
@@ -102,6 +108,7 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không
   - BBC World và Business, Guardian World, Al Jazeera, DW (`rss.dw.com/xml/rss-en-all`), France 24, NPR World
   - CNBC World và Economy, SCMP Asia
   - VnExpress Thế giới, Kinh doanh, Thời sự
+  - Crypto: CoinDesk, Cointelegraph, The Block, Decrypt, Coin68 (xem §8.7)
 - **Cách chạy:** dùng `rss-parser`, các feed chạy song song.
   - Chỉ lấy bài trong 3 ngày gần nhất; xóa bài cũ hơn 14 ngày.
   - `id = sha1(URL đã chuẩn hóa)`, trong đó URL đã bỏ `utm_*`, `at_*` và hash.
@@ -288,11 +295,47 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
   - Bản XML cũ (`portal.vietcombank.com.vn/…/pXML.aspx`) vẫn chạy nhưng yêu cầu tối đa 1 request mỗi 5 phút.
   - Chu kỳ 1 giờ là đủ an toàn.
 
-## 8. Nguồn đã loại
+## 8. Crypto
+
+Trang `/[lang]/crypto` đọc các nguồn dưới đây. Không nguồn nào cần key. Các chuỗi đều nằm trong `SERIES` (`config/series.ts`), nên tự có tile, hộp thoại lịch sử, watchlist, quy tắc "Điểm đáng chú ý" và ghi chú AI. Chuỗi chỉ có một điểm mỗi ngày (vốn hóa, tỷ trọng BTC, USDT/VND) thì điểm của hôm nay được ghi đè ở mỗi lần chạy, nên lịch sử bắt đầu tích lũy từ lần chạy đầu tiên.
+
+### 8.1 `coingecko` (`lib/sources/coingecko.ts`)
+- **URL:** `api.coingecko.com/api/v3/global`, `/coins/markets?vs_currency=usd&per_page=40&sparkline=true&price_change_percentage=1h,24h,7d`, `/search/trending`. Ba request mỗi 5 phút, dưới hạn mức keyless.
+- **Key tùy chọn:** `COINGECKO_API_KEY` (gói Demo miễn phí) được gửi qua header `x-cg-demo-api-key` khi có. Nên đặt khi chạy trên cloud vì IP dùng chung dễ bị 429.
+- **Lọc top coin (`pickTopCoins`):** bỏ stablecoin USD (giá trong ±2% quanh $1 và biến động 7 ngày dưới 2%) và bản wrapped/staked (tên chứa wrapped/bridged/staked/restaked, hoặc id `weth`, `wbtc`, `cbbtc`, `steth`, `wsteth`, `weeth`). Giữ 20, sparkline 7 ngày rút còn ~42 điểm.
+- **Lưu:** `quotes` + `observations` `cg:total_mcap` (tỷ USD, quote mang % thay đổi 24h), `observations` `cg:btc_dominance`, `items` `crypto_global`, `crypto_top`, `crypto_trending`. Trending lỗi chỉ ghi log, không làm hỏng phần còn lại.
+
+### 8.2 `fng` (`lib/sources/fng.ts`)
+- **URL:** `api.alternative.me/fng/?limit=N` (430 ngày ở lần đầu, sau đó 10).
+- **Lưu:** `observations` `fng:crypto`; `items` `crypto_fng` giữ nhãn của số đo mới nhất (Extreme Fear … Extreme Greed, dịch qua `messages/*.json` `crypto.fngLevels`).
+
+### 8.3 `deribit` (`lib/sources/deribit.ts`)
+- **URL:** `www.deribit.com/api/v2/public/get_volatility_index_data?currency=BTC&resolution=1D` (430 ngày lần đầu). 431 nến trả về trong một lần, không cần phân trang.
+- **Lưu:** giá đóng cửa ngày vào `observations` `deribit:DVOL-BTC`.
+
+### 8.4 `defillama` (`lib/sources/defillama.ts`)
+- **URL:** `stablecoins.llama.fi/stablecoincharts/all`. Luôn trả toàn bộ lịch sử (khoảng 1,3 MB) nên chạy 6 giờ/lần.
+- **Xử lý:** cộng mọi loại peg trong `totalCirculatingUSD` (giống con số tổng trên defillama.com), đổi ra tỷ USD, giữ 430 ngày.
+- **Lưu:** `observations` `llama:stablecoins`.
+
+### 8.5 `mempool` (`lib/sources/mempool.ts`)
+- **URL:** `mempool.space/api/blocks/tip/height`, `/v1/difficulty-adjustment`, `/v1/fees/recommended`, `/v1/mining/hashrate/1m`.
+- **Halving (`halvingInfo`):** mốc kế tiếp là bội số 210.000 khối; thời điểm ước tính theo thời gian khối trung bình của chu kỳ độ khó hiện tại (ngoài khoảng 5–20 phút thì dùng 10 phút).
+- **Lưu:** một dòng `items` `btc_network`.
+
+### 8.6 `binance` (`lib/sources/binance.ts`)
+- **Hợp đồng vĩnh cửu:** `fapi.binance.com/fapi/v1/premiumIndex?symbol=` và `/futures/data/openInterestHist?period=1h&limit=25` cho BTC, ETH, SOL. Funding quy năm = rate × 3 × 365 (kỳ funding 8 giờ). Lưu `items` `crypto_perps`.
+- **P2P USDT/VND (không chính thức):** `POST p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search` với `tradeType` `BUY` (người dùng mua, quảng cáo bán, giá tăng dần) và `SELL`. Lấy trung vị 10 quảng cáo đầu mỗi chiều. Hai chiều có thể chéo nhau vì mỗi quảng cáo có hạn mức và điều kiện riêng. Lưu `items` `usdt_p2p` và `observations` `binance:USDTVND` (giá giữa). Trang so giá mua với giá bán USD của Vietcombank.
+- **Chặn theo quốc gia:** Binance trả 451 cho một số nước (có Mỹ). Hai phần chạy độc lập: một phần lỗi thì ghi log, nguồn chỉ FAIL khi cả hai lỗi. Lưu ý khi chọn region để deploy.
+
+### 8.7 Tin và kèo crypto
+- **RSS:** CoinDesk, Cointelegraph, The Block, Decrypt, Coin68 (`crypto: true` trong `config/feeds.ts`). Các bài này **không** vào danh sách tin thế giới và đầu vào Brief; trang crypto đọc chúng cùng bài có `topic = crypto` từ các báo khác (`getCryptoNews`). Coin68 dùng `coin68.com/rss/tin-moi-nhat.rss` (`/feed/` trả HTML).
+- **Polymarket:** nguồn `polymarket` gọi thêm tag `crypto` (`limit=40`), bỏ kèo kết thúc trong vòng 48 giờ (phần lớn là "BTC lên hay xuống hôm nay"), giữ 8 kèo vào kind `polymarket_crypto`.
+
+## 9. Nguồn đã loại
 
 | Nguồn | Lý do | Thay bằng |
 |---|---|---|
-| CoinGecko | Keyless bị 429 sau khoảng 5 lần gọi nhanh; Yahoo đã có `BTC-USD` | Yahoo |
 | Frankfurter | v1 chỉ có dữ liệu ECB (không có VND); Yahoo đã có tỷ giá | Yahoo `USDVND=X`, Vietcombank |
 | World Bank | Rất chậm khi chưa có cache (11–72 giây); IMF đã đủ lạm phát và tăng trưởng, có cả dự báo | IMF DataMapper |
 | Reddit | `www.reddit.com` bị chặn ở tầng DNS; `api.reddit.com` 403; `old.reddit.com` bắt đăng nhập; cần OAuth | Wikipedia + Hacker News |
@@ -304,7 +347,7 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
 | FRED JSON API | Cần key | FRED CSV công khai |
 | Lịch FRED, BLS ICS | FRED cần key; BLS trả 403 | ForexFactory + `config/fomc.ts` |
 
-## 9. Nhật ký kiểm chứng (2026-10-31)
+## 10. Nhật ký kiểm chứng (2026-10-31)
 
 Kết quả `npm run fetch -- <id>` lần đầu:
 

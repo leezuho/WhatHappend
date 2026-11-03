@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "WhatHappend — toàn cảnh thế giới",
-    "description": "Dashboard cá nhân về những gì đang diễn ra trên thế giới: thị trường, vĩ mô, tin tức, sự kiện."
+    "description": "Dashboard cá nhân về những gì đang diễn ra trên thế giới: thị trường, vĩ mô, tin tức, sự kiện.",
+    "cryptoTitle": "Crypto — WhatHappend",
+    "cryptoDescription": "Thị trường crypto, tâm lý, phái sinh, mạng Bitcoin và tin tức."
   },
   "common": {
     "updated": "Cập nhật",
@@ -27,7 +29,10 @@
     "themeAnthropic": "Giao diện Anthropic (vàng kem)",
     "themeGroup": "Giao diện",
     "language": "Ngôn ngữ",
-    "ticker": "Bảng giá chạy"
+    "ticker": "Bảng giá chạy",
+    "nav": "Chuyên mục",
+    "navOverview": "Tổng quan",
+    "navCrypto": "Crypto"
   },
   "regime": {
     "title": "Trạng thái rủi ro",
@@ -101,6 +106,34 @@
     "vietnam": {
       "title": "Góc Việt Nam",
       "subtitle": "VN-Index, USD/VND, vàng SJC, VnExpress"
+    },
+    "cryptoVitals": {
+      "title": "Chỉ số sống còn của crypto",
+      "subtitle": "Đồng lớn, quy mô thị trường, biến động và thanh khoản"
+    },
+    "cryptoTop": {
+      "title": "Top đồng coin",
+      "subtitle": "Theo vốn hóa, bỏ stablecoin và token wrapped"
+    },
+    "cryptoDerivs": {
+      "title": "Đòn bẩy & nhu cầu trong nước",
+      "subtitle": "Funding hợp đồng vĩnh cửu, OI, USDT/VND P2P"
+    },
+    "cryptoNetwork": {
+      "title": "Mạng Bitcoin",
+      "subtitle": "Đếm ngược halving, phí, độ khó, hashrate"
+    },
+    "cryptoTrending": {
+      "title": "Coin đang hot",
+      "subtitle": "Được tìm nhiều nhất trên CoinGecko"
+    },
+    "cryptoOdds": {
+      "title": "Kèo crypto",
+      "subtitle": "Polymarket: xác suất theo đám đông"
+    },
+    "cryptoNews": {
+      "title": "Tin crypto",
+      "subtitle": "CoinDesk, Cointelegraph, The Block, Decrypt, Coin68"
     }
   },
   "charts": {
@@ -144,6 +177,7 @@
       "conflict": "Xung đột",
       "economy": "Kinh tế",
       "markets": "Thị trường",
+      "crypto": "Crypto",
       "business": "Doanh nghiệp",
       "tech": "Công nghệ",
       "science": "Khoa học",
@@ -203,6 +237,59 @@
       "PNJ24K": "PNJ 24K"
     }
   },
+  "crypto": {
+    "fng": "Sợ hãi & Tham lam",
+    "fngLevels": {
+      "Extreme Fear": "Cực kỳ sợ hãi",
+      "Fear": "Sợ hãi",
+      "Neutral": "Trung lập",
+      "Greed": "Tham lam",
+      "Extreme Greed": "Cực kỳ tham lam"
+    },
+    "yesterday": "Hôm qua",
+    "weekAgo": "Tuần trước",
+    "monthAgo": "Tháng trước",
+    "fngNote": "Vùng cực đoan thường trùng với đáy ngắn hạn (sợ hãi) và đỉnh ngắn hạn (tham lam).",
+    "marketCap": "Vốn hóa",
+    "volume24h": "KL 24h",
+    "dominance": "Tỷ trọng",
+    "coin": "Đồng",
+    "price": "Giá",
+    "h1": "1h",
+    "h24": "24h",
+    "d7": "7 ngày",
+    "mcap": "Vốn hóa",
+    "fromAth": "So với ATH",
+    "last7d": "7 ngày",
+    "funding": "Funding (8h)",
+    "fundingApr": "Quy năm",
+    "oi": "Hợp đồng mở (OI)",
+    "oiChange": "24h",
+    "fundingNote": "Funding dương = phe long trả phí cho phe short: đòn bẩy đang nghiêng về tăng. Funding rất cao cùng OI tăng nhanh thường báo trước các đợt thanh lý dây chuyền.",
+    "p2p": "USDT/VND trên Binance P2P",
+    "p2pBuy": "Giá bạn mua",
+    "p2pSell": "Giá bạn bán",
+    "bankRate": "USD Vietcombank (bán ra)",
+    "p2pPremium": "P2P cao hơn giá ngân hàng",
+    "p2pNote": "Trung vị 10 quảng cáo tốt nhất mỗi chiều. Mỗi quảng cáo có hạn mức và điều kiện riêng nên hai chiều có thể chéo nhau.",
+    "unavailable": "Không truy cập được từ vị trí của máy chủ này",
+    "halving": "Halving tiếp theo",
+    "blocksLeft": "còn {n} khối",
+    "subsidy": "Phần thưởng khối {now} → {next} BTC",
+    "fees": "Phí (sat/vB)",
+    "feeFast": "Khối kế",
+    "feeHalfHour": "30 phút",
+    "feeHour": "1 giờ",
+    "feeEconomy": "Tiết kiệm",
+    "difficulty": "Điều chỉnh độ khó kế tiếp",
+    "difficultyEta": "{progress} chu kỳ · ~{date}",
+    "hashrate": "Hashrate",
+    "hashrate30d": "so với 30 ngày trước",
+    "height": "Chiều cao khối",
+    "rank": "#{n}",
+    "noOdds": "Hiện không có kèo crypto dài hạn, hoặc mạng này không truy cập được Polymarket.",
+    "ends": "kết thúc"
+  },
   "calendar": {
     "econ": "Kinh tế",
     "fomc": "Fed",
@@ -232,7 +319,8 @@
     "volume": "KL 24h",
     "geopolitics": "Địa chính trị",
     "economy": "Kinh tế",
-    "ends": "kết thúc"
+    "ends": "kết thúc",
+    "crypto": "Crypto"
   },
   "env": {
     "co2": "CO₂ tại Mauna Loa",

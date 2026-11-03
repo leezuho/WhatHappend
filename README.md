@@ -1,6 +1,6 @@
 # WhatHappend
 
-Dashboard cá nhân "thế giới đang diễn ra gì": thị trường, vĩ mô, tin tức, bản đồ sự kiện, lịch, xu hướng, thị trường dự đoán, môi trường và góc Việt Nam. Giao diện song ngữ Việt/Anh, có ba giao diện: sáng, tối và Anthropic (nền kem, tiêu đề serif).
+Dashboard cá nhân "thế giới đang diễn ra gì": thị trường, vĩ mô, tin tức, bản đồ sự kiện, lịch, xu hướng, thị trường dự đoán, môi trường và góc Việt Nam. Trang `/vi/crypto` riêng cho crypto: top coin, Fear & Greed, DVOL, stablecoin, funding/OI, USDT/VND P2P, mạng Bitcoin, kèo Polymarket và tin crypto. Giao diện song ngữ Việt/Anh, có ba giao diện: sáng, tối và Anthropic (nền kem, tiêu đề serif).
 
 ## Chạy
 
@@ -35,6 +35,7 @@ Tất cả nguồn dữ liệu đều không cần key, trừ phần AI. Thiếu
 | `AI_API_KEY` | Key của provider. Cũng nhận `GEMINI_API_KEY` / `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` |
 | `AI_MODEL_BRIEF` | Model viết bản tin và diễn giải chỉ số. Mặc định `gemini-flash-latest` / `claude-sonnet-5-5` |
 | `AI_MODEL_FAST` | Model dịch và gắn nhãn tiêu đề. Mặc định `gemini-flash-lite-latest` / `claude-haiku-5-5` |
+| `COINGECKO_API_KEY` | Không thuộc AI, tùy chọn. Key Demo miễn phí của CoinGecko, nên đặt khi chạy trên cloud (IP dùng chung dễ bị 429) |
 
 Với key Gemini miễn phí, dòng Pro không có hạn mức (lỗi 429 `limit: 0`). Muốn dùng `gemini-pro-latest` cho bản tin thì cần gói trả phí. Sau khi sửa `.env.local`, khởi động lại cả worker lẫn web.
 

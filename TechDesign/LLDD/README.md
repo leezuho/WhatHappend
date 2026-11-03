@@ -6,7 +6,7 @@
 | # | Tài liệu | Nội dung |
 |---|---|---|
 | 01 | [Database schema](01-database-schema.md) | Các bảng SQLite, khóa, index, quy ước id, cách ghi, PRAGMA, thời hạn lưu |
-| 02 | [Data sources](02-data-sources.md) | 26 nguồn đã kiểm chứng: endpoint, cách lưu, giới hạn tần suất, lưu ý, nguồn đã loại |
+| 02 | [Data sources](02-data-sources.md) | 33 nguồn đã kiểm chứng: endpoint, cách lưu, giới hạn tần suất, lưu ý, nguồn đã loại |
 | 03 | [Worker và framework nguồn](03-worker-and-sources-framework.md) | Interface `Source`, runner, scheduler, HTTP helpers, store helpers, cách thêm nguồn mới |
 | 04 | [Frontend](04-frontend.md) | Routing, layout, mẫu Panel, query layer, client components, đặc tả biểu đồ, token màu, bản đồ, i18n |
 | 05 | [AI pipeline](05-ai-pipeline.md) | Lớp provider cấu hình được (Gemini / Claude), dịch và phân loại tiêu đề, Daily Brief, guardrails, hạn mức và chi phí, kết quả chạy thật |

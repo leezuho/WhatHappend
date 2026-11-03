@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SOURCE_META } from "@/config/sources";
+import { CRYPTO_KEYS } from "@/config/series";
 import { tx } from "@/lib/db";
 import { fmtDelta, fmtValue } from "@/lib/format";
 import { findNotables, type Notable, type Reason } from "@/lib/signals/notable";
@@ -15,6 +16,8 @@ import type { StoredInsight } from "./insights-shared";
 
 const REFRESH_MS = 12 * 3600_000;
 const MAX_HEADLINES = 60;
+/** Added on top when a crypto series is among the notables. */
+const MAX_CRYPTO_HEADLINES = 25;
 
 const Out = z.object({
   items: z.array(z.object({ key: z.string(), en: z.string(), vi: z.string(), refs: z.array(z.number()) })),
@@ -90,7 +93,9 @@ export const insights: Source = {
     const todo = notables.filter((n) => needsNote(n.reasons, existing.get(n.key), now));
     if (!todo.length) return 0;
 
-    const headlines = recentHeadlines(db, now, MAX_HEADLINES);
+    // Crypto moves are explained by crypto outlets far more often than by world news.
+    const crypto = todo.some((n) => CRYPTO_KEYS.includes(n.key));
+    const headlines = [...recentHeadlines(db, now, MAX_HEADLINES), ...(crypto ? recentHeadlines(db, now, MAX_CRYPTO_HEADLINES, "crypto") : [])];
     const input = {
       indicators: todo.map((n) => ({
         key: n.key,

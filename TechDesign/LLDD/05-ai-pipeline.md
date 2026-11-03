@@ -118,7 +118,8 @@ z.object({ items: z.array(z.object({
 | `politics` | Chính trị, bầu cử, ngoại giao |
 | `conflict` | Chiến tranh, khủng bố, bạo động |
 | `economy` | Kinh tế vĩ mô, chính sách, thương mại |
-| `markets` | Thị trường tài chính, crypto |
+| `markets` | Thị trường tài chính |
+| `crypto` | Tiền mã hóa, blockchain |
 | `business` | Doanh nghiệp |
 | `tech` | Công nghệ, AI |
 | `science` | Khoa học, vũ trụ |
@@ -138,7 +139,7 @@ z.object({ items: z.array(z.object({
 Nút "Viết lại" (`BriefRefresh`) gọi `POST /api/brief`. Route này chỉ ghi cờ `kv['brief:force']` (không xóa sau khi chạy; so sánh theo thời gian với `briefs.created_at`). Web server không gọi API AI nào (giữ nguyên tắc của ADR-04). Kiểu `StoredBrief` và `FORCE_KEY` nằm ở `lib/ai/brief-shared.ts` để web không import SDK.
 
 **Đầu vào** (gom từ DB, không gọi API ngoài):
-1. Tối đa 90 tiêu đề trong 24 giờ qua (tiếng Anh nếu có), gộp theo `title_key`, bỏ `topic = sports`. Mỗi tiêu đề được đánh số `n` kèm `source`, `region`, `topic`.
+1. Tối đa 90 tiêu đề trong 24 giờ qua (tiếng Anh nếu có), gộp theo `title_key`, bỏ `topic = sports` và bỏ các báo chỉ viết về crypto (`CRYPTO_OUTLETS`). Mỗi tiêu đề được đánh số `n` kèm `source`, `region`, `topic`.
 2. Snapshot 12 Vital Signs: tên, giá trị, % thay đổi.
 3. Thiên tai đáng chú ý trong 48 giờ: sự kiện mức orange/red và động đất M ≥ 6 (tối đa 15).
 
@@ -180,7 +181,7 @@ Người không chuyên nhìn con số không hiểu nó nói gì, nên chỉ s�
 
 **Khi nào viết lại** (`needsNote`): chỉ số chưa có ghi chú, có lý do mới chưa nằm trong `basis` đã lưu, hoặc ghi chú cũ hơn 12 giờ. Lý do chỉ mất đi (dao động mạnh nhạt dần trong phiên, `crit` lùi về `warn`) không kích hoạt viết lại, vì z-score lơ lửng quanh ngưỡng sẽ làm `basis` đổi qua lại và tốn một lần gọi model mỗi lượt. Mọi chỉ số cần viết gộp vào **một** lần gọi model.
 
-**Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief).
+**Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief); nếu có chỉ số crypto trong danh sách thì thêm 25 tiêu đề từ báo crypto (`recentHeadlines(…, "crypto")`).
 
 **Prompt** yêu cầu: (1) giải nghĩa mức hiện tại bằng lời thường, (2) nêu nguyên nhân **chỉ khi** tiêu đề nói rõ và ghi số tiêu đề vào `refs`, (3) có thể nêu tác động thường gặp tới người dân (giá xăng, lãi vay, Việt Nam), không dự báo, không khuyến nghị đầu tư. Số liệu tuần/tháng có `asOf` cũ hơn tin nên không được gán cho tin 24 giờ. Mỗi ghi chú dưới 60 từ, viết song ngữ.
 

@@ -8,7 +8,7 @@
 Tài liệu này mô tả kiến trúc tổng thể của **WhatHappend**, dashboard cá nhân tổng hợp tình hình thế giới. Yêu cầu nghiệp vụ nằm trong [BRD](../../BRD/README.md); chi tiết thiết kế từng phần nằm trong [LLDD](../LLDD/README.md).
 
 Phạm vi gồm:
-- thu thập dữ liệu từ 26 nguồn đã đăng ký (24 nguồn dữ liệu ngoài + 2 bước AI);
+- thu thập dữ liệu từ 33 nguồn đã đăng ký (30 nguồn dữ liệu ngoài + 3 bước AI: `translate`, `brief`, `insights`);
 - lưu vào SQLite cục bộ;
 - render dashboard song ngữ bằng Next.js;
 - dùng một mô hình AI để dịch, phân loại và tóm tắt. Provider cấu hình được: Google Gemini hoặc Anthropic Claude (ADR-10).
@@ -85,6 +85,7 @@ flowchart LR
 | Tin tức | RSS, GDELT | `articles` | Loại trùng theo `id` (hash URL) và `title_key`. Sau đó AI điền `title_vi`/`title_en`, `region`, `topic` |
 | Bản đồ | USGS, GDACS, EONET, GDELT (events export) | `events` | USGS/GDACS/EONET thay snapshot theo `source` và giữ `title_vi` đã dịch. GDELT upsert theo ô lưới 1° và xóa ô cũ hơn 24 giờ |
 | Danh sách | Wikipedia, HN, Polymarket, Kalshi, lịch kinh tế, launches, WHO, chất lượng không khí, vàng VN, Vietcombank | `items` (theo `kind`) | Thay toàn bộ snapshot theo `kind`. Lịch FOMC không lưu DB mà lấy từ `config/fomc.ts` |
+| Crypto | Yahoo (BTC, ETH, SOL), CoinGecko, alternative.me, Deribit, DefiLlama, mempool.space, Binance (futures + P2P), RSS báo crypto | `quotes`, `observations`, `items`, `articles` | Trang riêng `/[lang]/crypto`. Báo crypto không vào tin thế giới và Brief |
 | Watchlist | Người dùng ghim từ hộp thoại chi tiết | `watchlist` (`series_id` = `SeriesKey`) | Ghi qua `POST /api/watchlist` (ngoại lệ ghi duy nhất của web cùng với cờ `kv` của brief) |
 | AI Brief | Tin 24h qua + Vital Signs + sự kiện | `briefs` (`date`, `lang`) | 06:00 Asia/Ho_Chi_Minh |
 | Vận hành | Mọi nguồn | `source_status`, `fetch_log` | Cơ sở để tính stale trên từng panel |
@@ -118,7 +119,7 @@ flowchart LR
   - Tùy chọn `AI_MODEL_BRIEF`, `AI_MODEL_FAST` và `DB_PATH`.
   - Sau khi sửa `.env.local` phải khởi động lại **cả worker lẫn web**. Mọi nguồn dữ liệu khác đều không cần key: FRED dùng CSV công khai, chất lượng không khí dùng Open-Meteo.
 - **Build hooks:** `predev`/`prebuild` chạy `scripts/copy-maplibre-worker.mjs`; `public/vendor/` nằm trong `.gitignore` và được ESLint bỏ qua.
-- **Không dùng:** CoinGecko và Frankfurter (Yahoo đã có BTC và tỷ giá), World Bank (IMF đủ, World Bank rất chậm khi chưa có cache), Reddit (bị chặn khi không đăng nhập). Xem [LLDD 02](../LLDD/02-data-sources.md) §Nguồn đã loại.
+- **Không dùng:** Frankfurter (Yahoo đã có tỷ giá), World Bank (IMF đủ, World Bank rất chậm khi chưa có cache), Reddit (bị chặn khi không đăng nhập). Xem [LLDD 02](../LLDD/02-data-sources.md) §Nguồn đã loại.
 - **Không có** container, đám mây hay CI ở phiên bản này.
 
 ## 8. Các vấn đề xuyên suốt

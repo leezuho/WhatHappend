@@ -62,33 +62,47 @@ function outcomesOf(markets: z.infer<typeof Market>[]): Outcome[] {
     .slice(0, 4);
 }
 
+type Ev = z.infer<typeof Event>;
+
+const eventsUrl = (tag: string, limit: number) =>
+  `https://gamma-api.polymarket.com/events?tag_slug=${tag}&active=true&closed=false&order=volume24hr&ascending=false&limit=${limit}`;
+
+function toItems(list: { tag: string; e: Ev }[], n: number, keep: (e: Ev) => boolean = () => true) {
+  return list
+    .filter(({ e }) => keep(e))
+    .map(({ tag, e }) => ({ tag, e, outcomes: outcomesOf(e.markets ?? []) }))
+    .filter((x) => x.outcomes.length)
+    .sort((a, b) => (b.e.volume24hr ?? 0) - (a.e.volume24hr ?? 0))
+    .slice(0, n)
+    .map(({ tag, e, outcomes }) => ({
+      id: String(e.id),
+      title: e.title,
+      url: `https://polymarket.com/event/${e.slug}`,
+      ts: e.endDate ? Date.parse(e.endDate) || null : null,
+      data: { tag, volume24hr: e.volume24hr ?? 0, outcomes },
+    }));
+}
+
+/** Crypto's top volume is "BTC up or down today"-style markets; keep the ones with a horizon. */
+const MIN_CRYPTO_HORIZON = 2 * 24 * 3600_000;
+
 export const polymarket: Source = {
   id: "polymarket",
   ...SOURCE_META.polymarket,
   async run({ db }) {
-    const byId = new Map<string, { tag: string; e: z.infer<typeof Event> }>();
+    const byId = new Map<string, { tag: string; e: Ev }>();
     for (const tag of ["geopolitics", "economy"]) {
-      const url = `https://gamma-api.polymarket.com/events?tag_slug=${tag}&active=true&closed=false&order=volume24hr&ascending=false&limit=15`;
-      for (const e of await fetchJson(url, Resp, { timeoutMs: 30_000 })) {
+      for (const e of await fetchJson(eventsUrl(tag, 15), Resp, { timeoutMs: 30_000 })) {
         const id = String(e.id);
         if (!byId.has(id)) byId.set(id, { tag, e });
       }
     }
-    const top = [...byId.values()]
-      .map(({ tag, e }) => ({ tag, e, outcomes: outcomesOf(e.markets ?? []) }))
-      .filter((x) => x.outcomes.length)
-      .sort((a, b) => (b.e.volume24hr ?? 0) - (a.e.volume24hr ?? 0))
-      .slice(0, 12);
-    return replaceItems(
-      db,
-      "polymarket",
-      top.map(({ tag, e, outcomes }) => ({
-        id: String(e.id),
-        title: e.title,
-        url: `https://polymarket.com/event/${e.slug}`,
-        ts: e.endDate ? Date.parse(e.endDate) || null : null,
-        data: { tag, volume24hr: e.volume24hr ?? 0, outcomes },
-      })),
+    const crypto = (await fetchJson(eventsUrl("crypto", 40), Resp, { timeoutMs: 30_000 })).map((e) => ({ tag: "crypto", e }));
+    const now = Date.now();
+    const longDated = (e: Ev) => !e.endDate || Date.parse(e.endDate) - now > MIN_CRYPTO_HORIZON;
+    return (
+      replaceItems(db, "polymarket", toItems([...byId.values()], 12)) +
+      replaceItems(db, "polymarket_crypto", toItems(crypto, 8, longDated))
     );
   },
 };

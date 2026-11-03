@@ -2,10 +2,15 @@ import { brief } from "@/lib/ai/brief";
 import { insights } from "@/lib/ai/insights";
 import { translate } from "@/lib/ai/translate";
 import { airquality } from "./airquality";
+import { binance } from "./binance";
 import { bis } from "./bis";
 import { calendar } from "./calendar";
 import { co2 } from "./co2";
+import { coingecko } from "./coingecko";
+import { defillama } from "./defillama";
+import { deribit } from "./deribit";
 import { eonet } from "./eonet";
+import { fng } from "./fng";
 import { fred } from "./fred";
 import { gdacs } from "./gdacs";
 import { gdelt } from "./gdelt";
@@ -16,6 +21,7 @@ import { hackernews } from "./hackernews";
 import { imf } from "./imf";
 import { kalshi } from "./kalshi";
 import { launches } from "./launches";
+import { mempool } from "./mempool";
 import { polymarket } from "./polymarket";
 import { rss } from "./rss";
 import { sjc } from "./sjc";
@@ -62,4 +68,11 @@ export const sources: Source[] = [
   vnindex,
   sjc,
   vcb,
+  // crypto
+  coingecko,
+  fng,
+  deribit,
+  defillama,
+  mempool,
+  binance,
 ];

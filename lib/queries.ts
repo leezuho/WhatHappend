@@ -4,10 +4,14 @@ import { getDb } from "@/lib/db";
 import { sourceMeta, type SourceId } from "@/config/sources";
 import type { SourceStatusRow } from "@/lib/sources/types";
 import type { GoldQuote } from "@/lib/sources/sjc";
+import type { CoinRow, CryptoGlobal, TrendingCoin } from "@/lib/sources/coingecko";
+import type { BtcNetwork } from "@/lib/sources/mempool";
+import type { P2pQuote, PerpRow } from "@/lib/sources/binance";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { SERIES, type SeriesDef, type SeriesKey } from "@/config/series";
 import { COUNTRIES } from "@/config/countries";
 import { FOMC_MEETINGS } from "@/config/fomc";
+import { CRYPTO_OUTLETS } from "@/config/feeds";
 import { getPoints, getTile, getWatchlistKeys, tileOf, type TileData } from "@/lib/data/series";
 import type { Point } from "@/lib/sources/store";
 import { computeRegime, type RegimeResult } from "@/lib/signals/risk-regime";
@@ -115,27 +119,47 @@ export interface NewsItem {
   alsoIn: string[];
 }
 
-export async function getNews(lang: Locale, limit = 120): Promise<NewsItem[]> {
-  await connection();
+interface ArticleRow {
+  id: string;
+  url: string;
+  source: string;
+  title: string;
+  title_en: string | null;
+  title_vi: string | null;
+  lang: string;
+  region: string | null;
+  topic: string | null;
+  image: string | null;
+  published_at: number;
+  title_key: string;
+}
+
+/** Last 3 days of articles matching `where`, newest first, one per story. */
+function readNews(lang: Locale, where: string, params: (string | number)[], limit: number): NewsItem[] {
   const rows = getDb()
     .prepare(
       `SELECT id, url, source, title, title_en, title_vi, lang, region, topic, image, published_at, title_key
-       FROM articles WHERE published_at >= ? ORDER BY published_at DESC LIMIT 600`,
+       FROM articles WHERE published_at >= ? AND (${where}) ORDER BY published_at DESC LIMIT ?`,
     )
-    .all(Date.now() - 3 * 24 * 3600_000) as unknown as {
-    id: string;
-    url: string;
-    source: string;
-    title: string;
-    title_en: string | null;
-    title_vi: string | null;
-    lang: string;
-    region: string | null;
-    topic: string | null;
-    image: string | null;
-    published_at: number;
-    title_key: string;
-  }[];
+    .all(Date.now() - 3 * 24 * 3600_000, ...params, limit * 4) as unknown as ArticleRow[];
+  return collapseStories(rows, lang).slice(0, limit);
+}
+
+const outletMarks = CRYPTO_OUTLETS.map(() => "?").join(",");
+
+/** World news: everything except the crypto-only outlets (they have their own panel). */
+export async function getNews(lang: Locale, limit = 120): Promise<NewsItem[]> {
+  await connection();
+  return readNews(lang, `source NOT IN (${outletMarks})`, CRYPTO_OUTLETS, limit);
+}
+
+/** Crypto outlets plus crypto stories the AI found in general outlets. */
+export async function getCryptoNews(lang: Locale, limit = 40): Promise<NewsItem[]> {
+  await connection();
+  return readNews(lang, `source IN (${outletMarks}) OR topic = 'crypto'`, CRYPTO_OUTLETS, limit);
+}
+
+function collapseStories(rows: ArticleRow[], lang: Locale): NewsItem[] {
   // Collapse the same story across outlets (newest copy wins).
   const seen = new Map<string, NewsItem>();
   for (const r of rows) {
@@ -157,7 +181,7 @@ export async function getNews(lang: Locale, limit = 120): Promise<NewsItem[]> {
       alsoIn: [],
     });
   }
-  return [...seen.values()].slice(0, limit);
+  return [...seen.values()];
 }
 
 // ---------------------------------------------------------------- markets & macro
@@ -280,7 +304,8 @@ export async function getTicker(): Promise<TickerItem[]> {
   const byId = new Map(quotes.map((q) => [q.series_id, q]));
   return Object.values(SERIES).flatMap((def: SeriesDef) => {
     const q = byId.get(def.id);
-    return q ? [{ label: def.short, price: q.price, changePct: q.change_pct, digits: def.digits }] : [];
+    // Market caps in $ billions read badly as bare ticker numbers.
+    return q && def.unit !== "$B" ? [{ label: def.short, price: q.price, changePct: q.change_pct, digits: def.digits }] : [];
   });
 }
 
@@ -379,7 +404,7 @@ export async function getVietnam(lang: Locale): Promise<VietnamData> {
   const usdvnd = getTile(db, SERIES.usdvnd);
   const xau = getTile(db, SERIES.gold);
   const breadth = items("vn_breadth")[0];
-  const news = (await getNews(lang, 400)).filter((n) => n.source === "VnExpress" && n.region === "vietnam").slice(0, 6);
+  const news = readNews(lang, "source = 'VnExpress' AND region = 'vietnam'", [], 6);
   return {
     vnindex: getTile(db, SERIES.vnindex),
     usdvnd,
@@ -495,6 +520,86 @@ export async function getEnv(lang: Locale): Promise<EnvData> {
     outbreaks: await getItems("who", lang, 5),
   };
 }
+
+// ---------------------------------------------------------------- crypto
+
+export interface FearGreed {
+  value: number;
+  label: string;
+  ts: number;
+  yesterday: number | null;
+  weekAgo: number | null;
+  monthAgo: number | null;
+  spark: Point[];
+}
+
+export interface CryptoP2p extends P2pQuote {
+  ts: number;
+  /** Vietcombank's USD selling rate, and how far the P2P buy price sits above it (%). */
+  bankSell: number | null;
+  premium: number | null;
+}
+
+export interface PolyEvent {
+  tag: string;
+  volume24hr: number;
+  outcomes: { label: string; prob: number; change24h: number | null }[];
+}
+
+export interface CryptoData {
+  global: CryptoGlobal | null;
+  top: CoinRow[];
+  topTs: number | null;
+  trending: TrendingCoin[];
+  fng: FearGreed | null;
+  network: BtcNetwork | null;
+  perps: PerpRow[];
+  perpsTs: number | null;
+  p2p: CryptoP2p | null;
+}
+
+/** Everything the crypto page reads, once per request (several panels share it). */
+export const getCrypto = cache(async (lang: Locale): Promise<CryptoData> => {
+  await connection();
+  const db = getDb();
+  const one = <D,>(kind: string) => {
+    const r = db.prepare("SELECT ts, data FROM items WHERE kind = ? ORDER BY rank LIMIT 1").get(kind) as { ts: number | null; data: string | null } | undefined;
+    return r?.data ? { ts: r.ts ?? 0, data: JSON.parse(r.data) as D } : null;
+  };
+  const [top, trending, perps, vcb] = await Promise.all([
+    getItems<CoinRow>("crypto_top", lang, 20),
+    getItems<TrendingCoin>("crypto_trending", lang, 10),
+    getItems<PerpRow>("crypto_perps", lang, 10),
+    getItems<{ sell: number | null }>("vcb", lang),
+  ]);
+
+  const fngPts = getPoints(db, SERIES.fng.id, Date.now() - 400 * 24 * 3600_000);
+  const fngLast = fngPts[fngPts.length - 1];
+  const fngLabel = one<{ label: string }>("crypto_fng");
+  const ago = (days: number) => (fngLast ? (fngPts.filter((p) => p.ts <= fngLast.ts - days * 24 * 3600_000).pop()?.value ?? null) : null);
+
+  const p2p = one<P2pQuote>("usdt_p2p");
+  const bankSell = vcb.find((r) => r.id === "USD")?.data.sell ?? null;
+
+  return {
+    global: one<CryptoGlobal>("crypto_global")?.data ?? null,
+    top: top.map((t) => t.data),
+    topTs: top[0]?.ts ?? null,
+    trending: trending.map((t) => t.data),
+    fng: fngLast
+      ? { value: fngLast.value, label: fngLabel?.data.label ?? "", ts: fngLast.ts, yesterday: ago(1), weekAgo: ago(7), monthAgo: ago(30), spark: fngPts.slice(-90) }
+      : null,
+    network: one<BtcNetwork>("btc_network")?.data ?? null,
+    perps: perps.map((p) => p.data),
+    perpsTs: perps[0]?.ts ?? null,
+    p2p: p2p && {
+      ...p2p.data,
+      ts: p2p.ts,
+      bankSell,
+      premium: bankSell ? (p2p.data.buy / bankSell - 1) * 100 : null,
+    },
+  };
+});
 
 // ---------------------------------------------------------------- watchlist
 

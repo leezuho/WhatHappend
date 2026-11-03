@@ -30,7 +30,7 @@
 | `npx tsc --noEmit` | Sạch |
 | `npm run lint` | Sạch (0 lỗi, 0 cảnh báo) |
 | `npm run build` | Thành công; `/vi`, `/en` là Partial Prerender (◐), `/api/*` dynamic (ƒ) |
-| `npm run fetch` (V1/V2) | 24 nguồn dữ liệu đều `ok`; `translate` và `brief` bị `skip` cho tới khi cấu hình AI |
+| `npm run fetch` (V1/V2) | 30 nguồn dữ liệu đều `ok` (Polymarket/Kalshi có thể bị nhà mạng VN chặn); `translate` và `brief` bị `skip` cho tới khi cấu hình AI |
 | Giao diện (V4, V9, V12, V13) | Chụp màn hình qua Chrome headless: sáng/tối, bản đồ có chấm, mọi biểu đồ, hộp thoại chi tiết, hàng "Bạn đã ghim" |
 | AI với Gemini (V5, V14, V15) | **Đã chạy thật** với key Google AI Studio gói miễn phí:<br/>• `translate`: 220 mục trong 41 giây, tiếng Việt chất lượng tốt.<br/>• `brief`: chạy bằng `gemini-3.8-flash` (alias `gemini-flash-latest`) trên 90 tiêu đề, mất 2–3 phút.<br/>• Nút "Viết lại" → worker → brief mới đã kiểm chứng.<br/>• `gemini-pro-latest` bị 429 `limit: 0`, nên mặc định đổi sang Flash.<br/>• Một lần 503 "high demand", nên đã bật retry SDK. |
 | AI với Claude | Adapter qua kiểm tra kiểu nhưng **chưa gọi thật** (chưa có key) |
@@ -80,7 +80,7 @@ Mở `http://localhost:3000`. Web chỉ nghe trên `127.0.0.1` (script `dev`/`st
 | `AI_MODEL_BRIEF`, `AI_MODEL_FAST` | Đổi model cho Brief / dịch | Gemini: `gemini-flash-latest` / `gemini-flash-lite-latest`. Claude: `claude-sonnet-5-5` / `claude-haiku-5-5` |
 | `DB_PATH` | Vị trí file SQLite | Mặc định `./data/whathappend.db` |
 
-Không nguồn dữ liệu nào cần key: FRED dùng CSV công khai, chất lượng không khí dùng Open-Meteo, CoinGecko không dùng.
+Không nguồn dữ liệu nào cần key: FRED dùng CSV công khai, chất lượng không khí dùng Open-Meteo. CoinGecko nhận `COINGECKO_API_KEY` (gói Demo miễn phí) nhưng không bắt buộc.
 
 `npm run worker` và `npm run fetch` nạp `.env.local` qua `--env-file-if-exists`; `next dev`/`next start` tự nạp `.env.local`. Biến môi trường chỉ được đọc lúc khởi động, nên sau khi sửa `.env.local` phải **khởi động lại cả worker lẫn web**. Web cần khởi động lại để chip "Cần API key" và panel Brief cập nhật. `.env.local` chứa key nên phải nằm trong `.gitignore` (mẫu `.env*`) và nên có quyền 600.
 

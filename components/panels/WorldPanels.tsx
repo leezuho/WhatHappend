@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { getDict, intlLocale, type Locale } from "@/lib/i18n";
 import { fmtCompact, fmtDate, fmtNumber, fmtSigned, fmtTime } from "@/lib/format";
-import { getCalendar, getEnv, getItems, requestNow } from "@/lib/queries";
+import { getCalendar, getEnv, getItems, requestNow, type Item, type PolyEvent } from "@/lib/queries";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { EmptyState } from "@/components/ui/Panel";
 import { Tabs } from "@/components/ui/Tabs";
@@ -119,7 +119,7 @@ export async function TrendingBody({ lang }: { lang: Locale }) {
 
 // ---------------------------------------------------------------- prediction markets
 
-function Meter({ p }: { p: number }) {
+export function Meter({ p }: { p: number }) {
   // Same-ramp track: the unfilled part is a lighter step of the fill hue.
   return (
     <span className="relative block h-1.5 w-full overflow-hidden rounded-full" style={{ background: "color-mix(in oklab, var(--s1) 18%, transparent)" }}>
@@ -128,11 +128,43 @@ function Meter({ p }: { p: number }) {
   );
 }
 
+/** Polymarket events with their leading outcomes (prediction panel and crypto page). */
+export function PolyEvents({ events, lang }: { events: Item<PolyEvent>[]; lang: Locale }) {
+  const d = getDict(lang);
+  const tags: Record<string, string> = { geopolitics: d.prediction.geopolitics, economy: d.prediction.economy, crypto: d.prediction.crypto };
+  const pct = (p: number) => `${fmtNumber(p * 100, lang, 0)}%`;
+  return events.map((ev) => (
+    <article key={ev.id} className="border-t border-line pt-2">
+      <a href={ev.url ?? undefined} target="_blank" rel="noreferrer" className="text-xs font-medium text-ink hover:underline">
+        {ev.title}
+      </a>
+      <div className="mb-1 text-[10px] text-muted">
+        {tags[ev.data.tag] ?? ev.data.tag} · {d.prediction.volume} ${fmtCompact(ev.data.volume24hr, lang)}
+        {ev.ts ? ` · ${d.prediction.ends} ${fmtDate(ev.ts, lang)}` : ""}
+      </div>
+      <ul className="flex flex-col gap-1">
+        {ev.data.outcomes.map((o) => (
+          <li key={o.label} className="grid grid-cols-[minmax(0,1fr)_72px_64px] items-center gap-2 text-[11px]">
+            <span className="truncate text-ink-2" title={o.label}>
+              {o.label}
+            </span>
+            <Meter p={o.prob} />
+            <span className="tabular text-right">
+              <span className="font-medium text-ink">{pct(o.prob)}</span>
+              {o.change24h ? <span className={clsx("ml-1", o.change24h > 0 ? "text-up" : "text-down")}>{fmtSigned(o.change24h * 100, lang, 0)}</span> : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </article>
+  ));
+}
+
 export async function PredictionBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);
   const [fed, poly] = await Promise.all([
     getItems<{ prob: number | null; strike: number | null; eventTitle: string }>("kalshi_fed", lang, 40),
-    getItems<{ tag: string; volume24hr: number; outcomes: { label: string; prob: number; change24h: number | null }[] }>("polymarket", lang, 12),
+    getItems<PolyEvent>("polymarket", lang, 12),
   ]);
   if (!fed.length && !poly.length) return <EmptyState lang={lang} />;
   const pct = (p: number) => `${fmtNumber(p * 100, lang, 0)}%`;
@@ -157,33 +189,7 @@ export async function PredictionBody({ lang }: { lang: Locale }) {
       )}
       <section className="flex flex-col gap-3">
         <h3 className="text-xs font-semibold text-ink">{d.prediction.markets}</h3>
-        {poly.map((ev) => (
-          <article key={ev.id} className="border-t border-line pt-2">
-            <a href={ev.url ?? undefined} target="_blank" rel="noreferrer" className="text-xs font-medium text-ink hover:underline">
-              {ev.title}
-            </a>
-            <div className="mb-1 text-[10px] text-muted">
-              {ev.data.tag === "geopolitics" ? d.prediction.geopolitics : d.prediction.economy} · {d.prediction.volume} ${fmtCompact(ev.data.volume24hr, lang)}
-              {ev.ts ? ` · ${d.prediction.ends} ${fmtDate(ev.ts, lang)}` : ""}
-            </div>
-            <ul className="flex flex-col gap-1">
-              {ev.data.outcomes.map((o) => (
-                <li key={o.label} className="grid grid-cols-[minmax(0,1fr)_72px_64px] items-center gap-2 text-[11px]">
-                  <span className="truncate text-ink-2" title={o.label}>
-                    {o.label}
-                  </span>
-                  <Meter p={o.prob} />
-                  <span className="tabular text-right">
-                    <span className="font-medium text-ink">{pct(o.prob)}</span>
-                    {o.change24h ? (
-                      <span className={clsx("ml-1", o.change24h > 0 ? "text-up" : "text-down")}>{fmtSigned(o.change24h * 100, lang, 0)}</span>
-                    ) : null}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </article>
-        ))}
+        <PolyEvents events={poly} lang={lang} />
       </section>
     </div>
   );

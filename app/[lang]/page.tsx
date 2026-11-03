@@ -17,6 +17,7 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
     <>
       <TopBar
         lang={lang}
+        section="overview"
         regime={
           <Suspense fallback={null}>
             <RegimeBadge lang={lang} />

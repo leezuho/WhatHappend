@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { DatabaseSync } from "node:sqlite";
 import { SOURCE_META } from "@/config/sources";
 import { SERIES, VITAL_SIGNS } from "@/config/series";
+import { CRYPTO_OUTLETS } from "@/config/feeds";
 import { getTile } from "@/lib/data/series";
 import type { Source } from "@/lib/sources/types";
 import { generateJson } from "./provider";
@@ -55,14 +56,17 @@ export interface HeadlineRow {
 }
 
 /** Last 24h of headlines (English where available), one per story, newest first, no sports. */
-export function recentHeadlines(db: DatabaseSync, now: number, limit = MAX_HEADLINES): HeadlineRow[] {
+export function recentHeadlines(db: DatabaseSync, now: number, limit = MAX_HEADLINES, outlets: "world" | "crypto" = "world"): HeadlineRow[] {
+  // Crypto-only outlets publish dozens of items a day: they are asked for separately.
+  const marks = CRYPTO_OUTLETS.map(() => "?").join(",");
   return db
     .prepare(
       `SELECT COALESCE(title_en, title) AS title, url, source, region, topic, MAX(published_at) AS published_at
        FROM articles WHERE published_at >= ? AND (topic IS NULL OR topic != 'sports')
+         AND source ${outlets === "crypto" ? "IN" : "NOT IN"} (${marks})
        GROUP BY title_key ORDER BY published_at DESC LIMIT ?`,
     )
-    .all(now - 24 * 3600_000, limit) as unknown as HeadlineRow[];
+    .all(now - 24 * 3600_000, ...CRYPTO_OUTLETS, limit) as unknown as HeadlineRow[];
 }
 
 function forcedAt(db: DatabaseSync): number {

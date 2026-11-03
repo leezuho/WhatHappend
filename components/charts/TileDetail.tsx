@@ -43,7 +43,7 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
   }, [open, days, seriesKey]);
 
   const scale = unit === "K" ? 1e-3 : unit === "$T" ? 1e-6 : 1;
-  const suffix = unit === "K" ? "K" : unit === "$T" ? "T" : unit === "%" ? "%" : "";
+  const suffix = unit === "K" ? "K" : unit === "$T" ? "T" : unit === "$B" ? (locale === "vi" ? " tỷ $" : "B") : unit === "%" ? "%" : "";
 
   return (
     <>

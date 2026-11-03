@@ -38,6 +38,13 @@ export const SOURCE_META = {
   vnindex: { intervalMs: 3 * MIN },
   sjc: { intervalMs: 30 * MIN },
   vcb: { intervalMs: HOUR },
+  // Crypto
+  coingecko: { intervalMs: 5 * MIN },
+  fng: { intervalMs: HOUR },
+  deribit: { intervalMs: HOUR },
+  defillama: { intervalMs: 6 * HOUR },
+  mempool: { intervalMs: 10 * MIN },
+  binance: { intervalMs: 15 * MIN },
 } satisfies Record<string, SourceMeta>;
 
 export type SourceId = keyof typeof SOURCE_META;

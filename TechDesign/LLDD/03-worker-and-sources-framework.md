@@ -135,4 +135,4 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 | Môi trường và sức khỏe | `airquality` 1 giờ · `who` 6 giờ · `co2`, `gistemp` 24 giờ |
 | Việt Nam | `vnindex` 3 phút · `sjc` 30 phút · `vcb` 1 giờ |
 
-\* `needsAi`: cần AI provider đã cấu hình (`AI_API_KEY`, Gemini hoặc Claude). Lúc khởi động, worker in `AI: <provider> (brief …, fast …)` hoặc `AI: off`, rồi in một dòng `skip <id>: <lý do>` cho mỗi nguồn còn thiếu cấu hình. Cả 26 nguồn đã được cài đặt.
+\* `needsAi`: cần AI provider đã cấu hình (`AI_API_KEY`, Gemini hoặc Claude). Lúc khởi động, worker in `AI: <provider> (brief …, fast …)` hoặc `AI: off`, rồi in một dòng `skip <id>: <lý do>` cho mỗi nguồn còn thiếu cấu hình. Cả 33 nguồn đã được cài đặt.

@@ -10,6 +10,7 @@
 |---|---|
 | `/` hoặc bất kỳ path nào chưa có locale | `proxy.ts` chọn locale theo thứ tự: cookie `lang` → `Accept-Language` bắt đầu bằng `en` → mặc định `vi`. Sau đó redirect sang `/<locale><path>` |
 | `/vi`, `/en` | `app/[lang]/layout.tsx` (root layout) + `app/[lang]/page.tsx` (dashboard) |
+| `/vi/crypto`, `/en/crypto` | `app/[lang]/crypto/page.tsx` (trang crypto, xem §3a) |
 | Locale lạ | `hasLocale()` sai → `notFound()` |
 
 - `proxy.ts` matcher bỏ qua `_next`, `api` và các file có phần mở rộng.
@@ -63,7 +64,31 @@ Ghi chú hành vi từng panel:
 - **Trending:** tab mặc định là Wikipedia EN, vì top của vi.wikipedia thường bị bot đẩy lượt xem.
 - **Prediction:** thang lãi suất Fed của Kalshi (chỉ hiện các mức có xác suất 2–98%, nếu không có thì 6 mức đầu) và các sự kiện Polymarket, mỗi outcome có thanh meter (track là bước nhạt của cùng hue).
 - **Hành tinh & sức khỏe:** CO₂ Mauna Loa (so 1 năm trước), dị thường nhiệt độ GISTEMP (kèm trung bình 12 tháng), AQI của 10 thành phố (chấm màu trạng thái + nhãn chữ, không chỉ dựa vào màu) và tin WHO DON.
+- **TopBar:** có thanh điều hướng Tổng quan / Crypto (`section`); `LangSwitch` giữ nguyên trang khi đổi ngôn ngữ (`/vi/crypto` → `/en/crypto`).
 - **Việt Nam:** VN-Index (kèm độ rộng thị trường), USD/VND, bảng giá vàng VN, chênh SJC so với vàng thế giới quy đổi (1 lượng = 37,5 g), tỷ giá Vietcombank, tin VnExpress.
+
+## 3a. Trang crypto (`app/[lang]/crypto/page.tsx`, `components/panels/CryptoPanels.tsx`)
+
+Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Mọi panel đọc `getCrypto(lang)` (bọc `cache()`, một lần mỗi request).
+
+```
+Hàng 1  Chỉ số sống còn của crypto [xl:12]: 8 tile CRYPTO_SIGNS + thẻ Fear & Greed
+Hàng 2  Top coin [xl:8]                  │ Đòn bẩy & nhu cầu trong nước [xl:4]
+Hàng 3  Mạng Bitcoin [xl:4] │ Coin đang hot [xl:4] │ Kèo crypto [xl:4]
+Hàng 4  Tin crypto [xl:12] (2 cột từ md)
+```
+
+| Panel | Component | `sources` |
+|---|---|---|
+| Chỉ số sống còn | `CryptoVitals`: tile BTC, ETH, SOL, vốn hóa, BTC.D, DVOL, stablecoin, USDT/VND (đều mở `TileDetail`), thẻ Fear & Greed (meter 0–100, hôm qua/tuần/tháng trước, sparkline 90 ngày) | `yahoo`, `coingecko`, `fng`, `deribit`, `defillama`, `binance` |
+| Top coin | `TopCoinsBody`: giá, 1h/24h/7d, vốn hóa, so với ATH, sparkline 7 ngày. Dưới `sm` chỉ còn #, mã, giá, 24h, 7d | `coingecko` |
+| Đòn bẩy & nhu cầu trong nước | `DerivsBody`: funding 8h và quy năm, OI và % đổi 24h; USDT/VND P2P (giá mua/bán, so với USD bán ra Vietcombank) | `binance`, `vcb` |
+| Mạng Bitcoin | `NetworkBody`: ngày halving ước tính, meter tiến độ epoch, phí sat/vB, điều chỉnh độ khó, hashrate so với 30 ngày trước | `mempool` |
+| Coin đang hot | `TrendingCoinsBody` | `coingecko` |
+| Kèo crypto | `CryptoOddsBody` → `PolyEvents` (dùng chung với panel Prediction) | `polymarket` |
+| Tin crypto | `CryptoNewsBody` (`getCryptoNews`) | `rss`, `translate` |
+
+Đơn vị `$B` (tỷ USD) hiển thị dạng rút gọn theo ngôn ngữ: `$2.59T` / `$2,59 NT`, khớp với `fmtCompact` trong các bảng.
 
 ## 4. Mẫu Panel (`components/ui/Panel.tsx`)
 

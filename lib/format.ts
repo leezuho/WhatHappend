@@ -72,6 +72,9 @@ export function fmtValue(def: SeriesDef, value: number, locale: Locale): string 
     case "$T":
       // FRED reports the Fed balance sheet in millions of dollars.
       return `$${fmtNumber(value / 1_000_000, locale, def.digits)}T`;
+    case "$B":
+      // Compact in the reader's language: $2.59T / $2,59 NT, so it matches fmtCompact elsewhere on the page.
+      return `$${new Intl.NumberFormat(intlLocale(locale), { notation: "compact", maximumSignificantDigits: 3 }).format(value * 1e9)}`;
     default:
       return n;
   }
@@ -81,6 +84,7 @@ export function fmtValue(def: SeriesDef, value: number, locale: Locale): string 
 export function fmtDelta(def: SeriesDef, d: TileData, locale: Locale): string | null {
   if (def.delta === "abs") {
     if (d.change === null) return null;
+    if (def.deltaUnit === "pp") return fmtSigned(d.change, locale, 2, " pp");
     if (def.unit === "%" || def.unit === "pp") return fmtSigned(d.change * 100, locale, 0, " bp");
     return fmtSigned(d.change, locale, def.digits);
   }

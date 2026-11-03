@@ -3,13 +3,14 @@
 import { locales, type Locale } from "@/lib/i18n";
 import clsx from "clsx";
 
-export function LangSwitch({ current, label }: { current: Locale; label: string }) {
+/** `path` is the current page below the language segment ("" or "crypto"), kept when switching. */
+export function LangSwitch({ current, label, path = "" }: { current: Locale; label: string; path?: string }) {
   return (
     <div className="flex rounded-md border border-line p-0.5 text-xs" role="group" aria-label={label}>
       {locales.map((l) => (
         <a
           key={l}
-          href={`/${l}`}
+          href={path ? `/${l}/${path}` : `/${l}`}
           onClick={() => {
             document.cookie = `lang=${l}; path=/; max-age=31536000; samesite=lax`;
           }}

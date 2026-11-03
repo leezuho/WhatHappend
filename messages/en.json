@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "WhatHappend — the world at a glance",
-    "description": "Personal dashboard of what is happening in the world: markets, macro, news, events."
+    "description": "Personal dashboard of what is happening in the world: markets, macro, news, events.",
+    "cryptoTitle": "Crypto — WhatHappend",
+    "cryptoDescription": "Crypto market, sentiment, derivatives, Bitcoin network and news."
   },
   "common": {
     "updated": "Updated",
@@ -27,7 +29,10 @@
     "themeAnthropic": "Anthropic theme (warm cream)",
     "themeGroup": "Theme",
     "language": "Language",
-    "ticker": "Market ticker"
+    "ticker": "Market ticker",
+    "nav": "Sections",
+    "navOverview": "Overview",
+    "navCrypto": "Crypto"
   },
   "regime": {
     "title": "Risk regime",
@@ -101,6 +106,34 @@
     "vietnam": {
       "title": "Vietnam corner",
       "subtitle": "VN-Index, USD/VND, SJC gold, VnExpress"
+    },
+    "cryptoVitals": {
+      "title": "Crypto vital signs",
+      "subtitle": "Majors, market size, volatility and liquidity"
+    },
+    "cryptoTop": {
+      "title": "Top coins",
+      "subtitle": "By market cap, excluding stablecoins and wrapped tokens"
+    },
+    "cryptoDerivs": {
+      "title": "Leverage & local demand",
+      "subtitle": "Perpetual funding, open interest, USDT/VND P2P"
+    },
+    "cryptoNetwork": {
+      "title": "Bitcoin network",
+      "subtitle": "Halving countdown, fees, difficulty, hashrate"
+    },
+    "cryptoTrending": {
+      "title": "Trending coins",
+      "subtitle": "Most searched on CoinGecko"
+    },
+    "cryptoOdds": {
+      "title": "Crypto odds",
+      "subtitle": "Polymarket: crowd-implied probabilities"
+    },
+    "cryptoNews": {
+      "title": "Crypto news",
+      "subtitle": "CoinDesk, Cointelegraph, The Block, Decrypt, Coin68"
     }
   },
   "charts": {
@@ -144,6 +177,7 @@
       "conflict": "Conflict",
       "economy": "Economy",
       "markets": "Markets",
+      "crypto": "Crypto",
       "business": "Business",
       "tech": "Tech",
       "science": "Science",
@@ -203,6 +237,59 @@
       "PNJ24K": "PNJ 24K"
     }
   },
+  "crypto": {
+    "fng": "Fear & Greed",
+    "fngLevels": {
+      "Extreme Fear": "Extreme fear",
+      "Fear": "Fear",
+      "Neutral": "Neutral",
+      "Greed": "Greed",
+      "Extreme Greed": "Extreme greed"
+    },
+    "yesterday": "Yesterday",
+    "weekAgo": "Last week",
+    "monthAgo": "Last month",
+    "fngNote": "Extremes have often coincided with local bottoms (fear) and tops (greed).",
+    "marketCap": "Market cap",
+    "volume24h": "24h volume",
+    "dominance": "Dominance",
+    "coin": "Coin",
+    "price": "Price",
+    "h1": "1h",
+    "h24": "24h",
+    "d7": "7d",
+    "mcap": "Mkt cap",
+    "fromAth": "From ATH",
+    "last7d": "7 days",
+    "funding": "Funding (8h)",
+    "fundingApr": "Annualized",
+    "oi": "Open interest",
+    "oiChange": "24h",
+    "fundingNote": "Positive funding = longs pay shorts: leverage leans bullish. Very high funding and fast-rising open interest often precede liquidation flushes.",
+    "p2p": "USDT/VND on Binance P2P",
+    "p2pBuy": "You buy at",
+    "p2pSell": "You sell at",
+    "bankRate": "Vietcombank USD (sell)",
+    "p2pPremium": "P2P premium over the bank",
+    "p2pNote": "Median of the 10 best ads on each side. Ads carry their own limits and requirements, so the two sides can cross.",
+    "unavailable": "Not available from this server's location",
+    "halving": "Next halving",
+    "blocksLeft": "{n} blocks left",
+    "subsidy": "Block reward {now} → {next} BTC",
+    "fees": "Fees (sat/vB)",
+    "feeFast": "Next block",
+    "feeHalfHour": "30 min",
+    "feeHour": "1 hour",
+    "feeEconomy": "Economy",
+    "difficulty": "Next difficulty adjustment",
+    "difficultyEta": "{progress} of the epoch · ~{date}",
+    "hashrate": "Hashrate",
+    "hashrate30d": "vs 30 days ago",
+    "height": "Block height",
+    "rank": "#{n}",
+    "noOdds": "No long-dated crypto markets right now, or Polymarket is unreachable from this network.",
+    "ends": "ends"
+  },
   "calendar": {
     "econ": "Econ",
     "fomc": "Fed",
@@ -232,7 +319,8 @@
     "volume": "24h volume",
     "geopolitics": "Geopolitics",
     "economy": "Economy",
-    "ends": "ends"
+    "ends": "ends",
+    "crypto": "Crypto"
   },
   "env": {
     "co2": "CO₂ at Mauna Loa",

@@ -16,11 +16,14 @@ export interface SeriesDef {
   id: string;
   name: Bi;
   short: string;
-  unit: "" | "%" | "pp" | "$" | "₫" | "K" | "$T";
+  /** "$T": value in $ millions shown as trillions (FRED). "$B": value in $ billions, shown as B or T. */
+  unit: "" | "%" | "pp" | "$" | "₫" | "K" | "$T" | "$B";
   digits: number;
   polarity: Polarity;
   /** How to express the daily change: percent of price, or absolute (for yields/spreads). */
   delta: "pct" | "abs";
+  /** Absolute changes of a "%" series read in basis points (yields) unless this says percentage points (shares). */
+  deltaUnit?: "pp";
   threshold?: Threshold;
   explain: Bi;
 }
@@ -133,6 +136,26 @@ export const SERIES = {
     delta: "pct",
     explain: { en: "24/7 market; often the first to move on global liquidity shifts.", vi: "Giao dịch 24/7; thường phản ứng đầu tiên khi thanh khoản toàn cầu đổi chiều." },
   }),
+  eth: s({
+    id: "yahoo:ETH-USD",
+    name: { en: "Ether", vi: "Ether (ETH)" },
+    short: "ETH",
+    unit: "$",
+    digits: 0,
+    polarity: "up-good",
+    delta: "pct",
+    explain: { en: "Second-largest crypto asset; the base layer most DeFi and stablecoins run on.", vi: "Tài sản crypto lớn thứ hai; nền tảng chạy phần lớn DeFi và stablecoin." },
+  }),
+  sol: s({
+    id: "yahoo:SOL-USD",
+    name: { en: "Solana", vi: "Solana (SOL)" },
+    short: "SOL",
+    unit: "$",
+    digits: 2,
+    polarity: "up-good",
+    delta: "pct",
+    explain: { en: "High-speed chain; a gauge of retail and speculative appetite beyond BTC and ETH.", vi: "Chuỗi tốc độ cao; thước đo khẩu vị đầu cơ của nhỏ lẻ ngoài BTC và ETH." },
+  }),
   vnindex: s({
     id: "vn:VNINDEX",
     name: { en: "VN-Index", vi: "VN-Index" },
@@ -199,6 +222,72 @@ export const SERIES = {
   epu: s({ id: "fred:USEPUINDXD", name: { en: "Economic policy uncertainty", vi: "Bất định chính sách kinh tế" }, short: "EPU", unit: "", digits: 0, polarity: "up-bad", delta: "pct", explain: { en: "Newspaper-based index of policy uncertainty.", vi: "Chỉ số bất định chính sách dựa trên báo chí." } }),
   gpr: s({ id: "gpr:GPRD", name: { en: "Geopolitical risk index", vi: "Chỉ số rủi ro địa chính trị" }, short: "GPR", unit: "", digits: 0, polarity: "up-bad", delta: "pct", threshold: { dir: "above", warn: 150, crit: 250 }, explain: { en: "Share of news articles about war, terrorism and geopolitical tension (100 = 1985–2019 average).", vi: "Tỷ lệ bài báo về chiến tranh, khủng bố và căng thẳng địa chính trị (100 = trung bình 1985–2019)." } }),
   gscpi: s({ id: "nyfed:GSCPI", name: { en: "Global supply chain pressure", vi: "Áp lực chuỗi cung ứng toàn cầu" }, short: "GSCPI", unit: "", digits: 2, polarity: "up-bad", delta: "abs", threshold: { dir: "above", warn: 1, crit: 2 }, explain: { en: "Standard deviations from normal; 2021 peak was above 4.", vi: "Độ lệch chuẩn so với bình thường; đỉnh 2021 trên 4." } }),
+
+  // Crypto (observation-only series: one point per day, today's overwritten on every run)
+  cryptoMcap: s({
+    id: "cg:total_mcap",
+    name: { en: "Total crypto market cap", vi: "Vốn hóa toàn thị trường crypto" },
+    short: "Crypto cap",
+    unit: "$B",
+    digits: 0,
+    polarity: "up-good",
+    delta: "pct",
+    explain: { en: "Value of all listed crypto assets (CoinGecko).", vi: "Tổng giá trị mọi tài sản crypto đang niêm yết (CoinGecko)." },
+  }),
+  btcDom: s({
+    id: "cg:btc_dominance",
+    name: { en: "Bitcoin dominance", vi: "Tỷ trọng Bitcoin (BTC.D)" },
+    short: "BTC.D",
+    unit: "%",
+    digits: 1,
+    polarity: "neutral",
+    delta: "abs",
+    deltaUnit: "pp",
+    explain: { en: "BTC's share of total crypto value. Falling while prices rise = money rotating into altcoins.", vi: "Phần của BTC trong tổng vốn hóa crypto. Giảm trong khi giá tăng = tiền đang xoay sang altcoin." },
+  }),
+  fng: s({
+    id: "fng:crypto",
+    name: { en: "Crypto Fear & Greed", vi: "Chỉ số Sợ hãi & Tham lam (crypto)" },
+    short: "F&G",
+    unit: "",
+    digits: 0,
+    polarity: "neutral",
+    delta: "abs",
+    explain: { en: "0 = extreme fear, 100 = extreme greed (alternative.me). Extremes have often marked turning points.", vi: "0 = cực kỳ sợ hãi, 100 = cực kỳ tham lam (alternative.me). Vùng cực đoan thường trùng các điểm đảo chiều." },
+  }),
+  dvol: s({
+    id: "deribit:DVOL-BTC",
+    name: { en: "Bitcoin implied volatility (DVOL)", vi: "Biến động kỳ vọng Bitcoin (DVOL)" },
+    short: "DVOL",
+    unit: "",
+    digits: 1,
+    polarity: "up-bad",
+    delta: "pct",
+    explain: { en: "Deribit's 30-day implied volatility of BTC options: the VIX of bitcoin.", vi: "Biến động kỳ vọng 30 ngày từ quyền chọn BTC trên Deribit: \"VIX\" của bitcoin." },
+  }),
+  stables: s({
+    id: "llama:stablecoins",
+    name: { en: "Stablecoin supply", vi: "Tổng cung stablecoin" },
+    short: "Stables",
+    unit: "$B",
+    digits: 0,
+    polarity: "up-good",
+    delta: "pct",
+    explain: { en: "Dollars parked on-chain (DefiLlama). Growing supply = fresh liquidity ready to buy crypto.", vi: "Lượng đô la nằm sẵn trên chuỗi (DefiLlama). Cung tăng = thanh khoản mới sẵn sàng mua crypto." },
+  }),
+  usdtvnd: s({
+    id: "binance:USDTVND",
+    name: { en: "USDT/VND (Binance P2P)", vi: "USDT/VND (Binance P2P)" },
+    short: "USDT/VND",
+    unit: "₫",
+    digits: 0,
+    polarity: "neutral",
+    delta: "pct",
+    explain: {
+      en: "Price Vietnamese users pay for a dollar stablecoin. The gap over the bank rate shows crypto demand and capital-flow pressure.",
+      vi: "Giá người Việt trả để mua một đồng đô la stablecoin. Chênh lệch so với giá ngân hàng cho thấy nhu cầu crypto và áp lực dòng vốn.",
+    },
+  }),
 } as const satisfies Record<string, SeriesDef>;
 
 export type SeriesKey = keyof typeof SERIES;
@@ -219,6 +308,12 @@ export function defOf(key: SeriesKey): SeriesDef {
 
 /** The 12 tiles, in reading order: equities, rates, dollar, fear, commodities, crypto, Vietnam. */
 export const VITAL_SIGNS: SeriesKey[] = ["spx", "ndx", "us10y", "curve", "dxy", "vix", "brent", "gold", "copper", "btc", "vnindex", "usdvnd"];
+
+/** Tiles of the crypto page, in reading order: majors, market size, sentiment and liquidity, Vietnam. */
+export const CRYPTO_SIGNS: SeriesKey[] = ["btc", "eth", "sol", "cryptoMcap", "btcDom", "dvol", "stables", "usdtvnd"];
+
+/** Every series the crypto page owns (its tiles plus the Fear & Greed card). */
+export const CRYPTO_KEYS: SeriesKey[] = [...CRYPTO_SIGNS, "fng"];
 
 /** Yahoo symbols to pull quotes + history for. */
 export const YAHOO_SYMBOLS = Object.values(SERIES)
