@@ -164,7 +164,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `TileDetail` | Bọc KPI tile thành nút; mở `<dialog>` với lịch sử 3T/1N/2N/5N tải từ `/api/series/[key]`, và nút ghim/bỏ ghim (POST `/api/watchlist`). Series đã ghim hiện ở hàng "Bạn đã ghim" dưới Vital Signs |
 | `LineChart` | Recharts, nhận dữ liệu đã serialize; có nút chuyển sang **chế độ xem bảng**. `area` tô mờ dưới series đầu; `zones` vẽ dải "Lưu ý"/"Nguy hiểm" theo `Threshold` của series |
 | `DumbbellChart` | HTML/CSS thuần (client): mỗi thực thể một hàng, hai chấm trên cùng trục, đường nối giữa hai chấm; cột phải ghi hiệu b − a. Rê chuột hoặc focus bàn phím hiện tooltip, có chế độ xem bảng |
-| `Sparkline` (server) | SVG thuần: đường màu `--muted` trên lớp tô gradient, điểm cuối chấm `--s1`. `fluid` giãn theo bề rộng thẻ (`preserveAspectRatio="none"` + `vector-effect: non-scaling-stroke`), chấm cuối là phần tử HTML để luôn tròn |
+| `Sparkline` (server) | SVG thuần: đường màu `--muted` trên lớp tô gradient, điểm cuối chấm `--s1`. Với chart giá (`trend`: series có `price: true` trong `config/series.ts`, và cột 7 ngày của Top coin) thì đường, lớp tô và chấm cuối lấy màu xu hướng: cuối khung cao hơn đầu khung là `--up` (xanh), thấp hơn là `--down` (đỏ), đi ngang giữ màu mặc định. `TileDetail` dùng cùng quy tắc (`trendColor`) cho biểu đồ lịch sử theo khung thời gian đang chọn. `fluid` giãn theo bề rộng thẻ (`preserveAspectRatio="none"` + `vector-effect: non-scaling-stroke`), chấm cuối là phần tử HTML để luôn tròn |
 
 ## 7. Đặc tả biểu đồ (Recharts, theo phương pháp dataviz)
 
@@ -186,7 +186,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
   - Màu series cố định theo thực thể, không theo thứ hạng.
 - **Không dùng biểu đồ hai trục tung.** Hai đơn vị khác nhau thì tách 2 chart hoặc quy về cùng gốc (index).
 - **Chữ** dùng token ink (`text-ink`, `text-ink-2`, `text-muted`), không dùng màu series.
-- **KPI tile** gồm `label` · `value` và `delta` cùng một dòng (delta có dấu, giá: %, lợi suất/spread: bp; màu = hướng × "tăng là tốt hay xấu", ví dụ VIX tăng = `--down`) · sparkline 30 ngày giãn hết bề rộng thẻ · **thanh biên độ 1 năm** (`RangeBar`: nhãn "1N"/"1Y", thấp và cao 1 năm, chấm `--s1` ở vị trí hiện tại, cùng màu chấm cuối sparkline) · trạng thái ngưỡng (chấm + nhãn "Lưu ý"/"Nguy hiểm", viền `warning`/`critical`). Thanh biên độ chỉ hiện khi lịch sử dài ≥ 300 ngày (`yearRange` trong `lib/data/series.ts`); CPI dùng 12 tháng YoY gần nhất.
+- **KPI tile** gồm `label` · `value` và `delta` cùng một dòng (delta có dấu, giá: %, lợi suất/spread: bp; màu = hướng × "tăng là tốt hay xấu", ví dụ VIX tăng = `--down`) · sparkline 30 ngày giãn hết bề rộng thẻ · **thanh biên độ 1 năm** (`RangeBar`: nhãn "1N"/"1Y", thấp và cao 1 năm, chấm `--s1` ở vị trí hiện tại) · trạng thái ngưỡng (chấm + nhãn "Lưu ý"/"Nguy hiểm", viền `warning`/`critical`). Thanh biên độ chỉ hiện khi lịch sử dài ≥ 300 ngày (`yearRange` trong `lib/data/series.ts`); CPI dùng 12 tháng YoY gần nhất.
 - **Dải ngưỡng** (panel Căng thẳng): `ReferenceArea` màu `--warning` (từ `warn` tới `crit`) và `--critical` (vượt `crit`), 10% opacity, `ifOverflow="hidden"`; dải mở được cho cạnh xa tính từ dữ liệu, vì Recharts hiểu cạnh bỏ trống là đáy trục. Đường `warn` màu `--warning`. Chú thích dưới panel ghi tên hai dải bằng chữ.
 - **Chế độ xem bảng:** mọi `LineChart`/`DumbbellChart` có nút "Bảng"/"Biểu đồ".
 
@@ -197,7 +197,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `--page` / `--surface` / `--surface-2` | `#f9f9f7` / `#fcfcfb` / `#f3f2ee` | `#0d0d0d` / `#1a1a19` / `#232321` | Nền trang, nền panel, nền phụ |
 | `--ink` / `--ink-2` / `--muted` | `#0b0b0b` / `#52514e` / `#898781` | `#ffffff` / `#c3c2b7` / `#898781` | Chữ chính, chữ phụ, nhãn trục |
 | `--grid` / `--axis` / `--border` | `#e1e0d9` / `#c3c2b7` / `rgba(11,11,11,.1)` | `#2c2c2a` / `#383835` / `rgba(255,255,255,.1)` | Lưới, trục, viền |
-| `--up` / `--down` | `#006300` / `#c0302f` | `#0ca30c` / `#ef6b6b` | Chữ delta |
+| `--up` / `--down` | `#006300` / `#c0302f` | `#0ca30c` / `#ef6b6b` | Chữ delta, màu xu hướng của chart giá |
 | `--s1`…`--s8` | `#2a78d6 #eb6834 #1baf7a #eda100 #e87ba4 #008300 #4a3aa7 #e34948` | `#3987e5 #d95926 #199e70 #c98500 #d55181 #008300 #9085e9 #e66767` | Màu series theo **thứ tự cố định** |
 | `--good` / `--warning` / `--serious` / `--critical` | `#0ca30c` / `#fab219` / `#ec835a` / `#d03b3b` | giống bên sáng | Trạng thái, luôn kèm biểu tượng và nhãn |
 | `--accent` / `--on-accent` | `var(--ink)` / `var(--surface)` | như bên sáng (theo `--ink` tối) | Nút đang chọn: ngôn ngữ, theme, tab, bộ lọc tin, khoảng thời gian |

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { LineChart } from "./LineChart";
+import { trendColor } from "./Sparkline";
 
 interface Props {
   seriesKey: string;
@@ -14,6 +15,8 @@ interface Props {
   unit: string;
   digits: number;
   watched: boolean;
+  /** Market price: the history line takes the trend color of the range shown. */
+  price?: boolean;
   locale: "vi" | "en";
   labels: { pin: string; unpin: string; open: string; loading: string; close: string; table: string; chart: string; note: string; ranges: Record<string, string> };
   children: ReactNode;
@@ -22,7 +25,7 @@ interface Props {
 const RANGES = ["90", "365", "730", "1825"];
 
 /** Makes a KPI tile clickable: opens a dialog with the series history and a pin toggle. */
-export function TileDetail({ seriesKey, name, explain, note, unit, digits, watched, locale, labels, children }: Props) {
+export function TileDetail({ seriesKey, name, explain, note, unit, digits, watched, price, locale, labels, children }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
@@ -43,6 +46,7 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
   }, [open, days, seriesKey]);
 
   const scale = unit === "K" ? 1e-3 : unit === "$T" ? 1e-6 : 1;
+  const color = (price && points && trendColor(points.map((p) => p.value))) || "var(--s1)";
   const suffix = unit === "K" ? "K" : unit === "$T" ? "T" : unit === "$B" ? (locale === "vi" ? " tỷ $" : "B") : unit === "%" ? "%" : "";
 
   return (
@@ -115,7 +119,7 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
                 data={points.map((p) => ({ ts: p.ts, v: p.value * scale }))}
                 xKey="ts"
                 xFormat={Number(days) > 400 ? "month" : "day"}
-                series={[{ key: "v", label: name, color: "var(--s1)" }]}
+                series={[{ key: "v", label: name, color }]}
                 area
                 yDigits={Math.min(digits, 2)}
                 ySuffix={suffix}

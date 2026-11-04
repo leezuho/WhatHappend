@@ -152,7 +152,7 @@ export async function TopCoinsBody({ lang }: { lang: Locale }) {
               <td className="hidden py-1.5 text-ink-2 md:table-cell">{usd(c.marketCap, lang)}</td>
               <td className="hidden py-1.5 text-ink-2 lg:table-cell">{c.fromAth === null ? "—" : fmtPct(c.fromAth, lang, 0)}</td>
               <td className="hidden py-0.5 pl-3 sm:table-cell">
-                <Sparkline points={c.spark.map((value, ts) => ({ ts, value }))} width={88} height={22} label={`${c.symbol}, ${t.last7d}`} />
+                <Sparkline points={c.spark.map((value, ts) => ({ ts, value }))} width={88} height={22} trend={c.ch7d} label={`${c.symbol}, ${t.last7d}`} />
               </td>
             </tr>
           ))}

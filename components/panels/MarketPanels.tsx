@@ -26,6 +26,7 @@ export function DetailTile({ tile, def, lang, watched, note }: { tile: Tile; def
       unit={tile.key === "cpi" ? "%" : shown.unit}
       digits={shown.digits}
       watched={watched}
+      price={shown.price}
       locale={lang}
       labels={{ ...d.detail, close: d.common.close, table: d.common.showTable, chart: d.common.showChart }}
     >
@@ -108,6 +109,7 @@ export async function HighlightsBody({ lang }: { lang: Locale }) {
                 unit={it.def.unit}
                 digits={it.def.digits}
                 watched={watch.includes(it.key)}
+                price={it.def.price}
                 locale={lang}
                 labels={{ ...d.detail, close: d.common.close, table: d.common.showTable, chart: d.common.showChart }}
               >

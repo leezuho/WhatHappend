@@ -25,6 +25,8 @@ export interface SeriesDef {
   /** Absolute changes of a "%" series read in basis points (yields) unless this says percentage points (shares). */
   deltaUnit?: "pp";
   threshold?: Threshold;
+  /** A market price: its charts are drawn in the trend color (up green, down red over the window shown). */
+  price?: true;
   explain: Bi;
 }
 
@@ -39,6 +41,7 @@ export const SERIES = {
     digits: 0,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "500 largest US companies: the world's risk appetite in one number.", vi: "500 công ty lớn nhất Mỹ: khẩu vị rủi ro của thế giới gói trong một con số." },
   }),
   ndx: s({
@@ -49,6 +52,7 @@ export const SERIES = {
     digits: 0,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "Tech-heavy index; most sensitive to interest rates and the AI cycle.", vi: "Chỉ số nặng về công nghệ; nhạy nhất với lãi suất và chu kỳ AI." },
   }),
   us10y: s({
@@ -81,6 +85,7 @@ export const SERIES = {
     digits: 2,
     polarity: "neutral",
     delta: "pct",
+    price: true,
     threshold: { dir: "above", warn: 107, crit: 110 },
     explain: { en: "A strong dollar tightens global liquidity and squeezes emerging markets.", vi: "USD mạnh làm thắt thanh khoản toàn cầu và gây áp lực lên thị trường mới nổi." },
   }),
@@ -103,6 +108,7 @@ export const SERIES = {
     digits: 2,
     polarity: "neutral",
     delta: "pct",
+    price: true,
     threshold: { dir: "above", warn: 95, crit: 110 },
     explain: { en: "Feeds straight into inflation; spikes on Middle East and Hormuz risk.", vi: "Tác động thẳng vào lạm phát; tăng vọt khi Trung Đông hay eo Hormuz căng thẳng." },
   }),
@@ -114,6 +120,7 @@ export const SERIES = {
     digits: 0,
     polarity: "neutral",
     delta: "pct",
+    price: true,
     explain: { en: "Safe haven and central-bank reserve asset; rises on fear and a weak dollar.", vi: "Tài sản trú ẩn và dự trữ của NHTW; tăng khi sợ hãi và USD yếu." },
   }),
   copper: s({
@@ -124,6 +131,7 @@ export const SERIES = {
     digits: 3,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "\"Dr. Copper\": industrial demand, a read on global (and Chinese) growth.", vi: "\"Tiến sĩ Đồng\": nhu cầu công nghiệp, thước đo tăng trưởng toàn cầu và Trung Quốc." },
   }),
   btc: s({
@@ -134,6 +142,7 @@ export const SERIES = {
     digits: 0,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "24/7 market; often the first to move on global liquidity shifts.", vi: "Giao dịch 24/7; thường phản ứng đầu tiên khi thanh khoản toàn cầu đổi chiều." },
   }),
   eth: s({
@@ -144,6 +153,7 @@ export const SERIES = {
     digits: 0,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "Second-largest crypto asset; the base layer most DeFi and stablecoins run on.", vi: "Tài sản crypto lớn thứ hai; nền tảng chạy phần lớn DeFi và stablecoin." },
   }),
   sol: s({
@@ -154,6 +164,7 @@ export const SERIES = {
     digits: 2,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "High-speed chain; a gauge of retail and speculative appetite beyond BTC and ETH.", vi: "Chuỗi tốc độ cao; thước đo khẩu vị đầu cơ của nhỏ lẻ ngoài BTC và ETH." },
   }),
   vnindex: s({
@@ -164,6 +175,7 @@ export const SERIES = {
     digits: 2,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "Ho Chi Minh City Stock Exchange benchmark.", vi: "Chỉ số chuẩn của Sở Giao dịch Chứng khoán TP.HCM." },
   }),
   usdvnd: s({
@@ -232,6 +244,7 @@ export const SERIES = {
     digits: 0,
     polarity: "up-good",
     delta: "pct",
+    price: true,
     explain: { en: "Value of all listed crypto assets (CoinGecko).", vi: "Tổng giá trị mọi tài sản crypto đang niêm yết (CoinGecko)." },
   }),
   btcDom: s({
@@ -283,6 +296,7 @@ export const SERIES = {
     digits: 0,
     polarity: "neutral",
     delta: "pct",
+    price: true,
     explain: {
       en: "Price Vietnamese users pay for a dollar stablecoin. The gap over the bank rate shows crypto demand and capital-flow pressure.",
       vi: "Giá người Việt trả để mua một đồng đô la stablecoin. Chênh lệch so với giá ngân hàng cho thấy nhu cầu crypto và áp lực dòng vốn.",

@@ -47,13 +47,13 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
           </span>
         )}
       </div>
-      <Sparkline points={data.spark} height={34} fluid label={`${name}, ${d.charts.last30d}`} />
+      <Sparkline points={data.spark} height={34} fluid trend={def.price} label={`${name}, ${d.charts.last30d}`} />
       {data.range && <RangeBar def={def} value={data.value} range={data.range} locale={locale} />}
     </div>
   );
 }
 
-/** Where today sits between the 1-year low and high; the dot is the same accent as the sparkline's last point. */
+/** Where today sits between the 1-year low and high, marked by an accent dot. */
 function RangeBar({ def, value, range, locale }: { def: SeriesDef; value: number; range: { lo: number; hi: number }; locale: Locale }) {
   const t = getDict(locale).charts;
   const pos = Math.min(100, Math.max(0, ((value - range.lo) / (range.hi - range.lo)) * 100));
