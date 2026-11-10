@@ -70,7 +70,7 @@ Ghi chú hành vi từng panel:
 - **Trending:** tab mặc định là Wikipedia EN, vì top của vi.wikipedia thường bị bot đẩy lượt xem.
 - **Prediction:** thang lãi suất Fed của Kalshi (chỉ hiện các mức có xác suất 2–98%, nếu không có thì 6 mức đầu) và các sự kiện Polymarket, mỗi outcome có thanh meter (track là bước nhạt của cùng hue).
 - **Hành tinh & sức khỏe:** CO₂ Mauna Loa (so 1 năm trước), dị thường nhiệt độ GISTEMP (kèm trung bình 12 tháng), AQI của 10 thành phố (chấm màu trạng thái + nhãn chữ, không chỉ dựa vào màu) và tin WHO DON.
-- **TopBar:** có thanh điều hướng Tổng quan / Vĩ mô / Việt Nam / Crypto / Công nghệ (`section`). Tab đang chọn tô `bg-accent text-on-accent` (đen ở theme sáng, trắng ở theme tối, đất nung ở theme Anthropic), giống mọi nút đang chọn khác (§8); trước 2026-11-09 nó dùng `surface-2` và gần như không phân biệt được. Nhãn tab không bao giờ xuống dòng (`whitespace-nowrap`); năm tab vừa một dòng ở 390px, và nếu nhãn dài ra thì hàng tab cuộn ngang thay vì gãy chữ. `LangSwitch` giữ nguyên trang khi đổi ngôn ngữ (`/vi/crypto` → `/en/crypto`). Ngôn ngữ và theme là hai nút toggle đơn (không phải nhóm nút) và tagline chỉ hiện từ `2xl`. Đo ngày 2026-11-09: thanh nằm trên một dòng ở 1440px với cả `vi` và `en`; ở 1280px, bảy đồng hồ thị trường đẩy cụm Trạng thái rủi ro, ngôn ngữ, theme xuống dòng hai.
+- **TopBar:** có thanh điều hướng Tổng quan / Vĩ mô / Việt Nam / Crypto / Công nghệ (`section`). Tab đang chọn tô `bg-accent text-on-accent` (đen ở theme sáng, trắng ở theme tối, đất nung ở theme Anthropic), giống mọi nút đang chọn khác (§8); trước 2026-11-09 nó dùng `surface-2` và gần như không phân biệt được. Logo là ô `bg-accent` có hình quả cầu cạnh chữ WhatHappend; các tab nằm trong một khung `bg-surface` có `shadow-card`. Nhãn tab không bao giờ xuống dòng (`whitespace-nowrap`); năm tab vừa một dòng ở 390px (chữ `text-xs`, từ `sm` lên 13px), và nếu nhãn dài ra thì hàng tab cuộn ngang thay vì gãy chữ. `LangSwitch` giữ nguyên trang khi đổi ngôn ngữ (`/vi/crypto` → `/en/crypto`). Ngôn ngữ và theme là hai nút toggle đơn (không phải nhóm nút), cao 32px như khung tab, và tagline chỉ hiện từ `2xl`. `RegimeBadge` chỉ hiện chấm màu và nhãn ("Né rủi ro"); tiền tố "Trạng thái rủi ro:" hiện từ `2xl`, dưới đó là `sr-only` và nằm trong `title`. Dưới 1400px `MarketClocks` xuống một hàng riêng (`order-last w-full`) để tab và cụm nút vẫn chung hàng đầu. Đo ngày 2026-11-10: thanh nằm trên một dòng ở 1440px với cả `vi` và `en`; ở 1280px chỉ đồng hồ xuống hàng hai.
 - **Việt Nam:** VN-Index (kèm độ rộng thị trường), USD/VND, bảng giá vàng VN, chênh SJC so với vàng thế giới quy đổi (1 lượng = 37,5 g), tỷ giá Vietcombank, tin VnExpress.
 
 ## 3a. Trang crypto (`app/[lang]/crypto/page.tsx`, `components/panels/CryptoPanels.tsx`)
@@ -204,7 +204,7 @@ Màu trạng thái dịch vụ: bình thường `good`, bảo trì `s1`, gián �
 - **Khung tĩnh** (thuộc static shell): `<section>` bo góc, viền `border-line`, nền `bg-surface`, tiêu đề `h2` và subtitle.
 - **Dòng trạng thái** (`PanelStatusLine`, nằm trong `<Suspense fallback={null}>`) gọi `getPanelStatus(sources)`:
   - Thiếu key và chưa từng chạy được → hiện chip "Cần API key", tooltip liệt kê các env còn thiếu. Với nguồn `needsAi`, tooltip là `AI_ENV_HINT` = "AI_API_KEY (Gemini or Claude)", tính từ `aiStatus()`.
-  - Có `lastOk` → hiện "Cập nhật HH:MM" (giờ Asia/Ho_Chi_Minh).
+  - Có `lastOk` → hiện "Cập nhật HH:MM" (giờ Asia/Ho_Chi_Minh), trước đó là chấm `bg-good` khi dữ liệu còn mới; khi cũ hoặc lỗi thì chấm này thay bằng nhãn "Dữ liệu cũ"/"Lỗi nguồn" có chấm `bg-warning`.
   - Panel stale khi có nguồn mà `now − last_ok > 3 × intervalMs`, **hoặc** lần chạy gần nhất lỗi (`ok = 0`). Khi đó hiện chip gồm chấm `bg-warning` và nhãn "Lỗi nguồn" hoặc "Dữ liệu cũ", tooltip liệt kê `source: error`. Trạng thái không bao giờ chỉ thể hiện bằng màu.
 - **Thân panel** nằm trong `<Suspense fallback={<PanelSkeleton/>}>`. `EmptyState` hiện khi không có dữ liệu.
 
@@ -294,7 +294,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 
 | Token | Sáng | Tối | Dùng cho |
 |---|---|---|---|
-| `--page` / `--surface` / `--surface-2` | `#f9f9f7` / `#fcfcfb` / `#f3f2ee` | `#0d0d0d` / `#1a1a19` / `#232321` | Nền trang, nền panel, nền phụ |
+| `--page` / `--surface` / `--surface-2` | `#f2f1ed` / `#ffffff` / `#f3f2ee` | `#0d0d0d` / `#1a1a19` / `#232321` | Nền trang, nền panel, nền phụ. Nền trang sáng thấp hơn panel một bậc để panel tách khỏi nền; màu series đã chạy lại validator trên mặt `#ffffff` (kết quả như trên `#fcfcfb`) |
 | `--ink` / `--ink-2` / `--muted` | `#0b0b0b` / `#52514e` / `#898781` | `#ffffff` / `#c3c2b7` / `#898781` | Chữ chính, chữ phụ, nhãn trục |
 | `--grid` / `--axis` / `--border` | `#e1e0d9` / `#c3c2b7` / `rgba(11,11,11,.1)` | `#2c2c2a` / `#383835` / `rgba(255,255,255,.1)` | Lưới, trục, viền |
 | `--up` / `--down` | `#006300` / `#c0302f` | `#0ca30c` / `#ef6b6b` | Chữ delta, màu xu hướng của chart giá |
@@ -302,6 +302,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `--good` / `--warning` / `--serious` / `--critical` | `#0ca30c` / `#fab219` / `#ec835a` / `#d03b3b` | giống bên sáng | Trạng thái, luôn kèm biểu tượng và nhãn |
 | `--accent` / `--on-accent` | `var(--ink)` / `var(--surface)` | như bên sáng (theo `--ink` tối) | Nút đang chọn: tab điều hướng, ngôn ngữ, theme, tab, bộ lọc tin, khoảng thời gian |
 | `--display` | font sans như thân bài | như bên sáng | Logo, tiêu đề panel, tiêu đề Brief (`font-display`) |
+| `--elev-1` / `--elev-2` (Tailwind `shadow-card` / `shadow-lift`) | bóng mờ 1–3px / bóng nổi 8–24px | viền sáng `inset` 1px / viền sáng + bóng đen | `shadow-card`: panel, khung tab điều hướng, nút ở thanh trên. `shadow-lift`: ô KPI khi rê chuột, hộp thoại lịch sử, popover Risk Regime |
 
 **Theme thứ ba `anthropic`** (`[data-theme="anthropic"]`): nền giấy ngà ấm (`--page #f0eee6`, `--surface #faf9f5`, `--surface-2 #e8e6dc`), chữ `#141413` / `#3d3d3a` / `#73726c`, accent đất nung `#b4532f` (chữ trắng đạt 4,98:1), tiêu đề serif (`ui-serif, Georgia…`). Màu series và màu trạng thái giữ nguyên bảng sáng đã kiểm định. Đây là theme sáng: `useTheme()` trả `light` (bản đồ dùng `positron`), còn `useThemeName()` trả tên đầy đủ. `ThemeToggle` là một nút chuyển vòng qua ba theme, lưu vào `localStorage.theme`.
 

@@ -21,11 +21,11 @@ interface PanelProps {
 // line and the body stream in per request behind their own Suspense.
 export function Panel({ title, subtitle, sources, lang, className, children, actions }: PanelProps) {
   return (
-    <section className={clsx("flex min-w-0 flex-col rounded-xl border border-line bg-surface", className)}>
-      <header className="flex items-start justify-between gap-3 px-4 pt-3 pb-2">
+    <section className={clsx("flex min-w-0 flex-col rounded-xl border border-line bg-surface shadow-card", className)}>
+      <header className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-2.5">
         <div className="min-w-0">
-          <h2 className="font-display text-sm font-semibold text-ink">{title}</h2>
-          {subtitle && <p className="truncate text-xs text-muted">{subtitle}</p>}
+          <h2 className="font-display text-[15px] leading-snug font-semibold tracking-tight text-ink">{title}</h2>
+          {subtitle && <p className="mt-0.5 truncate text-xs text-muted">{subtitle}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {actions}
@@ -55,11 +55,13 @@ async function PanelStatusLine({ sources, lang }: { sources: SourceId[]; lang: L
   const tip = status.failing.map((f) => `${f.source}: ${f.error ?? "?"}`).join("\n") || `${t.updated} ${fmtDateTime(status.lastOk, lang)}`;
   return (
     <span className="flex items-center gap-1.5 text-[11px] text-muted" title={tip}>
-      {status.stale && (
+      {status.stale ? (
         <span className="flex items-center gap-1 rounded-full bg-surface-2 px-1.5 py-0.5 text-ink-2">
           <span aria-hidden className="inline-block size-1.5 rounded-full bg-warning" />
           {status.failing.length ? t.sourceError : t.stale}
         </span>
+      ) : (
+        <span aria-hidden className="inline-block size-1.5 rounded-full bg-good" />
       )}
       <span className="tabular">
         {t.updated} {fmtTime(status.lastOk, lang)}

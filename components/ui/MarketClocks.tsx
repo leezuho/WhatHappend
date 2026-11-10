@@ -63,7 +63,7 @@ export function MarketClocks({ labels }: { labels: { open: string; closed: strin
   const now = tick === null ? null : new Date(tick);
 
   return (
-    <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+    <ul className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-xs">
       {EXCHANGES.map((ex) => {
         const s = now ? stateOf(ex, now) : null;
         const state = s?.state ? labels[s.state] : null;

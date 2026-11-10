@@ -40,7 +40,7 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
         )}
       </div>
       <div className="flex flex-wrap items-baseline gap-x-2">
-        <span className="text-xl font-semibold whitespace-nowrap text-ink">{fmtValue(def, data.value, locale)}</span>
+        <span className="text-[22px] leading-tight font-semibold tracking-tight whitespace-nowrap text-ink">{fmtValue(def, data.value, locale)}</span>
         {delta && (
           <span className={clsx("tabular text-xs font-medium whitespace-nowrap", dir === 0 || good === null ? "text-ink-2" : good ? "text-up" : "text-down")}>
             {dir > 0 ? "▲" : dir < 0 ? "▼" : ""} {delta}

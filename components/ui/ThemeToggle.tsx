@@ -29,7 +29,7 @@ export function ThemeToggle({ labels }: { labels: Record<ThemeName, string> & { 
           localStorage.setItem("theme", next);
         } catch {}
       }}
-      className="grid size-7 place-items-center rounded-md border border-line text-ink-2 hover:bg-surface-2 hover:text-ink"
+      className="grid size-8 place-items-center rounded-lg border border-line bg-surface text-ink-2 shadow-card transition-colors hover:bg-surface-2 hover:text-ink"
     >
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         {ICON[current]}

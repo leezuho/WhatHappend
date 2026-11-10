@@ -17,7 +17,7 @@ export function LangSwitch({ current, label, path = "" }: { current: Locale; lab
       }}
       aria-label={label}
       title={label}
-      className="grid h-7 min-w-7 place-items-center rounded-md border border-line px-1.5 text-xs font-medium uppercase text-ink-2 hover:bg-surface-2 hover:text-ink"
+      className="grid h-8 min-w-8 place-items-center rounded-lg border border-line bg-surface px-2 text-xs font-semibold uppercase text-ink-2 shadow-card transition-colors hover:bg-surface-2 hover:text-ink"
     >
       {current}
     </a>

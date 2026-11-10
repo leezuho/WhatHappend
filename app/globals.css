@@ -9,8 +9,10 @@
    Series slots are CVD-checked in this order; do not reorder or recolor. */
 :root {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
+  /* The page plane sits a step below the cards so panels read as panels;
+     series colors were re-validated on the white surface. */
+  --page: #f2f1ed;
+  --surface: #ffffff;
   --surface-2: #f3f2ee;
   --ink: #0b0b0b;
   --ink-2: #52514e;
@@ -39,6 +41,10 @@
   --accent: var(--ink);
   --on-accent: var(--surface);
   --display: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Elevation: a hairline lift for cards, a softer float for hover and dialogs. */
+  --elev-1: 0 1px 2px rgba(23, 22, 18, 0.04), 0 1px 3px rgba(23, 22, 18, 0.04);
+  --elev-2: 0 2px 4px rgba(23, 22, 18, 0.04), 0 8px 24px -6px rgba(23, 22, 18, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -63,6 +69,8 @@
     --s6: #008300;
     --s7: #9085e9;
     --s8: #e66767;
+    --elev-1: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --elev-2: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px -6px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -87,6 +95,8 @@
   --s6: #008300;
   --s7: #9085e9;
   --s8: #e66767;
+  --elev-1: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --elev-2: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px -6px rgba(0, 0, 0, 0.6);
 }
 
 /* Anthropic: warm ivory paper, slate ink, clay accent and serif headings.
@@ -105,6 +115,8 @@
   --accent: #b4532f;
   --on-accent: #ffffff;
   --display: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --elev-1: 0 1px 2px rgba(61, 50, 30, 0.05), 0 1px 3px rgba(61, 50, 30, 0.04);
+  --elev-2: 0 2px 4px rgba(61, 50, 30, 0.05), 0 8px 24px -6px rgba(61, 50, 30, 0.16);
 }
 
 @theme inline {
@@ -136,6 +148,8 @@
   --font-display: var(--display);
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
+  --shadow-card: var(--elev-1);
+  --shadow-lift: var(--elev-2);
 }
 
 html {
@@ -146,6 +160,10 @@ body {
   background: var(--page);
   color: var(--ink);
   font-family: var(--font-sans);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--s1) 22%, transparent);
 }
 
 .tabular {
@@ -166,6 +184,10 @@ body {
 }
 .ticker-track:hover {
   animation-play-state: paused;
+}
+/* Fade the tape in and out at both edges instead of a hard cut. */
+.ticker-mask {
+  mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
 }
 @media (prefers-reduced-motion: reduce) {
   .ticker-track {

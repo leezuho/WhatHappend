@@ -53,7 +53,7 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
     <>
       <button
         type="button"
-        className="block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-s1"
+        className="block w-full cursor-pointer rounded-lg text-left transition-shadow hover:shadow-lift focus-visible:outline-2 focus-visible:outline-s1"
         aria-label={`${name}: ${labels.open}`}
         onClick={() => {
           setOpen(true);
@@ -66,7 +66,7 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
         ref={dialog}
         onClose={() => setOpen(false)}
         onClick={(e) => e.target === dialog.current && dialog.current?.close()}
-        className="m-auto w-[min(720px,calc(100vw-32px))] rounded-xl border border-line bg-surface p-0 text-ink backdrop:bg-black/40"
+        className="m-auto w-[min(720px,calc(100vw-32px))] rounded-2xl border border-line bg-surface p-0 text-ink shadow-lift backdrop:bg-black/40 backdrop:backdrop-blur-[2px]"
       >
         <div className="flex flex-col gap-3 p-4">
           <div className="flex items-start justify-between gap-3">

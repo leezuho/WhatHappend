@@ -138,7 +138,7 @@ export async function HighlightsBody({ lang }: { lang: Locale }) {
                       </span>
                     ))}
                   </div>
-                  <p className={clsx("text-xs leading-snug", it.note ? "text-ink" : "text-muted")}>{it.note?.text ?? pick(it.def.explain, lang)}</p>
+                  <p className={clsx("text-xs leading-relaxed", it.note ? "text-ink-2" : "text-muted")}>{it.note?.text ?? pick(it.def.explain, lang)}</p>
                 </div>
               </TileDetail>
               {it.note && it.note.sources.length > 0 && (
@@ -306,12 +306,15 @@ export async function RegimeBadge({ lang }: { lang: Locale }) {
   const label = r.regime === "risk-on" ? t.riskOn : r.regime === "risk-off" ? t.riskOff : r.regime === "neutral" ? t.neutral : t.unknown;
   return (
     <details className="relative">
-      <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-md border border-line px-2 py-1 text-xs text-ink-2 hover:bg-surface-2">
+      <summary
+        title={`${t.title}: ${label}`}
+        className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 text-xs text-ink-2 shadow-card transition-colors hover:bg-surface-2"
+      >
         <span aria-hidden className={clsx("inline-block size-2 rounded-full", REGIME_STYLE[r.regime])} />
-        <span className="hidden sm:inline">{t.title}:</span>
+        <span className="sr-only 2xl:not-sr-only">{t.title}:</span>
         <span className="font-semibold text-ink">{label}</span>
       </summary>
-      <div className="absolute right-0 z-40 mt-2 w-72 rounded-lg border border-line bg-surface p-3 text-xs shadow-lg">
+      <div className="absolute right-0 z-40 mt-2 w-72 rounded-xl border border-line bg-surface p-3 text-xs shadow-lift">
         <p className="mb-2 text-ink-2">{t.explain}</p>
         {r.score !== null && (
           <p className="mb-2">
@@ -352,7 +355,7 @@ export async function Ticker({ lang }: { lang: Locale }) {
     </span>
   ));
   return (
-    <div className="overflow-hidden border-t border-line text-xs" aria-label={getDict(lang).topbar.ticker}>
+    <div className="ticker-mask overflow-hidden border-t border-line text-xs" aria-label={getDict(lang).topbar.ticker}>
       <div className="ticker-track flex w-max py-1.5">
         {row}
         <span aria-hidden className="flex">
