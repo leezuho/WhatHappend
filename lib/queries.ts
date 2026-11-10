@@ -13,7 +13,11 @@ import { COUNTRIES, policyRateId } from "@/config/countries";
 import { FOMC_MEETINGS } from "@/config/fomc";
 import { BANKS, CB_MEETINGS, LPR_DAY } from "@/config/central-banks";
 import { CRYPTO_OUTLETS, DESK_OUTLETS, TECH_OUTLETS } from "@/config/feeds";
-import { getPoints, getTile, getWatchlistKeys, tileOf, type TileData } from "@/lib/data/series";
+import { freshest, getPoints, getTile, getWatchlistKeys, tileOf, type TileData } from "@/lib/data/series";
+import { cpiIds, lastPoint } from "@/lib/data/macro";
+import { assetClassRows, commodityRows, ratioSeries, spreadHistory, worldIndexRows, type AssetClassRow, type CommodityRow, type SpreadHistory, type WorldIndexRow } from "@/lib/data/markets";
+import { imfId } from "@/config/macro";
+import { vnMarketDates } from "@/lib/data/vietnam";
 import type { Point } from "@/lib/sources/store";
 import { computeRegime, type RegimeResult } from "@/lib/signals/risk-regime";
 import { FORCE_KEY, type StoredBrief } from "@/lib/ai/brief-shared";
@@ -255,32 +259,66 @@ export async function getYieldCurve(): Promise<CurveData> {
 export interface CountryMacro {
   short: string;
   name: string;
+  /** Latest monthly CPI inflation (OECD or the IMF CPI dataset, whichever is newer), else this year's IMF estimate. */
   inflation: number | null;
-  growth: number | null;
+  /** True when `inflation` is the IMF annual estimate, not a monthly reading. */
+  inflationEst: boolean;
   rate: number | null;
   rateTs: number | null;
 }
 
-export async function getCountryMacro(lang: Locale): Promise<{ year: number; rows: CountryMacro[] }> {
+/** The overview's inflation-vs-policy-rate panel: the same CPI and rate as the macro page's scorecard, so the real rates agree. */
+export async function getCountryMacro(lang: Locale): Promise<{ rows: CountryMacro[] }> {
   await connection();
   const db = getDb();
-  const year = new Date().getUTCFullYear();
-  const yearTs = Date.UTC(year, 0, 1);
+  const now = Date.now();
+  const yearTs = Date.UTC(new Date(now).getUTCFullYear(), 0, 1);
   const val = db.prepare("SELECT value FROM observations WHERE series_id = ? AND ts = ?");
-  const last = db.prepare("SELECT ts, value FROM observations WHERE series_id = ? ORDER BY ts DESC LIMIT 1");
   const rows = COUNTRIES.filter((c) => c.overview).map((c) => {
     const rateId = policyRateId(c);
-    const rate = rateId ? (last.get(rateId) as { ts: number; value: number } | undefined) : undefined;
+    const rate = rateId ? lastPoint(db, rateId, now) : null;
+    const cpi = freshest(db, cpiIds(c), now)?.last;
+    const est = cpi ? null : ((val.get(imfId("PCPIPCH", c.imf), yearTs) as { value: number } | undefined)?.value ?? null);
     return {
       short: c.short,
       name: pick(c.name, lang),
-      inflation: (val.get(`imf:PCPIPCH:${c.imf}`, yearTs) as { value: number } | undefined)?.value ?? null,
-      growth: (val.get(`imf:NGDP_RPCH:${c.imf}`, yearTs) as { value: number } | undefined)?.value ?? null,
+      inflation: cpi?.value ?? est,
+      inflationEst: !cpi && est !== null,
       rate: rate?.value ?? null,
       rateTs: rate?.ts ?? null,
     };
   });
-  return { year, rows };
+  return { rows };
+}
+
+export type { AssetClassRow, CommodityRow, SpreadHistory, WorldIndexRow } from "@/lib/data/markets";
+
+/** The overview's world-markets table, once per request (the Vietnam page reads it too). */
+export const getWorldMarkets = cache(async (lang: Locale): Promise<WorldIndexRow[]> => {
+  await connection();
+  return worldIndexRows(getDb(), lang);
+});
+
+export async function getCommodities(lang: Locale): Promise<CommodityRow[]> {
+  await connection();
+  return commodityRows(getDb(), lang);
+}
+
+export async function getAssetClasses(lang: Locale): Promise<AssetClassRow[]> {
+  await connection();
+  return assetClassRows(getDb(), lang);
+}
+
+/** Daily `num / den` over the last `days` (ETH priced in bitcoin). */
+export async function getRatio(numId: string, denId: string, days = 365): Promise<Point[]> {
+  await connection();
+  return ratioSeries(getDb(), numId, denId, Date.now() - days * 24 * 3600_000);
+}
+
+/** 2s10s and 10Y−3M over the last two years, for under the yield curve. */
+export async function getSpreadHistory(): Promise<SpreadHistory> {
+  await connection();
+  return spreadHistory(getDb());
 }
 
 /** Last year of daily points for small-multiple charts. */
@@ -410,7 +448,8 @@ export async function getInsightNotes(lang: Locale): Promise<Partial<Record<Seri
 export interface VietnamData {
   vnindex: TileData | null;
   usdvnd: TileData | null;
-  breadth: { advances: number | null; declines: number | null; unchanged: number | null } | null;
+  /** Advancing / declining / unchanged HOSE stocks and today's order-matched value in VND (SSI's totalValue; put-through deals excluded). */
+  breadth: { advances: number | null; declines: number | null; unchanged: number | null; totalValue?: number | null } | null;
   gold: GoldQuote[];
   goldTs: number | null;
   worldGoldVnd: number | null;
@@ -478,7 +517,7 @@ function fmtDayRange(start: string, end: string, lang: Locale): string {
 }
 
 export interface CalendarEntry {
-  kind: "econ" | "fomc" | "cb" | "launch";
+  kind: "econ" | "fomc" | "cb" | "launch" | "vn";
   ts: number;
   title: string;
   detail: string | null;
@@ -536,6 +575,19 @@ export async function getCalendar(lang: Locale, days = 21, kinds: CalendarEntry[
       allDay: true,
     })),
     ...lprFixings(now, until).map((ts) => ({ kind: "cb" as const, ts, title: t.lpr, detail: null })),
+    // Stamped 17:00 Hanoi so the day's entry stays listed through the session.
+    ...vnMarketDates(now, until).map((v) => {
+      const month = `${v.month + 1}/${v.year}`;
+      return v.kind === "vn30f"
+        ? { kind: "vn" as const, ts: v.ts + 10 * 3600_000, title: t.vn30f.replace("{month}", month), detail: t.vn30fDetail, allDay: true }
+        : {
+            kind: "vn" as const,
+            ts: v.ts + 10 * 3600_000,
+            title: t.gso.replace("{month}", month),
+            detail: v.month % 3 === 2 ? t.gsoQuarter.replace("{q}", `${(v.month + 1) / 3}/${v.year}`) : t.gsoDetail,
+            allDay: true,
+          };
+    }),
     ...launches.flatMap((l) =>
       l.ts
         ? [{

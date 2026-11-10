@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { imfId } from "@/config/macro";
 import { OUTLOOK_AHEAD, OUTLOOK_BACK, VN_OUTLOOK } from "@/config/vietnam";
 import { pick, type Locale } from "@/lib/i18n";
+import { vnHazards, vnRatesHistory, type VnHazard, type VnRatesRow } from "@/lib/data/vietnam";
 
 // Read side of the Vietnam page (app/[lang]/vietnam) beyond getVietnam() in
 // lib/queries.ts. Same rules: synchronous SQLite reads behind connection().
@@ -35,4 +36,18 @@ export async function getVietnamOutlook(lang: Locale): Promise<{ years: number[]
     em: value(imfId(o.ind, "OEMDC"), thisYear),
   }));
   return { years, thisYear, rows };
+}
+
+export type { VnHazard, VnRatesRow } from "@/lib/data/vietnam";
+
+/** Monthly CPI inflation next to the refinancing rate, for the chart under the economy tiles. */
+export async function getVnRates(): Promise<VnRatesRow[]> {
+  await connection();
+  return vnRatesHistory(getDb());
+}
+
+/** Storms, quakes, floods and fires of the last two weeks near Vietnam, nearest first. */
+export async function getVnHazards(lang: Locale): Promise<VnHazard[]> {
+  await connection();
+  return vnHazards(getDb(), lang);
 }

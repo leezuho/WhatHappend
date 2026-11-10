@@ -10,6 +10,7 @@ import {
   getConfidence,
   getCycleClock,
   getDebtTable,
+  getGrowthInflation,
   getMacroNote,
   getWorldMap,
   getOecdLines,
@@ -24,6 +25,7 @@ import {
 import type { Status } from "@/lib/signals/macro";
 import { alertOf } from "@/lib/signals/notable";
 import { CycleClock } from "@/components/charts/CycleClock";
+import { QuadrantScatter } from "@/components/charts/QuadrantScatter";
 import { WorldChoropleth } from "@/components/charts/WorldChoropleth";
 import { SmallMultiples, type MultipleRow } from "@/components/charts/SmallMultiples";
 import { Sparkline } from "@/components/charts/Sparkline";
@@ -130,6 +132,68 @@ export async function CycleClockPanel({ lang }: { lang: Locale }) {
         chart: d.common.showChart,
       }}
     />
+  );
+}
+
+// ---------------------------------------------------------------- growth vs inflation, debt vs deficit
+
+export async function GrowthInflationPanel({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const m = d.macro;
+  const points = await getGrowthInflation(lang);
+  if (!points.length) return <EmptyState lang={lang} />;
+  return (
+    <div className="flex flex-col gap-2">
+      <QuadrantScatter
+        points={points.map((p) => ({
+          key: p.short,
+          label: p.short,
+          name: p.name,
+          x: p.growthGap,
+          y: p.inflationGap,
+          trail: p.trail.map((t) => ({ x: t.growthGap, y: t.inflationGap })),
+          group: p.group === "dm" ? 0 : 1,
+          notes: [m.giPeriod.replace("{q}", fmtPeriod(p.ts, "q", lang))],
+        }))}
+        split={{ x: 0, y: 0 }}
+        quadrants={{ tl: m.giQuadrants.stagflation, tr: m.giQuadrants.overheating, bl: m.giQuadrants.weak, br: m.giQuadrants.stable }}
+        danger="tl"
+        x={{ label: m.giX, suffix: " pp", digits: 1, signed: true }}
+        y={{ label: m.giY, suffix: " pp", digits: 1, signed: true }}
+        groups={[m.groups.dm, m.groups.em]}
+        locale={lang}
+        tableLabels={{ table: d.common.showTable, chart: d.common.showChart, name: m.country }}
+      />
+      <p className="text-[11px] text-muted">{m.giNote}</p>
+    </div>
+  );
+}
+
+export async function FiscalPanel({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const m = d.macro;
+  const { year, rows } = await getDebtTable(lang);
+  const points = rows.flatMap((r) =>
+    r.debt.value !== null && r.balance.value !== null
+      ? [{ key: r.short, label: r.short, name: r.name, x: r.balance.value, y: r.debt.value, group: r.group === "dm" ? (0 as const) : (1 as const) }]
+      : [],
+  );
+  if (!points.length) return <EmptyState lang={lang} />;
+  return (
+    <div className="flex flex-col gap-2">
+      <QuadrantScatter
+        points={points}
+        split={{ x: -3, y: 90 }}
+        quadrants={{ tl: m.fiscalQuadrants.risk, tr: m.fiscalQuadrants.highDebt, bl: m.fiscalQuadrants.bigDeficit, br: m.fiscalQuadrants.sound }}
+        danger="tl"
+        x={{ label: m.fiscalX.replace("{year}", String(year)), suffix: "%", digits: 1, signed: true }}
+        y={{ label: m.fiscalY.replace("{year}", String(year)), suffix: "%", digits: 0 }}
+        groups={[m.groups.dm, m.groups.em]}
+        locale={lang}
+        tableLabels={{ table: d.common.showTable, chart: d.common.showChart, name: m.country }}
+      />
+      <p className="text-[11px] text-muted">{m.fiscalNote}</p>
+    </div>
   );
 }
 

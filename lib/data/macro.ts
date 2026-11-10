@@ -215,3 +215,49 @@ export function cycleRows(db: DatabaseSync, lang: Locale, now: number): ClockRow
       : [];
   });
 }
+
+// ---------------------------------------------------------------- growth vs inflation
+
+export interface GrowthInflationPoint {
+  short: string;
+  name: string;
+  group: Country["group"];
+  /** GDP y/y minus the 2015–19 average (pp), CPI y/y minus the central bank's target (pp), for the latest quarter. */
+  growthGap: number;
+  inflationGap: number;
+  /** Quarter start of the latest point. */
+  ts: number;
+  /** The same for up to `tail` earlier quarters, oldest first. */
+  trail: { ts: number; growthGap: number; inflationGap: number }[];
+}
+
+/** Mean of the monthly readings that fall in the quarter starting at `q`; null when none do. */
+function quarterMean(points: Point[], q: number): number | null {
+  const d = new Date(q);
+  const end = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 3, 1);
+  const xs = points.filter((p) => p.ts >= q && p.ts < end);
+  return xs.length ? xs.reduce((s, p) => s + p.value, 0) / xs.length : null;
+}
+
+/**
+ * Each economy's latest quarter on growth against its own normal and inflation against its target, with a tail
+ * of the quarters before: the four quadrants read as overheating, stable, stagflation and weak. Economies with
+ * no quarterly GDP or no 2015–19 IMF average are left out.
+ */
+export function growthInflation(db: DatabaseSync, lang: Locale, now: number, tail = 4): GrowthInflationPoint[] {
+  return MACRO_COUNTRIES.flatMap((c) => {
+    const normal = averageOfYears(getPoints(db, imfId("NGDP_RPCH", c.imf)), 2015, 2019);
+    const gdpId = freshest(db, [c.oecd && oecdId("GDP", c.oecd), c.gdp], now)?.id;
+    const cpiId = freshest(db, cpiIds(c), now)?.id;
+    if (normal === null || !gdpId || !cpiId) return [];
+    const gdp = getPoints(db, gdpId, now - (tail + 2) * 100 * DAY).filter((p) => p.ts <= now);
+    const cpi = getPoints(db, cpiId, now - (tail + 3) * 100 * DAY);
+    const quarters = gdp.flatMap((g) => {
+      const inf = quarterMean(cpi, g.ts);
+      return inf === null ? [] : [{ ts: g.ts, growthGap: g.value - normal, inflationGap: inf - c.cpiTarget }];
+    });
+    const last = quarters.at(-1);
+    if (!last) return [];
+    return [{ short: c.short, name: pick(c.name, lang), group: c.group, ...last, trail: quarters.slice(-1 - tail, -1) }];
+  });
+}

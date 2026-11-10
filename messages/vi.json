@@ -76,6 +76,18 @@
       "title": "Chỉ số sống còn",
       "subtitle": "12 con số giới chuyên môn xem đầu tiên"
     },
+    "worldMarkets": {
+      "title": "Thị trường thế giới",
+      "subtitle": "Chỉ số chứng khoán chính của từng thị trường, tính bằng nội tệ"
+    },
+    "commodities": {
+      "title": "Hàng hoá",
+      "subtitle": "Năng lượng, kim loại và lương thực, theo giá hợp đồng tương lai"
+    },
+    "assetClasses": {
+      "title": "Các lớp tài sản năm nay",
+      "subtitle": "Cái gì đang thắng: lợi nhuận từ đầu năm"
+    },
     "yieldCurve": {
       "title": "Đường cong lợi suất Mỹ",
       "subtitle": "Lợi suất trái phiếu theo kỳ hạn"
@@ -124,6 +136,22 @@
       "title": "Kinh tế Việt Nam",
       "subtitle": "Tăng trưởng, lạm phát, lãi suất NHNN và dự báo của IMF"
     },
+    "vnRates": {
+      "title": "Lạm phát và lãi suất NHNN",
+      "subtitle": "CPI so cùng kỳ và lãi suất tái cấp vốn theo tháng"
+    },
+    "vnRegion": {
+      "title": "VN-Index và khu vực",
+      "subtitle": "Lợi nhuận từ đầu năm của các chỉ số châu Á – Thái Bình Dương"
+    },
+    "vnHazards": {
+      "title": "Thiên tai gần Việt Nam",
+      "subtitle": "Bão, động đất, lũ, cháy rừng trong 14 ngày qua"
+    },
+    "vnCalendar": {
+      "title": "Lịch thị trường Việt Nam",
+      "subtitle": "Đáo hạn phái sinh, công bố số liệu, họp Fed"
+    },
     "vnGold": {
       "title": "Giá vàng",
       "subtitle": "Các thương hiệu trong nước so với giá thế giới"
@@ -147,6 +175,14 @@
     "cryptoDerivs": {
       "title": "Đòn bẩy & nhu cầu trong nước",
       "subtitle": "Funding hợp đồng vĩnh cửu, OI, USDT/VND P2P"
+    },
+    "cryptoMap": {
+      "title": "Bản đồ thị trường",
+      "subtitle": "Top coin theo vốn hoá, tô màu theo 24 giờ qua"
+    },
+    "cryptoEthBtc": {
+      "title": "ETH/BTC",
+      "subtitle": "Giá ether tính bằng bitcoin trong một năm qua"
     },
     "cryptoNetwork": {
       "title": "Mạng Bitcoin",
@@ -179,6 +215,14 @@
     "cycleClock": {
       "title": "Đồng hồ chu kỳ kinh tế",
       "subtitle": "Mỗi nền kinh tế đang ở pha nào, theo chỉ báo sớm của OECD"
+    },
+    "growthInflation": {
+      "title": "Tăng trưởng và lạm phát",
+      "subtitle": "Mỗi nền kinh tế so với mức bình thường và mục tiêu lạm phát của chính nó, kèm 4 quý trước"
+    },
+    "fiscal": {
+      "title": "Nợ công và ngân sách",
+      "subtitle": "Nợ chính phủ so với cân đối ngân sách năm nay (IMF)"
     },
     "scorecard": {
       "title": "Sức khoẻ các nền kinh tế",
@@ -232,6 +276,10 @@
       "title": "Lỗ hổng đang bị khai thác",
       "subtitle": "Danh mục KEV của CISA, 30 ngày qua"
     },
+    "techKevVendors": {
+      "title": "Hãng nào đang bị nhắm",
+      "subtitle": "Lỗ hổng mới trong danh mục CISA, theo hãng"
+    },
     "techHn": {
       "title": "Dân lập trình đang đọc gì",
       "subtitle": "Trang nhất Hacker News"
@@ -245,11 +293,11 @@
     "today": "Mới nhất",
     "monthAgo": "1 tháng trước",
     "yearAgo": "1 năm trước",
-    "inflation": "Lạm phát {year} (IMF ước tính)",
+    "inflation": "Lạm phát CPI (tháng gần nhất)",
+    "inflationEst": "* Ước tính năm của IMF, chưa có số tháng.",
     "policyRate": "Lãi suất điều hành",
     "realRate": "Lãi suất thực",
     "rateVn": "VN: lãi suất tái cấp vốn của NHNN (BIS không công bố).",
-    "spread2s10s": "Chênh lệch 2s10s",
     "inverted": "Đảo ngược",
     "normal": "Bình thường",
     "lastYear": "12 tháng qua",
@@ -264,7 +312,12 @@
     "range1y": "Biên độ 1 năm: thấp → cao",
     "range1yShort": "1N",
     "realRateHint": "lãi suất − lạm phát",
-    "period": "Kỳ của số liệu"
+    "period": "Kỳ của số liệu",
+    "spreadHistory": "Chênh lệch lợi suất trong hai năm qua (điểm %)",
+    "positiveSince": "dương từ {date}",
+    "invertedSince": "đảo ngược từ {date}",
+    "orEarlier": " hoặc sớm hơn",
+    "uninvertHint": "Đường cong đảo ngược đã đi trước mọi cuộc suy thoái ở Mỹ từ thập niên 1960, nhưng suy thoái thường bắt đầu sau khi đường cong dương trở lại, không phải trong lúc còn đảo ngược."
   },
   "macro": {
     "phases": {
@@ -356,7 +409,26 @@
     "noteNeedsKey": "Thêm AI_API_KEY (key Gemini hoặc Claude) vào .env.local rồi khởi động lại worker để có nhận định tuần.",
     "noteMeta": "Tuần {week} · {date} · {model}",
     "noteCaveat": "AI viết chỉ từ số liệu trên trang này; hãy đối chiếu với các bảng trước khi dựa vào.",
-    "cpiNote": "Chấm màu = khoảng cách tới mục tiêu: xanh trong 1 điểm %, vàng cao hơn 1–3 điểm % (hoặc giảm phát), đỏ cao hơn trên 3 điểm %."
+    "cpiNote": "Chấm màu = khoảng cách tới mục tiêu: xanh trong 1 điểm %, vàng cao hơn 1–3 điểm % (hoặc giảm phát), đỏ cao hơn trên 3 điểm %.",
+    "giQuadrants": {
+      "stagflation": "Đình lạm",
+      "overheating": "Quá nóng",
+      "weak": "Suy yếu",
+      "stable": "Ổn định"
+    },
+    "giX": "Tăng trưởng so với bình thường",
+    "giY": "Lạm phát so với mục tiêu",
+    "giPeriod": "Quý gần nhất: {q}",
+    "giNote": "Tăng trưởng: GDP so cùng kỳ trừ mức trung bình 2015–19 của nền kinh tế đó (IMF). Lạm phát: CPI so cùng kỳ bình quân trong cùng quý trừ mục tiêu của ngân hàng trung ương. Rê chuột lên một nền kinh tế để xem đường đi của nó qua 4 quý trước.",
+    "fiscalQuadrants": {
+      "risk": "Rủi ro tài khoá",
+      "highDebt": "Nợ cao, thâm hụt nhỏ",
+      "bigDeficit": "Thâm hụt lớn, nợ thấp",
+      "sound": "Vững"
+    },
+    "fiscalX": "Cân đối ngân sách {year}, % GDP",
+    "fiscalY": "Nợ chính phủ {year}, % GDP",
+    "fiscalNote": "Hai đường mốc: thâm hụt 3% (trần của EU) và nợ 90% GDP (ngưỡng mà nhiều nghiên cứu thấy tăng trưởng bắt đầu chậm lại). Nợ cao cộng thâm hụt lớn nghĩa là nợ còn tăng tiếp và thị trường trái phiếu có thể phản ứng. Số ước tính năm nay của IMF."
   },
   "map": {
     "quake": "Động đất",
@@ -447,6 +519,8 @@
     "up": "tăng",
     "down": "giảm",
     "unchanged": "đứng",
+    "value": "Giá trị khớp lệnh",
+    "valueFmt": "{v} tỷ ₫",
     "news": "VnExpress",
     "goldUnit": "Triệu đồng/lượng",
     "more": "Trang Việt Nam →",
@@ -466,7 +540,55 @@
       "DOHNL": "DOJI Hà Nội",
       "BTSJC": "Bảo Tín SJC",
       "PNJ24K": "PNJ 24K"
-    }
+    },
+    "ratesCpi": "Lạm phát CPI (so cùng kỳ)",
+    "ratesRefi": "Lãi suất tái cấp vốn",
+    "ratesNote": "Khoảng cách giữa hai đường là lãi suất thực: lãi suất tái cấp vốn cao hơn lạm phát nghĩa là tiền đang đắt. Mục tiêu lạm phát Quốc hội đặt ra khoảng 4,5%. CPI: IMF, theo số của Cục Thống kê; lãi suất: theo quyết định của NHNN.",
+    "regionRank": "VN-Index đứng thứ {rank}/{n} thị trường châu Á – Thái Bình Dương từ đầu năm.",
+    "regionNote": "Mỗi chỉ số tính bằng nội tệ, so với giá đóng cửa cuối năm trước. Rê chuột lên thanh để xem tên chỉ số.",
+    "hazardTypes": {
+      "cyclone": "Bão",
+      "storm": "Bão",
+      "earthquake": "Động đất",
+      "flood": "Lũ",
+      "wildfire": "Cháy",
+      "volcano": "Núi lửa",
+      "drought": "Hạn hán",
+      "landslide": "Sạt lở",
+      "tsunami": "Sóng thần",
+      "heat": "Nắng nóng"
+    },
+    "hazardKm": "cách {city} {km} km",
+    "hazardsEmpty": "Không có bão, động đất, lũ hay cháy rừng nào được ghi nhận gần Việt Nam trong 14 ngày qua.",
+    "hazardsNote": "Bão được theo dõi ra tới biển Philippines (0–30°B, 100–135°Đ); thiên tai khác trong khung 5–25°B, 100–118°Đ. Khoảng cách tính tới thành phố gần nhất trong Hà Nội, Đà Nẵng, TP.HCM. GDACS, NASA EONET, USGS."
+  },
+  "markets": {
+    "regions": {
+      "americas": "Châu Mỹ",
+      "europe": "Châu Âu",
+      "asia": "Châu Á – Thái Bình Dương"
+    },
+    "index": "Chỉ số",
+    "price": "Điểm",
+    "d1": "Phiên",
+    "w1": "1 tuần",
+    "m1": "1 tháng",
+    "ytd": "Từ đầu năm",
+    "year": "1 năm",
+    "summary": "{up}/{n} thị trường tăng trong phiên gần nhất · mạnh nhất {best} · yếu nhất {worst}",
+    "note": "Phiên = phiên gần nhất của từng sàn, đang mở hoặc đã đóng. Nền xanh đậm dần theo mức tăng, đỏ theo mức giảm, thang riêng cho từng cột. Tính bằng nội tệ, chưa gồm biến động tỷ giá.",
+    "source": "Yahoo Finance · VN-Index: SSI",
+    "groups": {
+      "energy": "Năng lượng",
+      "metals": "Kim loại",
+      "agri": "Lương thực"
+    },
+    "commodity": "Hàng hoá",
+    "priceCommodity": "Giá",
+    "summaryCommodities": "{up}/{n} mặt hàng tăng trong phiên gần nhất · mạnh nhất {best} · yếu nhất {worst}",
+    "noteCommodities": "Hợp đồng tương lai kỳ hạn gần nhất, tính theo đơn vị của từng hợp đồng (¢ = xu Mỹ). Giá năng lượng và lương thực truyền vào giá tiêu dùng ở các nước nhập khẩu trong vài tháng, kể cả Việt Nam.",
+    "assetsLabel": "Lợi nhuận từ đầu năm {year} theo lớp tài sản",
+    "noteAssets": "Thay đổi so với giá đóng cửa cuối năm trước, tính bằng đồng tiền của từng tài sản (VN-Index bằng VND). Cổ phiếu thế giới, cổ phiếu mới nổi và trái phiếu Mỹ là quỹ ETF (ACWI, EEM, IEF): chỉ tính giá, chưa gồm cổ tức và lãi coupon."
   },
   "crypto": {
     "fng": "Sợ hãi & Tham lam",
@@ -519,7 +641,12 @@
     "height": "Chiều cao khối",
     "rank": "#{n}",
     "noOdds": "Hiện không có kèo crypto dài hạn, hoặc mạng này không truy cập được Polymarket.",
-    "ends": "kết thúc"
+    "ends": "kết thúc",
+    "mapLabel": "Top coin, diện tích theo vốn hoá, màu theo biến động 24 giờ",
+    "mapNote": "Diện tích = vốn hoá; màu = biến động 24 giờ: nhạt từ ±1%, vừa từ ±3%, đậm từ ±6%, xám ở giữa. Đã bỏ stablecoin và token bọc. Rê chuột để xem vốn hoá và biến động 7 ngày; bấm để mở CoinGecko.",
+    "ethBtcYear": "trong năm",
+    "ethBtcRange": "vùng 1 năm {lo}–{hi}",
+    "ethBtcNote": "Đường đi lên nghĩa là ether mạnh hơn bitcoin. Giới giao dịch xem một đợt tăng kéo dài là dấu hiệu bắt đầu \"mùa altcoin\", khi tiền chảy từ bitcoin sang các coin rủi ro hơn. Giá đóng cửa ngày từ Yahoo Finance."
   },
   "tech": {
     "groups": {
@@ -572,7 +699,20 @@
     "due": "hạn vá {date}",
     "ransomware": "Ransomware",
     "kevNote": "Mọi lỗ hổng ở đây đều đang bị khai thác thật. Hạn vá là hạn CISA đặt cho cơ quan liên bang Mỹ; nơi khác nên vá sớm hơn.",
-    "noKev": "Không có lỗ hổng mới trong 30 ngày qua."
+    "noKev": "Không có lỗ hổng mới trong 30 ngày qua.",
+    "tableTab": "Bảng",
+    "mapTab": "Bản đồ",
+    "mapLabel": "Cổ phiếu công nghệ, diện tích theo vốn hoá, màu theo biến động phiên",
+    "mapNote": "Diện tích = vốn hoá quy ra USD; màu = biến động phiên gần nhất: nhạt từ ±0,5%, vừa từ ±1,5%, đậm từ ±3%, xám ở giữa. Rê chuột để xem biến động từ đầu năm.",
+    "longSummary": "đã tách riêng {n} sự cố kéo dài",
+    "longCount": "+{n} sự cố kéo dài",
+    "longTitle": "Sự cố kéo dài, mở quá 14 ngày ({n})",
+    "kevWindow": "{days} ngày",
+    "kevVendorsSummary": "{total} lỗ hổng được thêm trong {days} ngày; ba hãng đứng đầu chiếm {share}%.",
+    "kevVendorsLabel": "Số lỗ hổng bị khai thác được thêm theo hãng, {days} ngày qua",
+    "kevVendorHint": "{vendor}: {n} lỗ hổng được thêm, {r} đã bị dùng trong ransomware",
+    "kevVendorsNote": "Hãng có nhiều lỗ hổng là mục tiêu được ưa chuộng, thường vì sản phẩm nằm ở rìa mạng (VPN, tường lửa, truyền file). Đây không phải bảng xếp hạng chất lượng mã: phần mềm càng phổ biến càng thu hút kẻ tấn công.",
+    "kevYear": "1 năm"
   },
   "calendar": {
     "econ": "Kinh tế",
@@ -589,7 +729,13 @@
     "fomcSep": "Kèm dự báo kinh tế (SEP, dot plot)",
     "cb": "NHTW",
     "cbTitle": "{bank} công bố lãi suất",
-    "lpr": "Trung Quốc công bố lãi suất cho vay cơ bản (LPR)"
+    "lpr": "Trung Quốc công bố lãi suất cho vay cơ bản (LPR)",
+    "vn": "Việt Nam",
+    "vn30f": "Đáo hạn hợp đồng tương lai VN30 tháng {month}",
+    "vn30fDetail": "Thứ Năm thứ ba của tháng; lùi về phiên liền trước nếu trùng ngày nghỉ.",
+    "gso": "Cục Thống kê công bố số liệu kinh tế tháng {month}",
+    "gsoDetail": "CPI, sản xuất công nghiệp, bán lẻ, xuất nhập khẩu, FDI",
+    "gsoQuarter": "CPI, xuất nhập khẩu, FDI, kèm GDP quý {q}"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",

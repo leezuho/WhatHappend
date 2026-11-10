@@ -1,8 +1,26 @@
 import clsx from "clsx";
 import { SERIES, VITAL_SIGNS, type SeriesKey } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtDate, fmtDelta, fmtNumber, fmtPct, fmtTime, fmtValue } from "@/lib/format";
-import { getCountryMacro, getHighlights, getHistory, getInsightNotes, getRegime, getTicker, getTiles, getWatchlist, getYieldCurve, type Tile } from "@/lib/queries";
+import { fmtAxisPct, fmtDate, fmtDelta, fmtNumber, fmtPct, fmtTime, fmtValue } from "@/lib/format";
+import {
+  getAssetClasses,
+  getCommodities,
+  getCountryMacro,
+  getHighlights,
+  getHistory,
+  getInsightNotes,
+  getRegime,
+  getSpreadHistory,
+  getTicker,
+  getTiles,
+  getWatchlist,
+  getWorldMarkets,
+  getYieldCurve,
+  type Tile,
+} from "@/lib/queries";
+import { COMMODITY_GROUPS, type MarketRegion } from "@/config/markets";
+import { BarList } from "@/components/charts/BarList";
+import { MarketTable, MoveSummary } from "@/components/panels/MarketTable";
 import { TileDetail } from "@/components/charts/TileDetail";
 import { KpiTile } from "@/components/charts/KpiTile";
 import { alertOf } from "@/lib/signals/notable";
@@ -168,8 +186,10 @@ export async function YieldCurvePanel({ lang }: { lang: Locale }) {
   const d = getDict(lang);
   const curve = await getYieldCurve();
   if (!curve.rows.length) return <EmptyState lang={lang} />;
-  const [spread] = (await getTiles(["curve"])).map((t) => t.data);
+  const hist = await getSpreadHistory();
   const label = (base: string, ts: number | null) => (ts ? `${base} (${fmtDate(ts, lang)})` : base);
+  const spreadName = { s2s10: "2s10s (10Y − 2Y)", s3m10: "10Y − 3M" } as const;
+  const day = (ts: number) => fmtDate(ts, lang, { day: "numeric", month: "short", year: "numeric" });
   return (
     <div className="flex flex-col gap-2">
       <LineChart
@@ -188,15 +208,39 @@ export async function YieldCurvePanel({ lang }: { lang: Locale }) {
         locale={lang}
         tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
       />
-      {spread && (
-        <p className="text-xs text-ink-2">
-          {d.charts.spread2s10s}:{" "}
-          <span className="tabular font-semibold text-ink">{fmtValue(SERIES.curve, spread.value, lang)} pp</span>{" "}
-          <span className={clsx("ml-1 rounded px-1.5 py-0.5 text-[11px]", spread.value < 0 ? "bg-surface-2 text-down" : "bg-surface-2 text-ink-2")}>
-            {spread.value < 0 ? d.charts.inverted : d.charts.normal}
-          </span>{" "}
-          <span className="text-muted">· {pick(SERIES.curve.explain, lang)}</span>
-        </p>
+      {hist.rows.length > 1 && (
+        <div className="flex flex-col gap-1.5 border-t border-line pt-2">
+          <p className="text-[11px] font-semibold text-ink-2">{d.charts.spreadHistory}</p>
+          <LineChart
+            data={hist.rows}
+            xKey="ts"
+            xFormat="month"
+            series={[
+              { key: "s2s10", label: spreadName.s2s10, color: "var(--s1)" },
+              { key: "s3m10", label: spreadName.s3m10, color: "var(--s2)" },
+            ]}
+            refY={0}
+            yDigits={2}
+            height={140}
+            locale={lang}
+            tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
+          />
+          <ul className="flex flex-col gap-0.5 text-xs text-ink-2">
+            {hist.runs.map((r) => (
+              <li key={r.key}>
+                {spreadName[r.key]}: <span className="tabular font-semibold text-ink">{fmtNumber(r.value, lang, 2)} pp</span>{" "}
+                <span className={clsx("ml-1 rounded bg-surface-2 px-1.5 py-0.5 text-[11px]", r.inverted ? "text-down" : "text-ink-2")}>
+                  {r.inverted ? d.charts.inverted : d.charts.normal}
+                </span>{" "}
+                <span className="text-muted">
+                  · {(r.inverted ? d.charts.invertedSince : d.charts.positiveSince).replace("{date}", day(r.since))}
+                  {r.atLeast && d.charts.orEarlier}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-muted">{d.charts.uninvertHint}</p>
+        </div>
       )}
     </div>
   );
@@ -206,20 +250,87 @@ export async function YieldCurvePanel({ lang }: { lang: Locale }) {
 
 export async function InflationRatesPanel({ lang }: { lang: Locale }) {
   const d = getDict(lang);
-  const { year, rows } = await getCountryMacro(lang);
+  const { rows } = await getCountryMacro(lang);
   if (rows.every((r) => r.inflation === null && r.rate === null)) return <EmptyState lang={lang} />;
   return (
     <div className="flex flex-col gap-2">
       <DumbbellChart
-        rows={rows.map((r) => ({ key: r.short, label: r.name, a: r.inflation, b: r.rate }))}
-        a={{ label: d.charts.inflation.replace("{year}", String(year)), color: "var(--s1)" }}
+        rows={rows.map((r) => ({ key: r.short, label: r.inflationEst ? `${r.name} *` : r.name, a: r.inflation, b: r.rate }))}
+        a={{ label: d.charts.inflation, color: "var(--s1)" }}
         b={{ label: d.charts.policyRate, color: "var(--s2)" }}
         gapLabel={d.charts.realRate}
         gapHint={d.charts.realRateHint}
         locale={lang}
         tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
       />
-      <p className="text-[11px] text-muted">{d.charts.rateVn}</p>
+      <p className="text-[11px] text-muted">
+        {d.charts.rateVn}
+        {rows.some((r) => r.inflationEst) && ` ${d.charts.inflationEst}`}
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- world markets
+
+/** Two columns from xl: the Americas and Europe beside Asia-Pacific (11 and 9 rows). */
+const MARKET_COLUMNS: MarketRegion[][] = [["americas", "europe"], ["asia"]];
+
+export async function WorldMarkets({ lang }: { lang: Locale }) {
+  const t = getDict(lang).markets;
+  const rows = await getWorldMarkets(lang);
+  if (rows.every((r) => r.price === null)) return <EmptyState lang={lang} />;
+  const group = (region: MarketRegion) => ({ key: region, label: t.regions[region], rows: rows.filter((r) => r.region === region).map((r) => ({ ...r, sub: r.country })) });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <MoveSummary rows={rows} template={t.summary} lang={lang} />
+      <div className="grid grid-cols-1 gap-x-8 gap-y-3 xl:grid-cols-2">
+        {MARKET_COLUMNS.map((regions) => (
+          <MarketTable key={regions.join()} groups={regions.map(group)} nameHead={t.index} priceHead={t.price} lang={lang} />
+        ))}
+      </div>
+      <p className="text-[10px] leading-snug text-muted">
+        {t.note} · {t.source}
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- commodities
+
+export async function Commodities({ lang }: { lang: Locale }) {
+  const t = getDict(lang).markets;
+  const rows = await getCommodities(lang);
+  if (rows.every((r) => r.price === null)) return <EmptyState lang={lang} />;
+  const groups = COMMODITY_GROUPS.map((g) => ({ key: g, label: t.groups[g], rows: rows.filter((r) => r.group === g).map((r) => ({ ...r, sub: r.unit })) }));
+  return (
+    <div className="flex flex-col gap-3">
+      <MoveSummary rows={rows} template={t.summaryCommodities} lang={lang} />
+      <MarketTable groups={groups} nameHead={t.commodity} priceHead={t.priceCommodity} lang={lang} />
+      <p className="text-[10px] leading-snug text-muted">
+        {t.noteCommodities} · Yahoo Finance
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- asset classes this year
+
+export async function AssetClasses({ lang }: { lang: Locale }) {
+  const t = getDict(lang).markets;
+  const rows = await getAssetClasses(lang);
+  if (rows.every((r) => r.ytd === null)) return <EmptyState lang={lang} />;
+  const year = new Date().getUTCFullYear();
+  return (
+    <div className="flex flex-col gap-2">
+      <BarList
+        rows={rows.map((r) => ({ key: r.id, label: r.name, value: r.ytd, text: r.ytd === null ? "—" : fmtPct(r.ytd, lang, 1) }))}
+        color="sign"
+        tick={(v) => fmtAxisPct(v, lang)}
+        label={t.assetsLabel.replace("{year}", String(year))}
+      />
+      <p className="text-[10px] leading-snug text-muted">{t.noteAssets}</p>
     </div>
   );
 }

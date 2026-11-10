@@ -34,6 +34,34 @@ export interface KevEntry {
   desc: string | null;
 }
 
+/** Flaws added per vendor over a window: which products attackers are going after. */
+export interface KevVendors {
+  days: number;
+  /** Every flaw added in the window, not only the vendors listed. */
+  total: number;
+  /** Vendors with the most flaws added, most first (ties by name); `ransomware` of them known to be used by ransomware. */
+  rows: { vendor: string; n: number; ransomware: number }[];
+}
+
+/** Windows the vendor counts are kept for, in days. */
+export const KEV_VENDOR_WINDOWS = [90, 365] as const;
+
+export function kevByVendor(vulns: z.infer<typeof Vuln>[], now: number, days: number, top = 12): KevVendors {
+  const recent = recentKev(vulns, now, days);
+  const by = new Map<string, { n: number; ransomware: number }>();
+  for (const v of recent) {
+    const e = by.get(v.vendorProject) ?? { n: 0, ransomware: 0 };
+    e.n++;
+    if (v.knownRansomwareCampaignUse === "Known") e.ransomware++;
+    by.set(v.vendorProject, e);
+  }
+  const rows = [...by.entries()]
+    .map(([vendor, e]) => ({ vendor, ...e }))
+    .sort((a, b) => b.n - a.n || a.vendor.localeCompare(b.vendor, "en"))
+    .slice(0, top);
+  return { days, total: recent.length, rows };
+}
+
 /** Entries added in the last `days`, newest first (same day: higher CVE number first). */
 export function recentKev(vulns: z.infer<typeof Vuln>[], now: number, days = WINDOW_DAYS) {
   return vulns
@@ -48,8 +76,14 @@ export const kev: Source = {
   async run({ db }) {
     const r = await fetchJson("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", Resp, { timeoutMs: 40_000 });
     if (!r.vulnerabilities.length) throw new Error("KEV catalog is empty");
-    const rows = recentKev(r.vulnerabilities, Date.now()).slice(0, MAX_ROWS);
-    return replaceItems(
+    const now = Date.now();
+    const rows = recentKev(r.vulnerabilities, now).slice(0, MAX_ROWS);
+    const vendors = replaceItems(
+      db,
+      "kev_vendors",
+      KEV_VENDOR_WINDOWS.map((days) => ({ id: String(days), title: `${days}d`, ts: now, data: kevByVendor(r.vulnerabilities, now, days) })),
+    );
+    return vendors + replaceItems(
       db,
       "kev",
       rows.map((v) => ({

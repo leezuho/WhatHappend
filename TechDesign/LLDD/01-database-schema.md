@@ -103,7 +103,7 @@ Index: `events_ts (ts DESC)`.
 ### 3.6 `items` — danh sách snapshot
 | Cột | Kiểu | Ý nghĩa |
 |---|---|---|
-| `kind` | TEXT | PK (1). Loại danh sách: `wiki_en`, `wiki_vi`, `hn`, `polymarket`, `kalshi_fed`, `launch`, `calendar`, `airquality`, `who`, `gold_vn`, `vcb`, `vn_breadth`, và của trang Công nghệ: `status`, `ai_models`, `hf_papers`, `hf_models`, `kev`, `tech_caps` (dạng `data` xem [LLDD 02](02-data-sources.md)) |
+| `kind` | TEXT | PK (1). Loại danh sách: `wiki_en`, `wiki_vi`, `hn`, `polymarket`, `kalshi_fed`, `launch`, `calendar`, `airquality`, `who`, `gold_vn`, `vcb`, `vn_breadth`, và của trang Công nghệ: `status`, `ai_models`, `hf_papers`, `hf_models`, `kev`, `kev_vendors`, `tech_caps` (dạng `data` xem [LLDD 02](02-data-sources.md)) |
 | `id` | TEXT | PK (2). Id trong nguồn |
 | `rank` | INTEGER NOT NULL | Thứ tự trong snapshot (0 là đầu tiên) |
 | `title`, `title_vi` | TEXT | Tiêu đề và bản dịch |

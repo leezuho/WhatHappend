@@ -1,5 +1,6 @@
 import type { Bi } from "@/lib/i18n";
 import { FX_SYMBOLS } from "@/config/countries";
+import { MARKET_EXTRA_SYMBOLS, WORLD_INDEX_SYMBOLS } from "@/config/markets";
 import { TECH_FX, TECH_SYMBOLS } from "@/config/tech";
 
 // Every number the dashboard shows, with its bilingual name, formatting,
@@ -850,7 +851,7 @@ export const MACRO_US = {
   debt: ["usDebt", "interest", "ig", "hy", "emSpread"],
 } as const satisfies Record<string, readonly SeriesKey[]>;
 
-/** Yahoo symbols to pull quotes + history for: every Yahoo series, the macro page's currency pairs, the tech page's stocks. */
+/** Yahoo symbols to pull quotes + history for: every Yahoo series, the macro page's currency pairs, the overview's world indices, commodities and asset classes, the tech page's stocks. */
 export const YAHOO_SYMBOLS = [
   ...new Set([
     ...Object.values(SERIES)
@@ -858,6 +859,8 @@ export const YAHOO_SYMBOLS = [
       .filter((id) => id.startsWith("yahoo:"))
       .map((id) => id.slice("yahoo:".length)),
     ...FX_SYMBOLS,
+    ...WORLD_INDEX_SYMBOLS,
+    ...MARKET_EXTRA_SYMBOLS,
     ...TECH_SYMBOLS,
     ...Object.values(TECH_FX),
   ]),

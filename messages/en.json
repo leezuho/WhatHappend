@@ -76,6 +76,18 @@
       "title": "Vital signs",
       "subtitle": "The dozen numbers professionals check first"
     },
+    "worldMarkets": {
+      "title": "World markets",
+      "subtitle": "Each market's main stock index, in local currency"
+    },
+    "commodities": {
+      "title": "Commodities",
+      "subtitle": "Energy, metals and food, from futures prices"
+    },
+    "assetClasses": {
+      "title": "Asset classes this year",
+      "subtitle": "What is winning: return since the start of the year"
+    },
     "yieldCurve": {
       "title": "US yield curve",
       "subtitle": "Treasury yields by maturity"
@@ -124,6 +136,22 @@
       "title": "Vietnam's economy",
       "subtitle": "Growth, inflation, the State Bank rate and the IMF outlook"
     },
+    "vnRates": {
+      "title": "Inflation and the State Bank's rate",
+      "subtitle": "CPI y/y and the refinancing rate, by month"
+    },
+    "vnRegion": {
+      "title": "VN-Index and the region",
+      "subtitle": "Year-to-date return of Asia-Pacific stock indices"
+    },
+    "vnHazards": {
+      "title": "Hazards near Vietnam",
+      "subtitle": "Storms, earthquakes, floods and fires in the last 14 days"
+    },
+    "vnCalendar": {
+      "title": "Vietnam market calendar",
+      "subtitle": "Futures expiries, statistics releases, Fed meetings"
+    },
     "vnGold": {
       "title": "Gold prices",
       "subtitle": "Domestic brands vs the world price"
@@ -147,6 +175,14 @@
     "cryptoDerivs": {
       "title": "Leverage & local demand",
       "subtitle": "Perpetual funding, open interest, USDT/VND P2P"
+    },
+    "cryptoMap": {
+      "title": "Market map",
+      "subtitle": "Top coins by market cap, colored by the last 24 hours"
+    },
+    "cryptoEthBtc": {
+      "title": "ETH/BTC",
+      "subtitle": "Ether priced in bitcoin over the last year"
     },
     "cryptoNetwork": {
       "title": "Bitcoin network",
@@ -179,6 +215,14 @@
     "cycleClock": {
       "title": "Business cycle clock",
       "subtitle": "Where each economy stands, from OECD leading indicators"
+    },
+    "growthInflation": {
+      "title": "Growth and inflation",
+      "subtitle": "Each economy against its own normal and its inflation target, with the four quarters before"
+    },
+    "fiscal": {
+      "title": "Public debt and the budget",
+      "subtitle": "Government debt against this year's budget balance (IMF)"
     },
     "scorecard": {
       "title": "Economies at a glance",
@@ -232,6 +276,10 @@
       "title": "Actively exploited vulnerabilities",
       "subtitle": "CISA Known Exploited Vulnerabilities, last 30 days"
     },
+    "techKevVendors": {
+      "title": "Who is being targeted",
+      "subtitle": "New entries in CISA's catalog, by vendor"
+    },
     "techHn": {
       "title": "What developers are reading",
       "subtitle": "Hacker News front page"
@@ -245,11 +293,11 @@
     "today": "Latest",
     "monthAgo": "1 month ago",
     "yearAgo": "1 year ago",
-    "inflation": "Inflation {year} (IMF est.)",
+    "inflation": "CPI inflation (latest month)",
+    "inflationEst": "* IMF annual estimate; no monthly number yet.",
     "policyRate": "Policy rate",
     "realRate": "Real rate",
     "rateVn": "VN: the State Bank's refinancing rate (BIS publishes none).",
-    "spread2s10s": "2s10s spread",
     "inverted": "Inverted",
     "normal": "Normal",
     "lastYear": "Last 12 months",
@@ -264,7 +312,12 @@
     "range1y": "1-year range: low → high",
     "range1yShort": "1Y",
     "realRateHint": "policy rate − inflation",
-    "period": "Period the number covers"
+    "period": "Period the number covers",
+    "spreadHistory": "Yield spreads over the last two years (pp)",
+    "positiveSince": "positive since {date}",
+    "invertedSince": "inverted since {date}",
+    "orEarlier": " or earlier",
+    "uninvertHint": "An inverted curve came before every US recession since the 1960s, but the recession usually started after the curve turned positive again, not while it was still inverted."
   },
   "macro": {
     "phases": {
@@ -356,7 +409,26 @@
     "noteNeedsKey": "Add AI_API_KEY (a Gemini or Claude key) to .env.local and restart the worker to get the weekly note.",
     "noteMeta": "Week {week} · {date} · {model}",
     "noteCaveat": "Written by AI from the numbers on this page only; check the tables before relying on it.",
-    "cpiNote": "Dot = distance from target: green within 1 pp, amber 1–3 pp above (or deflation), red more than 3 pp above."
+    "cpiNote": "Dot = distance from target: green within 1 pp, amber 1–3 pp above (or deflation), red more than 3 pp above.",
+    "giQuadrants": {
+      "stagflation": "Stagflation",
+      "overheating": "Overheating",
+      "weak": "Weak",
+      "stable": "Sweet spot"
+    },
+    "giX": "Growth vs normal",
+    "giY": "Inflation vs target",
+    "giPeriod": "Latest quarter: {q}",
+    "giNote": "Growth: GDP y/y minus the economy's 2015–19 average (IMF). Inflation: CPI y/y averaged over the same quarter minus the central bank's target. Hover an economy to see its path over the four quarters before.",
+    "fiscalQuadrants": {
+      "risk": "Fiscal risk",
+      "highDebt": "High debt, small deficit",
+      "bigDeficit": "Big deficit, low debt",
+      "sound": "Sound"
+    },
+    "fiscalX": "Budget balance {year}, % GDP",
+    "fiscalY": "Government debt {year}, % GDP",
+    "fiscalNote": "Lines at a 3% deficit (the EU's limit) and 90% of GDP debt (past which studies find growth tends to slow). High debt with a big deficit means debt keeps rising and bond markets can push back. IMF estimates for this year."
   },
   "map": {
     "quake": "Earthquakes",
@@ -447,6 +519,8 @@
     "up": "up",
     "down": "down",
     "unchanged": "flat",
+    "value": "Matched value",
+    "valueFmt": "₫{v} bn",
     "news": "VnExpress",
     "goldUnit": "Million VND per tael",
     "more": "Vietnam page →",
@@ -466,7 +540,55 @@
       "DOHNL": "DOJI Hanoi",
       "BTSJC": "Bao Tin SJC",
       "PNJ24K": "PNJ 24K"
-    }
+    },
+    "ratesCpi": "CPI inflation (y/y)",
+    "ratesRefi": "Refinancing rate",
+    "ratesNote": "The gap between the lines is the real rate: the refinancing rate above inflation means money is tight. The National Assembly's inflation target is about 4.5%. CPI: IMF, from the Statistics Office; rate: the SBV's decisions.",
+    "regionRank": "VN-Index is {rank} of {n} Asia-Pacific markets this year.",
+    "regionNote": "Each index in its own currency, since the last close of last year. Hover a bar for the index name.",
+    "hazardTypes": {
+      "cyclone": "Storm",
+      "storm": "Storm",
+      "earthquake": "Earthquake",
+      "flood": "Flood",
+      "wildfire": "Fire",
+      "volcano": "Volcano",
+      "drought": "Drought",
+      "landslide": "Landslide",
+      "tsunami": "Tsunami",
+      "heat": "Heat"
+    },
+    "hazardKm": "{km} km from {city}",
+    "hazardsEmpty": "No storm, earthquake, flood or fire recorded near Vietnam in the last 14 days.",
+    "hazardsNote": "Storms are tracked out to the Philippine Sea (0–30°N, 100–135°E); other hazards within 5–25°N, 100–118°E. Distance to the nearest of Hanoi, Da Nang and Ho Chi Minh City. GDACS, NASA EONET, USGS."
+  },
+  "markets": {
+    "regions": {
+      "americas": "Americas",
+      "europe": "Europe",
+      "asia": "Asia-Pacific"
+    },
+    "index": "Index",
+    "price": "Level",
+    "d1": "Day",
+    "w1": "1W",
+    "m1": "1M",
+    "ytd": "YTD",
+    "year": "1 year",
+    "summary": "{up} of {n} markets up in their latest session · best {best} · worst {worst}",
+    "note": "Day = each exchange's latest session, open or closed. Green deepens with the size of a rise, red with a fall, on each column's own scale. In local currency, so currency moves are not included.",
+    "source": "Yahoo Finance · VN-Index: SSI",
+    "groups": {
+      "energy": "Energy",
+      "metals": "Metals",
+      "agri": "Food"
+    },
+    "commodity": "Commodity",
+    "priceCommodity": "Price",
+    "summaryCommodities": "{up} of {n} up in their latest session · best {best} · worst {worst}",
+    "noteCommodities": "Front-month futures, each in its contract's unit (¢ = US cents). Energy and food reach consumer prices in importing countries within months, Vietnam included.",
+    "assetsLabel": "Year-to-date return by asset class, {year}",
+    "noteAssets": "Change since last year's final close, in each asset's own currency (VN-Index in dong). World and emerging-market stocks and Treasuries are ETFs (ACWI, EEM, IEF): price only, without dividends or coupons."
   },
   "crypto": {
     "fng": "Fear & Greed",
@@ -519,7 +641,12 @@
     "height": "Block height",
     "rank": "#{n}",
     "noOdds": "No long-dated crypto markets right now, or Polymarket is unreachable from this network.",
-    "ends": "ends"
+    "ends": "ends",
+    "mapLabel": "Top coins sized by market cap, colored by 24-hour change",
+    "mapNote": "Area = market cap; fill = 24-hour change: light from ±1%, medium from ±3%, deep from ±6%, grey in between. Stablecoins and wrapped tokens left out. Hover for size and 7-day change; click for CoinGecko.",
+    "ethBtcYear": "over the year",
+    "ethBtcRange": "1-year range {lo}–{hi}",
+    "ethBtcNote": "A rising line means ether beats bitcoin. Traders read a sustained rise as the start of an \"altcoin season\", when money rotates out of bitcoin into riskier coins. Daily closes from Yahoo Finance."
   },
   "tech": {
     "groups": {
@@ -572,7 +699,20 @@
     "due": "patch by {date}",
     "ransomware": "Ransomware",
     "kevNote": "Every flaw here is being exploited in the wild. The deadline is the one CISA sets for US federal agencies; elsewhere, patch sooner.",
-    "noKev": "No new entries in the last 30 days."
+    "noKev": "No new entries in the last 30 days.",
+    "tableTab": "Table",
+    "mapTab": "Map",
+    "mapLabel": "Tech stocks sized by market cap, colored by the day's change",
+    "mapNote": "Area = market cap in US dollars; fill = the latest session's change: light from ±0.5%, medium from ±1.5%, deep from ±3%, grey in between. Hover for the year-to-date change.",
+    "longSummary": "{n} long-running outages set aside",
+    "longCount": "+{n} long-running",
+    "longTitle": "Long-running outages, open more than 14 days ({n})",
+    "kevWindow": "{days} days",
+    "kevVendorsSummary": "{total} flaws added in {days} days; the top three vendors account for {share}%.",
+    "kevVendorsLabel": "Exploited flaws added per vendor, last {days} days",
+    "kevVendorHint": "{vendor}: {n} flaws added, {r} known to be used in ransomware",
+    "kevVendorsNote": "A vendor with many entries is a favoured target, often because its products sit on the network edge (VPNs, firewalls, file transfer). It is not a ranking of code quality: widely deployed software draws more attackers.",
+    "kevYear": "1 year"
   },
   "calendar": {
     "econ": "Econ",
@@ -589,7 +729,13 @@
     "fomcSep": "With projections (SEP, dot plot)",
     "cb": "Central bank",
     "cbTitle": "{bank} rate decision",
-    "lpr": "China loan prime rate (LPR) fixing"
+    "lpr": "China loan prime rate (LPR) fixing",
+    "vn": "Vietnam",
+    "vn30f": "VN30 futures expire ({month} contract)",
+    "vn30fDetail": "Third Thursday of the month; the trading day before when that is a holiday.",
+    "gso": "Statistics Office: economic data for {month}",
+    "gsoDetail": "CPI, industrial output, retail sales, trade, FDI",
+    "gsoQuarter": "CPI, trade, FDI, plus GDP for quarter {q}"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",

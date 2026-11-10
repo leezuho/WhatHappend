@@ -5,7 +5,19 @@ import { getDict, hasLocale } from "@/lib/i18n";
 import { TopBar } from "@/components/TopBar";
 import { AutoRefresh } from "@/components/ui/AutoRefresh";
 import { Panel } from "@/components/ui/Panel";
-import { EconomyPulse, HighlightsBody, InflationRatesPanel, RegimeBadge, StressPanel, Ticker, VitalSigns, YieldCurvePanel } from "@/components/panels/MarketPanels";
+import {
+  AssetClasses,
+  Commodities,
+  EconomyPulse,
+  HighlightsBody,
+  InflationRatesPanel,
+  RegimeBadge,
+  StressPanel,
+  Ticker,
+  VitalSigns,
+  WorldMarkets,
+  YieldCurvePanel,
+} from "@/components/panels/MarketPanels";
 import { BriefBody, MapBody, NewsBody, VietnamBody } from "@/components/panels/ContentPanels";
 import { CalendarBody, EnvBody, PredictionBody, TrendingBody } from "@/components/panels/WorldPanels";
 
@@ -48,6 +60,17 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         {/* Row 3: vital signs */}
         <Panel lang={lang} title={p.vitals.title} subtitle={p.vitals.subtitle} sources={["yahoo", "fred", "vnindex"]} className="md:col-span-2 xl:col-span-12">
           <VitalSigns lang={lang} />
+        </Panel>
+
+        {/* Row 3b: every major stock market, not only Wall Street */}
+        <Panel lang={lang} title={p.worldMarkets.title} subtitle={p.worldMarkets.subtitle} sources={["yahoo", "vnindex"]} className="md:col-span-2 xl:col-span-12">
+          <WorldMarkets lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.commodities.title} subtitle={p.commodities.subtitle} sources={["yahoo"]} className="xl:col-span-7">
+          <Commodities lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.assetClasses.title} subtitle={p.assetClasses.subtitle} sources={["yahoo", "vnindex"]} className="xl:col-span-5">
+          <AssetClasses lang={lang} />
         </Panel>
 
         {/* Row 4: context */}

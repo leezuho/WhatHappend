@@ -1,10 +1,12 @@
 import clsx from "clsx";
 import { VIETNAM_ECONOMY, VIETNAM_MARKETS, type SeriesKey } from "@/config/series";
 import { getDict, type Locale } from "@/lib/i18n";
-import { fmtNumber, fmtSigned } from "@/lib/format";
-import { getInsightNotes, getTiles, getVietnam, getWatchlist } from "@/lib/queries";
-import { getVietnamOutlook } from "@/lib/queries-vietnam";
+import { fmtAxisPct, fmtDate, fmtNumber, fmtPct, fmtSigned } from "@/lib/format";
+import { getInsightNotes, getTiles, getVietnam, getWatchlist, getWorldMarkets } from "@/lib/queries";
+import { getVietnamOutlook, getVnHazards, getVnRates } from "@/lib/queries-vietnam";
 import { EmptyState } from "@/components/ui/Panel";
+import { BarList } from "@/components/charts/BarList";
+import { LineChart } from "@/components/charts/LineChart";
 import { GoldTable, VcbTable, VnBreadth, VnNewsList } from "./ContentPanels";
 import { DetailTile } from "./MarketPanels";
 
@@ -130,4 +132,109 @@ export async function VnBank({ lang }: { lang: Locale }) {
 export async function VnNews({ lang }: { lang: Locale }) {
   const v = await getVietnam(lang, 15);
   return v.news.length ? <VnNewsList v={v} lang={lang} title={false} /> : <EmptyState lang={lang} />;
+}
+
+// ---------------------------------------------------------------- inflation vs the refinancing rate
+
+export async function VnRates({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const rows = await getVnRates();
+  if (!rows.some((r) => r.cpi !== null)) return <EmptyState lang={lang} />;
+  return (
+    <div className="flex flex-col gap-2">
+      <LineChart
+        data={rows}
+        xKey="ts"
+        xFormat="month"
+        series={[
+          { key: "cpi", label: d.vn.ratesCpi, color: "var(--s1)" },
+          { key: "refi", label: d.vn.ratesRefi, color: "var(--s2)", step: true },
+        ]}
+        yDigits={1}
+        ySuffix="%"
+        height={200}
+        locale={lang}
+        tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
+      />
+      <p className="text-[11px] text-muted">{d.vn.ratesNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- VN-Index against the region
+
+export async function VnRegion({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const rows = (await getWorldMarkets(lang)).filter((r) => r.region === "asia" && r.chYtd !== null).sort((a, b) => b.chYtd! - a.chYtd!);
+  if (!rows.length) return <EmptyState lang={lang} />;
+  const rank = rows.findIndex((r) => r.id === "vn:VNINDEX") + 1;
+  return (
+    <div className="flex flex-col gap-2">
+      {rank > 0 && (
+        <p className="text-xs text-ink-2">
+          {d.vn.regionRank.replace("{rank}", String(rank)).replace("{n}", String(rows.length))}
+        </p>
+      )}
+      <BarList
+        rows={rows.map((r) => ({
+          key: r.id,
+          label: r.country,
+          value: r.chYtd,
+          text: fmtPct(r.chYtd!, lang, 1),
+          hint: `${r.name} (${r.country}): ${fmtPct(r.chYtd!, lang, 1)}`,
+          highlight: r.id === "vn:VNINDEX",
+        }))}
+        color="highlight"
+        tick={(v) => fmtAxisPct(v, lang)}
+        label={d.panels.vnRegion.title}
+      />
+      <p className="text-[10px] leading-snug text-muted">{d.vn.regionNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- hazards near Vietnam
+
+export async function VnHazards({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const items = await getVnHazards(lang);
+  const types = d.vn.hazardTypes as Record<string, string>;
+  return (
+    <div className="flex flex-col gap-2">
+      {items.length ? (
+        <ul className="flex flex-col">
+          {items.map((h) => {
+            const mag =
+              h.severity === null ? null : h.type === "earthquake" ? `M${fmtNumber(h.severity, lang, 1)}` : h.type === "storm" && h.id.startsWith("eonet:") ? `${fmtNumber(h.severity, lang, 0)} kt` : null;
+            return (
+              <li key={h.id} className="flex items-baseline gap-2 border-t border-line py-1.5 text-xs first:border-t-0">
+                <span className="shrink-0 rounded bg-surface-2 px-1 text-[10px] text-ink-2">{types[h.type] ?? h.type}</span>
+                <span className="min-w-0 flex-1">
+                  {h.url ? (
+                    <a href={h.url} target="_blank" rel="noreferrer" className="text-ink hover:underline">
+                      {h.title}
+                    </a>
+                  ) : (
+                    <span className="text-ink">{h.title}</span>
+                  )}
+                  {(h.level === "red" || h.level === "orange") && (
+                    <span className="ml-1.5 inline-flex items-center gap-1 text-[10px] text-ink-2">
+                      <span aria-hidden className={clsx("inline-block size-1.5 rounded-full", h.level === "red" ? "bg-critical" : "bg-serious")} />
+                      {d.map.levels[h.level]}
+                    </span>
+                  )}
+                  <span className="block text-[11px] text-muted">
+                    {[mag, d.vn.hazardKm.replace("{km}", fmtNumber(Math.round(h.km / 10) * 10, lang, 0)).replace("{city}", h.city), fmtDate(h.ts, lang)].filter(Boolean).join(" · ")}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="py-4 text-center text-xs text-ink-2">{d.vn.hazardsEmpty}</p>
+      )}
+      <p className="text-[10px] leading-snug text-muted">{d.vn.hazardsNote}</p>
+    </div>
+  );
 }

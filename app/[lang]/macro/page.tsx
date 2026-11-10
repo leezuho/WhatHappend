@@ -9,14 +9,16 @@ import { RegimeBadge, Ticker } from "@/components/panels/MarketPanels";
 import {
   CycleClockPanel,
   DebtPanel,
+  FiscalPanel,
+  GrowthInflationPanel,
   GrowthPanel,
   InflationPanel,
   JobsPanel,
   MacroNoteBody,
-  WorldMapPanel,
   MoneyPanel,
   RecessionPanel,
   ScorecardPanel,
+  WorldMapPanel,
   WorldPulse,
 } from "@/components/panels/MacroPanels";
 import { CalendarBody } from "@/components/panels/WorldPanels";
@@ -67,6 +69,14 @@ export default async function MacroPage({ params }: PageProps<"/[lang]/macro">) 
         {/* Row 4: where each economy is in its cycle */}
         <Panel lang={lang} title={p.cycleClock.title} subtitle={p.cycleClock.subtitle} sources={["oecd"]} className="md:col-span-2 xl:col-span-12">
           <CycleClockPanel lang={lang} />
+        </Panel>
+
+        {/* Row 4b: two pictures of the scorecard: the macro mix, and the fiscal room */}
+        <Panel lang={lang} title={p.growthInflation.title} subtitle={p.growthInflation.subtitle} sources={["oecd", "imfcpi", "worldbank", "imf"]} className="xl:col-span-6">
+          <GrowthInflationPanel lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.fiscal.title} subtitle={p.fiscal.subtitle} sources={["imf"]} className="xl:col-span-6">
+          <FiscalPanel lang={lang} />
         </Panel>
 
         {/* Row 5: the whole world, not only the 16 economies above */}

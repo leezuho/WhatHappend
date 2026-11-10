@@ -20,10 +20,11 @@ const coin = (id: string, name: string, price: number, ch7d = 5) => ({
   sparkline_in_7d: { price: Array.from({ length: 168 }, (_, i) => price + i) },
 });
 
-test("pickTopCoins: drops dollar stablecoins and wrapped/staked copies, thins the sparkline", () => {
+test("pickTopCoins: drops dollar stablecoins, dollar-pegged tokens and wrapped/staked copies, thins the sparkline", () => {
   const rows = pickTopCoins([
     coin("bitcoin", "Bitcoin", 76_000),
     coin("tether", "Tether", 1.0003, 0.01),
+    coin("figure-heloc", "Figure Heloc", 1.04, 0.7),
     coin("staked-ether", "Lido Staked Ether", 2_240),
     coin("wrapped-bitcoin", "Wrapped Bitcoin", 76_010),
     coin("weth", "WETH", 2_241),

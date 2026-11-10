@@ -2,6 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { TECH_FX, TECH_STOCKS, type TechGroup } from "@/config/tech";
 import type { Point } from "@/lib/sources/store";
 import type { TechCap } from "@/lib/sources/yahoo";
+import type { Impact, ServiceStatus, StatusIncident } from "@/lib/sources/cloudstatus";
 import { getPoints } from "./series";
 
 // The tech page's stock table, computed from what the yahoo source stores:
@@ -77,4 +78,35 @@ export function techStockRows(db: DatabaseSync, now = Date.now()): TechStockRow[
       ts: live?.ts ?? points.at(-1)?.ts ?? null,
     };
   });
+}
+
+// ---------------------------------------------------------------- status board
+
+/** An incident open longer than this is a long-running outage: listed, but not "what broke today". */
+export const LONG_INCIDENT_DAYS = 14;
+
+/** Severity order of status levels (the web may not import the fetcher's own copy). */
+export const IMPACT_RANK: Record<Impact, number> = { none: 0, maintenance: 1, unknown: 2, minor: 3, major: 4, critical: 5 };
+
+const worst = (impacts: Impact[]): Impact => impacts.reduce<Impact>((a, b) => (IMPACT_RANK[b] > IMPACT_RANK[a] ? b : a), "none");
+
+export interface SplitStatus {
+  /** The service's level with long-running incidents set aside; null when the provider could not be read. */
+  level: Impact | null;
+  current: StatusIncident[];
+  long: StatusIncident[];
+}
+
+/**
+ * Sets aside incidents open more than LONG_INCIDENT_DAYS (AWS kept two Middle East region outages open for
+ * months, which pinned it at "major disruption"). The level drops only when long incidents alone explain it:
+ * a provider-wide indicator worse than every incident still counts.
+ */
+export function splitStatus(s: ServiceStatus, now = Date.now()): SplitStatus {
+  const cut = now - LONG_INCIDENT_DAYS * DAY;
+  const long = s.incidents.filter((i) => i.since !== null && i.since < cut);
+  const current = s.incidents.filter((i) => !long.includes(i));
+  if (s.level === null || !long.length) return { level: s.level, current, long };
+  const explainedByLong = long.some((i) => i.impact === s.level) && !current.some((i) => i.impact === s.level);
+  return { level: explainedByLong ? worst(current.map((i) => i.impact)) : s.level, current, long };
 }

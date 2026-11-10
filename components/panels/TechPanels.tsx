@@ -2,14 +2,17 @@ import clsx from "clsx";
 import { TECH_GROUPS } from "@/config/tech";
 import { TECH_SIGNS } from "@/config/series";
 import { getDict, intlLocale, type Locale } from "@/lib/i18n";
-import { fmtCompact, fmtDate, fmtNumber } from "@/lib/format";
+import { fmtCompact, fmtDate, fmtNumber, fmtPct } from "@/lib/format";
 import { getInsightNotes, getItems, getTechNews, getTiles, getWatchlist, requestNow } from "@/lib/queries";
 import { getTechStocks, type TechStockRow } from "@/lib/queries-tech";
+import { splitStatus } from "@/lib/data/tech";
 import type { Impact, ServiceStatus, StatusIncident } from "@/lib/sources/cloudstatus";
 import type { AiModel } from "@/lib/sources/openrouter";
 import type { HfModel, HfPaper } from "@/lib/sources/huggingface";
-import type { KevEntry } from "@/lib/sources/kev";
+import type { KevEntry, KevVendors } from "@/lib/sources/kev";
 import { Sparkline } from "@/components/charts/Sparkline";
+import { BarList } from "@/components/charts/BarList";
+import { Treemap } from "@/components/charts/Treemap";
 import { EmptyState } from "@/components/ui/Panel";
 import { Tabs } from "@/components/ui/Tabs";
 import { DetailTile } from "./MarketPanels";
@@ -87,36 +90,70 @@ export async function TechMarkets({ lang }: { lang: Locale }) {
             .replace("{up}", String(usUp))}
         </p>
       )}
-      <div className="scroll-thin -mx-1 overflow-x-auto px-1">
-        <table className="tabular w-full text-xs">
-          <thead className="text-muted">
-            <tr className="text-right">
-              <th className={clsx(th, "text-left")}>{t.company}</th>
-              <th className={th}>{t.price}</th>
-              <th className={th}>{t.d1}</th>
-              <th className={clsx(th, "hidden sm:table-cell")}>{t.m1}</th>
-              <th className={clsx(th, "hidden md:table-cell")}>{t.ytd}</th>
-              <th className={clsx(th, "hidden md:table-cell")}>{t.mcap}</th>
-              <th className={clsx(th, "hidden pl-3 text-left sm:table-cell")}>{t.year}</th>
-            </tr>
-          </thead>
-          {TECH_GROUPS.map((g) => {
-            const group = rows.filter((r) => r.group === g);
-            return (
-              <tbody key={g}>
-                <tr>
-                  <th colSpan={7} scope="rowgroup" className="pt-3 pb-1 text-left text-[11px] font-semibold text-ink-2">
-                    {t.groups[g]}
-                  </th>
-                </tr>
-                {group.map((r) => (
-                  <StockRow key={r.symbol} r={r} lang={lang} yearLabel={t.year} />
-                ))}
-              </tbody>
-            );
-          })}
-        </table>
-      </div>
+      <Tabs
+        tabs={[
+          {
+            key: "table",
+            label: t.tableTab,
+            content: (
+            <div className="scroll-thin -mx-1 overflow-x-auto px-1">
+              <table className="tabular w-full text-xs">
+                <thead className="text-muted">
+                  <tr className="text-right">
+                    <th className={clsx(th, "text-left")}>{t.company}</th>
+                    <th className={th}>{t.price}</th>
+                    <th className={th}>{t.d1}</th>
+                    <th className={clsx(th, "hidden sm:table-cell")}>{t.m1}</th>
+                    <th className={clsx(th, "hidden md:table-cell")}>{t.ytd}</th>
+                    <th className={clsx(th, "hidden md:table-cell")}>{t.mcap}</th>
+                    <th className={clsx(th, "hidden pl-3 text-left sm:table-cell")}>{t.year}</th>
+                  </tr>
+                </thead>
+                {TECH_GROUPS.map((g) => {
+                  const group = rows.filter((r) => r.group === g);
+                  return (
+                    <tbody key={g}>
+                      <tr>
+                        <th colSpan={7} scope="rowgroup" className="pt-3 pb-1 text-left text-[11px] font-semibold text-ink-2">
+                          {t.groups[g]}
+                        </th>
+                      </tr>
+                      {group.map((r) => (
+                        <StockRow key={r.symbol} r={r} lang={lang} yearLabel={t.year} />
+                      ))}
+                    </tbody>
+                  );
+                })}
+              </table>
+            </div>
+            ),
+          },
+          {
+            key: "map",
+            label: t.mapTab,
+            content: (
+              <div className="flex flex-col gap-2">
+                <Treemap
+                  items={rows.map((r) => ({
+                    key: r.symbol,
+                    label: r.name,
+                    size: r.capUsd,
+                    change: r.ch1d,
+                    changeText: r.ch1d === null ? "—" : fmtPct(r.ch1d, lang, 1),
+                    hint: `${r.name} (${r.symbol}): ${usd(r.capUsd, lang)} · ${t.d1} ${r.ch1d === null ? "—" : fmtPct(r.ch1d, lang, 1)} · ${t.ytd} ${r.chYtd === null ? "—" : fmtPct(r.chYtd, lang, 1)}`,
+                    href: `https://finance.yahoo.com/quote/${encodeURIComponent(r.symbol)}`,
+                  }))}
+                  aspect={2.2}
+                  steps={[0.5, 1.5, 3]}
+                  tick={(v) => fmtPct(v, lang, 0)}
+                  label={t.mapLabel}
+                />
+                <p className="text-[10px] leading-snug text-muted">{t.mapNote}</p>
+              </div>
+            ),
+          },
+        ]}
+      />
       <p className="text-[10px] leading-snug text-muted">{t.capNote} · Yahoo Finance</p>
     </div>
   );
@@ -154,17 +191,21 @@ export async function StatusBoard({ lang }: { lang: Locale }) {
   const t = getDict(lang).tech;
   const [services, now] = await Promise.all([getItems<ServiceStatus>("status", lang), requestNow()]);
   if (!services.length) return <EmptyState lang={lang} />;
-  const bad = services.filter((s) => s.data.level && SEVERITY[s.data.level] >= SEVERITY.unknown).length;
-  const incidents = services
-    .flatMap((s) => s.data.incidents.map((i) => ({ ...i, service: s.title })))
-    .sort((a, b) => SEVERITY[b.impact] - SEVERITY[a.impact] || (b.since ?? 0) - (a.since ?? 0));
+  const split = services.map((s) => ({ s, ...splitStatus(s.data, now) }));
+  const bad = split.filter((x) => x.level && SEVERITY[x.level] >= SEVERITY.unknown).length;
+  const bySeverity = (a: StatusIncident, b: StatusIncident) => SEVERITY[b.impact] - SEVERITY[a.impact] || (b.since ?? 0) - (a.since ?? 0);
+  const incidents = split.flatMap((x) => x.current.map((i) => ({ ...i, service: x.s.title }))).sort(bySeverity);
+  const long = split.flatMap((x) => x.long.map((i) => ({ ...i, service: x.s.title }))).sort(bySeverity);
   const shown = incidents.slice(0, 6);
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-ink-2">{bad ? t.statusSummary.replace("{bad}", String(bad)).replace("{n}", String(services.length)) : t.statusAllOk.replace("{n}", String(services.length))}</p>
+      <p className="text-xs text-ink-2">
+        {bad ? t.statusSummary.replace("{bad}", String(bad)).replace("{n}", String(services.length)) : t.statusAllOk.replace("{n}", String(services.length))}
+        {long.length > 0 && <span className="text-muted"> · {t.longSummary.replace("{n}", String(long.length))}</span>}
+      </p>
       <ul className="grid grid-cols-2 gap-1.5">
-        {services.map((s) => (
+        {split.map(({ s, level, long: own }) => (
           <li key={s.id}>
             <a
               href={s.url ?? undefined}
@@ -174,11 +215,12 @@ export async function StatusBoard({ lang }: { lang: Locale }) {
               className="flex flex-col gap-0.5 rounded-lg bg-surface-2/60 px-2.5 py-1.5 hover:bg-surface-2"
             >
               <span className="flex items-center gap-1.5">
-                <Dot level={s.data.level} />
+                <Dot level={level} />
                 <span className="truncate text-xs font-medium text-ink">{s.title}</span>
               </span>
-              <span className={clsx("truncate text-[11px]", s.data.level && s.data.level !== "none" ? "text-ink" : "text-muted")}>
-                {s.data.level ? t.levels[s.data.level] : t.unreadable}
+              <span className={clsx("truncate text-[11px]", level && level !== "none" ? "text-ink" : "text-muted")}>
+                {level ? t.levels[level] : t.unreadable}
+                {own.length > 0 && <span className="text-muted"> · {t.longCount.replace("{n}", String(own.length))}</span>}
               </span>
             </a>
           </li>
@@ -191,6 +233,16 @@ export async function StatusBoard({ lang }: { lang: Locale }) {
           ))}
           {incidents.length > shown.length && <li className="pt-1 text-[11px] text-muted">{t.moreIncidents.replace("{n}", String(incidents.length - shown.length))}</li>}
         </ul>
+      )}
+      {long.length > 0 && (
+        <details className="group text-xs">
+          <summary className="cursor-pointer text-[11px] font-semibold text-ink-2 select-none hover:text-ink">{t.longTitle.replace("{n}", String(long.length))}</summary>
+          <ul className="mt-1 flex flex-col opacity-80">
+            {long.map((i, k) => (
+              <IncidentRow key={k} i={i} lang={lang} now={now} />
+            ))}
+          </ul>
+        </details>
       )}
       <p className="text-[10px] leading-snug text-muted">{t.statusNote}</p>
     </div>
@@ -391,6 +443,48 @@ export async function ExploitedVulns({ lang }: { lang: Locale }) {
         ))}
       </ul>
       <p className="text-[10px] leading-snug text-muted">{t.kevNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- exploited flaws by vendor
+
+export async function KevVendorsBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).tech;
+  const windows = (await getItems<KevVendors>("kev_vendors", lang)).map((w) => w.data).filter((w) => w.rows.length);
+  if (!windows.length) return <EmptyState lang={lang} message={t.noKev} />;
+  const pane = (w: KevVendors) => {
+    const top3 = w.rows.slice(0, 3).reduce((a, r) => a + r.n, 0);
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-xs text-ink-2">
+          {t.kevVendorsSummary
+            .replace("{total}", String(w.total))
+            .replace("{days}", String(w.days))
+            .replace("{share}", fmtNumber(w.total ? (top3 / w.total) * 100 : 0, lang, 0))}
+        </p>
+        <BarList
+          rows={w.rows.map((r) => ({
+            key: r.vendor,
+            label: r.vendor,
+            value: r.n,
+            text: String(r.n),
+            hint: t.kevVendorHint.replace("{vendor}", r.vendor).replace("{n}", String(r.n)).replace("{r}", String(r.ransomware)),
+          }))}
+          color="single"
+          label={t.kevVendorsLabel.replace("{days}", String(w.days))}
+        />
+      </div>
+    );
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      {windows.length > 1 ? (
+        <Tabs tabs={windows.map((w) => ({ key: String(w.days), label: w.days === 365 ? t.kevYear : t.kevWindow.replace("{days}", String(w.days)), content: pane(w) }))} />
+      ) : (
+        pane(windows[0])
+      )}
+      <p className="text-[10px] leading-snug text-muted">{t.kevVendorsNote}</p>
     </div>
   );
 }

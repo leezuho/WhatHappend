@@ -21,6 +21,8 @@ export interface ChartSeries {
   label: string;
   /** CSS color, normally a categorical slot: "var(--s1)". Slots are assigned in order, never cycled. */
   color: string;
+  /** Draw as steps (a rate set by decision, flat between changes) instead of a smooth curve. */
+  step?: boolean;
 }
 
 export type XFormat = "day" | "month" | "year" | "category";
@@ -182,7 +184,7 @@ export function LineChart({ data, xKey, series, height = 200, xFormat, yDigits =
                   activeDot={{ r: 4, fill: s.color, stroke: "var(--surface)", strokeWidth: 2 }}
                   connectNulls
                   isAnimationActive={false}
-                  type="monotone"
+                  type={s.step ? "stepAfter" : "monotone"}
                 />
               ))}
             </ComposedChart>

@@ -26,7 +26,7 @@ export async function CalendarBody({ lang, days, kinds }: { lang: Locale; days?:
     const k = dayKey(e.ts);
     groups.set(k, [...(groups.get(k) ?? []), e]);
   }
-  const kindLabel = { econ: d.calendar.econ, fomc: d.calendar.fomc, cb: d.calendar.cb, launch: d.calendar.launch };
+  const kindLabel = { econ: d.calendar.econ, fomc: d.calendar.fomc, cb: d.calendar.cb, launch: d.calendar.launch, vn: d.calendar.vn };
   return (
     <div className="scroll-thin flex max-h-[560px] flex-col gap-3 overflow-auto pr-1">
       {[...groups.entries()].map(([day, list]) => (

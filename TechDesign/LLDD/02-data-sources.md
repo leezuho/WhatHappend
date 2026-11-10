@@ -51,7 +51,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `cloudstatus` | Công nghệ | Trang trạng thái AWS, Google Cloud, Azure, Cloudflare, GitHub, Vercel, OpenAI, Claude | 10 phút | `items` `status` |
 | `openrouter` | Công nghệ | OpenRouter `api/v1/models` | 6 giờ | `items` `ai_models` |
 | `huggingface` | Công nghệ | Hugging Face `api/daily_papers`, `api/models?sort=trendingScore` | 3 giờ | `items` `hf_papers`, `hf_models` |
-| `kev` | Công nghệ | CISA Known Exploited Vulnerabilities (JSON) | 6 giờ | `items` `kev` |
+| `kev` | Công nghệ | CISA Known Exploited Vulnerabilities (JSON) | 6 giờ | `items` `kev`, `kev_vendors` |
 
 Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC và lịch họp các NHTW khác không lấy từ API mà đặt trong `config/fomc.ts` và `config/central-banks.ts` (§5.2).
 
@@ -59,7 +59,7 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC và l�
 
 ### 2.1 `yahoo` — Yahoo Finance (`lib/sources/yahoo.ts`)
 - **Thư viện:** `yahoo-finance2` 4.0.5, khởi tạo `new YahooFinance({ suppressNotices: ["yahooSurvey"] })`.
-- **Mã:** lấy từ `YAHOO_SYMBOLS` trong `config/series.ts`: `^GSPC`, `^IXIC`, `^TNX`, `DX-Y.NYB`, `^VIX`, `BZ=F`, `GC=F`, `HG=F`, `BTC-USD`, `USDVND=X`, `^MOVE`, cộng 11 cặp tiền của trang Vĩ mô (`FX_SYMBOLS` trong `config/countries.ts`: `EURUSD=X`, `GBPUSD=X`, `JPY=X`, `CAD=X`, `AUDUSD=X`, `KRW=X`, `CNY=X`, `INR=X`, `IDR=X`, `BRL=X`, `MXN=X`), cộng 20 cổ phiếu của trang Công nghệ (`TECH_SYMBOLS` trong `config/tech.ts`) và `HKD=X` để quy đổi vốn hoá (`TECH_FX`). Cặp tiền và cổ phiếu không nằm trong `SERIES` nên không chạy trên ticker; chỉ số bán dẫn `^SOX` thì có (`SERIES.sox`).
+- **Mã:** lấy từ `YAHOO_SYMBOLS` trong `config/series.ts`: `^GSPC`, `^IXIC`, `^TNX`, `DX-Y.NYB`, `^VIX`, `BZ=F`, `GC=F`, `HG=F`, `BTC-USD`, `USDVND=X`, `^MOVE`, cộng 11 cặp tiền của trang Vĩ mô (`FX_SYMBOLS` trong `config/countries.ts`: `EURUSD=X`, `GBPUSD=X`, `JPY=X`, `CAD=X`, `AUDUSD=X`, `KRW=X`, `CNY=X`, `INR=X`, `IDR=X`, `BRL=X`, `MXN=X`), cộng 19 chỉ số chứng khoán của bảng Thị trường thế giới (`WORLD_INDEX_SYMBOLS` trong `config/markets.ts`: `^RUT`, `^GSPTSE`, `^BVSP`, `^MXX`, `^STOXX50E`, `^GDAXI`, `^FCHI`, `FTSEMIB.MI`, `^FTSE`, `^N225`, `^KS11`, `^TWII`, `000001.SS`, `^HSI`, `^NSEI`, `^AXJO`, `^JKSE`; `^GSPC`, `^IXIC` đã có), cộng hàng hoá và lớp tài sản của trang Tổng quan (`MARKET_EXTRA_SYMBOLS` trong `config/markets.ts`: `CL=F`, `NG=F`, `TTF=F`, `SI=F`, `ZW=F`, `ZC=F`, `ZR=F`, `KC=F`, `ACWI`, `EEM`, `IEF`; thêm 2026-11-10, lịch sử TTF trên Yahoo chỉ có từ 10/2025), cộng 20 cổ phiếu của trang Công nghệ (`TECH_SYMBOLS` trong `config/tech.ts`) và `HKD=X` để quy đổi vốn hoá (`TECH_FX`). Cặp tiền và cổ phiếu không nằm trong `SERIES` nên không chạy trên ticker; chỉ số bán dẫn `^SOX` thì có (`SERIES.sox`).
 - **Giá:** gọi `quote(symbols, { return: "array" })` một lần cho tất cả mã. Các trường dùng:
   - `regularMarketPrice`, `regularMarketChange`
   - `regularMarketChangePercent` (đã ở đơn vị %)
@@ -74,6 +74,7 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC và l�
   - Mã không tồn tại bị bỏ qua mà không báo lỗi; worker log `no quote for: …`.
   - `close` có thể là `null` (ví dụ `^MOVE`, `BTC-USD`), nên phải lọc.
   - `^TNX` là lợi suất tính bằng %, không phải ×10.
+  - `chart` đôi khi trả payload sai schema cho một mã (đã gặp với `^STOXX50E` ngày 2026-11-10); source log `history <mã>: …` rồi chạy tiếp, lượt sau tự backfill lại.
   - Yahoo chỉ có giá hiện tại của `^VNINDEX.VN`, không có lịch sử, vì vậy VN-Index lấy từ SSI.
 
 ### 2.2 `fred` — FRED, không cần key (`lib/sources/fred.ts`)
@@ -345,7 +346,8 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
 ### 7.1 `vnindex` — SSI iBoard (`lib/sources/vnindex.ts`)
 - **Giá hiện tại:** `https://iboard-query.ssi.com.vn/exchange-index/VNINDEX?hasHistory=false`.
   - Trường `data.indexValue`, `change`, `changePercent`, `time` → ghi vào `quotes`.
-  - Trường `advances`, `declines`, `nochanges`, `totalValue` → ghi vào kind `vn_breadth`.
+  - Trường `advances`, `declines`, `nochanges`, `totalValue` → ghi vào kind `vn_breadth`. `totalValue` là giá trị khớp lệnh (VND); giao dịch thoả thuận nằm riêng ở `totalValuePT`, tổng hai thứ là `allValue`.
+  - Cùng response còn có `totalBuyForeignQtty`, `totalSellForeignQtty` (khối lượng cổ phiếu khối ngoại mua/bán, không có giá trị VND), chưa dùng.
 - **Lịch sử:** `https://iboard-api.ssi.com.vn/statistics/charts/history?resolution=1D&symbol=VNINDEX&from=<unix>&to=<unix>` trả các mảng `t` (giây) và `c`.
   - Có dưới 200 điểm thì backfill 430 ngày.
 - **Dự phòng (chưa tích hợp):**
@@ -450,6 +452,7 @@ Trang `/[lang]/tech` (BR-23) đọc các nguồn dưới đây cùng `yahoo` (§
 - **URL:** `www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json` (toàn bộ danh mục, khoảng 1,8 MB, cập nhật vài lần mỗi tuần).
 - **Lọc (`recentKev`):** mục có `dateAdded` trong 30 ngày, mới nhất trước, cùng ngày thì số CVE lớn hơn trước; tối đa 60.
 - **Lưu:** `items` `kev`, `id` = CVE, `url` = trang NVD, `ts` = ngày thêm, `data = { vendor, product, due, ransomware, desc }`. `due` là hạn vá CISA đặt cho cơ quan liên bang Mỹ; `ransomware` = `knownRansomwareCampaignUse === "Known"`.
+- **Theo hãng (`kevByVendor`):** cùng lượt tải, đếm số lỗ hổng được thêm theo `vendorProject` trong 90 và 365 ngày (`KEV_VENDOR_WINDOWS`), 12 hãng nhiều nhất, kèm số dùng trong ransomware và tổng cả cửa sổ. Lưu `items` `kev_vendors`, `id` = số ngày, `data = { days, total, rows: [{ vendor, n, ransomware }] }`. Panel "Hãng nào đang bị nhắm" đọc kind này, vì `kev` chỉ giữ 30 ngày.
 
 ### 8b.5 Tin công nghệ
 - **RSS:** The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress Khoa học công nghệ (`tech: true` trong `config/feeds.ts`). Giống báo crypto, các bài này **không** vào tin thế giới và đầu vào Brief (`DESK_OUTLETS`); trang Công nghệ đọc chúng cùng bài có `topic = tech` từ báo khác, trừ báo crypto (`getTechNews`).

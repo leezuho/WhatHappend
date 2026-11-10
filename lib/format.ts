@@ -26,6 +26,11 @@ export function fmtPct(value: number, locale: Locale, digits = 2): string {
   return fmtSigned(value, locale, digits, "%");
 }
 
+/** Axis tick in %: no plus sign, a true minus, plain 0. */
+export function fmtAxisPct(value: number, locale: Locale, digits = 0): string {
+  return value < 0 ? `−${fmtNumber(-value, locale, digits)}%` : `${fmtNumber(value, locale, digits)}%`;
+}
+
 export function fmtTime(ts: number, locale: Locale, timeZone = "Asia/Ho_Chi_Minh"): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit", hour12: false, timeZone }).format(ts);
 }

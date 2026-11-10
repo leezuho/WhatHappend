@@ -129,6 +129,12 @@ export function VnBreadth({ v, lang }: { v: VietnamData; lang: Locale }) {
       <span className="text-muted">
         {v.breadth.unchanged ?? "—"} {d.vn.unchanged}
       </span>
+      {typeof v.breadth.totalValue === "number" && v.breadth.totalValue > 0 && (
+        <>
+          {" · "}
+          {d.vn.value}: <span className="tabular text-ink">{d.vn.valueFmt.replace("{v}", fmtNumber(v.breadth.totalValue / 1e9, lang, 0))}</span>
+        </>
+      )}
     </p>
   );
 }

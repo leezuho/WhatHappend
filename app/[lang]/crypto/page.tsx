@@ -6,7 +6,7 @@ import { TopBar } from "@/components/TopBar";
 import { AutoRefresh } from "@/components/ui/AutoRefresh";
 import { Panel } from "@/components/ui/Panel";
 import { RegimeBadge, Ticker } from "@/components/panels/MarketPanels";
-import { CryptoNewsBody, CryptoOddsBody, CryptoVitals, DerivsBody, NetworkBody, TopCoinsBody, TrendingCoinsBody } from "@/components/panels/CryptoPanels";
+import { CoinMapBody, CryptoNewsBody, CryptoOddsBody, CryptoVitals, DerivsBody, EthBtcBody, NetworkBody, TopCoinsBody, TrendingCoinsBody } from "@/components/panels/CryptoPanels";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/crypto">): Promise<Metadata> {
   const { lang } = await params;
@@ -53,6 +53,14 @@ export default async function CryptoPage({ params }: PageProps<"/[lang]/crypto">
         </Panel>
         <Panel lang={lang} title={p.cryptoDerivs.title} subtitle={p.cryptoDerivs.subtitle} sources={["binance", "vcb"]} className="md:col-span-2 xl:col-span-4">
           <DerivsBody lang={lang} />
+        </Panel>
+
+        {/* Row 2b: where the money sits and moves today; the altcoin gauge */}
+        <Panel lang={lang} title={p.cryptoMap.title} subtitle={p.cryptoMap.subtitle} sources={["coingecko"]} className="md:col-span-2 xl:col-span-7">
+          <CoinMapBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.cryptoEthBtc.title} subtitle={p.cryptoEthBtc.subtitle} sources={["yahoo"]} className="md:col-span-2 xl:col-span-5">
+          <EthBtcBody lang={lang} />
         </Panel>
 
         {/* Row 3: chain, attention, odds */}

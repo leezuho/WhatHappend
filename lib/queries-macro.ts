@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { MACRO_COUNTRIES, policyRateId, type Country } from "@/config/countries";
 import { bisId, imfId, oecdId, WORLD_MAP, type OecdCode } from "@/config/macro";
 import { freshest, getPoints } from "@/lib/data/series";
-import { cpiIds, cycleRows, EMPTY, imfCell, lastPoint, scorecardRows, type ClockRow, type ScoreCell, type ScoreRow } from "@/lib/data/macro";
+import { cpiIds, cycleRows, EMPTY, growthInflation, imfCell, lastPoint, scorecardRows, type ClockRow, type GrowthInflationPoint, type ScoreCell, type ScoreRow } from "@/lib/data/macro";
 import { aiStatus } from "@/lib/ai/config";
 import { MACRO_NOTE_KEY, type MacroNoteText, type StoredMacroNote } from "@/lib/ai/macronote-shared";
 import { pick, type Locale } from "@/lib/i18n";
@@ -21,7 +21,7 @@ import {
   type Status,
 } from "@/lib/signals/macro";
 
-export type { ClockRow, ScoreCell, ScoreRow } from "@/lib/data/macro";
+export type { ClockRow, GrowthInflationPoint, ScoreCell, ScoreRow } from "@/lib/data/macro";
 
 // Read side of the world-macro page (app/[lang]/macro). Same rules as
 // lib/queries.ts: synchronous SQLite reads behind connection(). The scorecard
@@ -37,6 +37,11 @@ export async function getScorecard(lang: Locale): Promise<ScoreRow[]> {
 export async function getCycleClock(lang: Locale): Promise<ClockRow[]> {
   await connection();
   return cycleRows(getDb(), lang, Date.now());
+}
+
+export async function getGrowthInflation(lang: Locale): Promise<GrowthInflationPoint[]> {
+  await connection();
+  return growthInflation(getDb(), lang, Date.now());
 }
 
 

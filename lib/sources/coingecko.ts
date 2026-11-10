@@ -92,13 +92,14 @@ const WRAPPED_IDS = new Set(["weth", "wbtc", "cbbtc", "steth", "wsteth", "weeth"
 
 /**
  * Top coins worth a row of their own: no dollar stablecoins (the stablecoin
- * tile covers them) and no wrapped or staked copies of another coin.
+ * tile covers them), no dollar-pegged tokens like tokenized loan pools
+ * (Figure Heloc sits near $1.04), and no wrapped or staked copies of another coin.
  */
 export function pickTopCoins(coins: CoinIn[], n = TOP_N): CoinRow[] {
   return coins
     .filter((c) => typeof c.current_price === "number")
     .filter((c) => !WRAPPED.test(c.name) && !WRAPPED_IDS.has(c.id))
-    .filter((c) => !(Math.abs(c.current_price! - 1) < 0.02 && Math.abs(c.price_change_percentage_7d_in_currency ?? 0) < 2))
+    .filter((c) => !(Math.abs(c.current_price! - 1) < 0.05 && Math.abs(c.price_change_percentage_7d_in_currency ?? 0) < 2))
     .slice(0, n)
     .map((c) => {
       const prices = (c.sparkline_in_7d?.price ?? []).filter((p): p is number => typeof p === "number");

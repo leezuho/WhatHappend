@@ -7,7 +7,8 @@ import { TopBar } from "@/components/TopBar";
 import { AutoRefresh } from "@/components/ui/AutoRefresh";
 import { Panel } from "@/components/ui/Panel";
 import { RegimeBadge, Ticker } from "@/components/panels/MarketPanels";
-import { VnBank, VnEconomy, VnGold, VnMarkets, VnNews } from "@/components/panels/VietnamPanels";
+import { VnBank, VnEconomy, VnGold, VnHazards, VnMarkets, VnNews, VnRates, VnRegion } from "@/components/panels/VietnamPanels";
+import { CalendarBody } from "@/components/panels/WorldPanels";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/vietnam">): Promise<Metadata> {
   const { lang } = await params;
@@ -59,6 +60,14 @@ export default async function VietnamPage({ params }: PageProps<"/[lang]/vietnam
           <VnEconomy lang={lang} />
         </Panel>
 
+        {/* Row 2b: the economy over time, the market against its neighbours */}
+        <Panel lang={lang} title={p.vnRates.title} subtitle={p.vnRates.subtitle} sources={["imfcpi", "sbv"]} className="xl:col-span-7">
+          <VnRates lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.vnRegion.title} subtitle={p.vnRegion.subtitle} sources={["yahoo", "vnindex"]} className="xl:col-span-5">
+          <VnRegion lang={lang} />
+        </Panel>
+
         {/* Row 3: gold, bank rates, news */}
         <Panel lang={lang} title={p.vnGold.title} subtitle={p.vnGold.subtitle} sources={["sjc", "yahoo"]} className="xl:col-span-4">
           <VnGold lang={lang} />
@@ -68,6 +77,14 @@ export default async function VietnamPage({ params }: PageProps<"/[lang]/vietnam
         </Panel>
         <Panel lang={lang} title={p.vnNews.title} subtitle={p.vnNews.subtitle} sources={["rss", "translate"]} className="md:col-span-2 xl:col-span-4">
           <VnNews lang={lang} />
+        </Panel>
+
+        {/* Row 4: what is coming, and what is blowing in */}
+        <Panel lang={lang} title={p.vnCalendar.title} subtitle={p.vnCalendar.subtitle} sources={["calendar"]} className="xl:col-span-6">
+          <CalendarBody lang={lang} days={45} kinds={["vn", "fomc"]} />
+        </Panel>
+        <Panel lang={lang} title={p.vnHazards.title} subtitle={p.vnHazards.subtitle} sources={["gdacs", "eonet", "usgs"]} className="xl:col-span-6">
+          <VnHazards lang={lang} />
         </Panel>
       </main>
       <AutoRefresh />

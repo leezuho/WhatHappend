@@ -2,8 +2,10 @@ import clsx from "clsx";
 import { CRYPTO_SIGNS, SERIES } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { fmtCompact, fmtDate, fmtNumber, fmtPct, fmtSigned } from "@/lib/format";
-import { getCrypto, getCryptoNews, getInsightNotes, getItems, getTiles, getWatchlist, requestNow, type FearGreed, type PolyEvent } from "@/lib/queries";
+import { getCrypto, getCryptoNews, getInsightNotes, getItems, getRatio, getTiles, getWatchlist, requestNow, type FearGreed, type PolyEvent } from "@/lib/queries";
 import { TileDetail } from "@/components/charts/TileDetail";
+import { LineChart } from "@/components/charts/LineChart";
+import { Treemap } from "@/components/charts/Treemap";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { EmptyState } from "@/components/ui/Panel";
 import { DetailTile } from "./MarketPanels";
@@ -158,6 +160,76 @@ export async function TopCoinsBody({ lang }: { lang: Locale }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- market map
+
+export async function CoinMapBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).crypto;
+  const { top } = await getCrypto(lang);
+  if (!top.length) return <EmptyState lang={lang} />;
+  const total = top.reduce((a, c) => a + (c.marketCap ?? 0), 0);
+  return (
+    <div className="flex flex-col gap-2">
+      <Treemap
+        items={top.map((c) => ({
+          key: c.id,
+          label: c.symbol,
+          size: c.marketCap,
+          change: c.ch24h,
+          changeText: c.ch24h === null ? "—" : fmtPct(c.ch24h, lang, 1),
+          hint: `${c.name}: ${usd(c.marketCap, lang)}${total && c.marketCap ? ` (${fmtNumber((c.marketCap / total) * 100, lang, 1)}%)` : ""} · 24h ${c.ch24h === null ? "—" : fmtPct(c.ch24h, lang, 1)} · 7d ${c.ch7d === null ? "—" : fmtPct(c.ch7d, lang, 1)}`,
+          href: `https://www.coingecko.com/en/coins/${c.id}`,
+        }))}
+        aspect={2}
+        steps={[1, 3, 6]}
+        tick={(v) => fmtPct(v, lang, 0)}
+        label={t.mapLabel}
+      />
+      <p className="text-[10px] leading-snug text-muted">{t.mapNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- ETH priced in bitcoin
+
+export async function EthBtcBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const t = d.crypto;
+  const pts = await getRatio(SERIES.eth.id, SERIES.btc.id);
+  const last = pts.at(-1);
+  if (!last || pts.length < 2) return <EmptyState lang={lang} />;
+  const first = pts[0];
+  const vals = pts.map((p) => p.value);
+  const lo = Math.min(...vals);
+  const hi = Math.max(...vals);
+  const ch = (last.value / first.value - 1) * 100;
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs text-ink-2">
+        <span className="tabular text-base font-semibold text-ink">{fmtNumber(last.value, lang, 4)}</span> BTC{" "}
+        <span className="ml-1">
+          <Pct v={ch} lang={lang} /> {t.ethBtcYear}
+        </span>
+        <span className="text-muted">
+          {" "}
+          · {t.ethBtcRange.replace("{lo}", fmtNumber(lo, lang, 4)).replace("{hi}", fmtNumber(hi, lang, 4))}
+        </span>
+      </p>
+      <LineChart
+        data={pts.map((p) => ({ ts: p.ts, v: p.value }))}
+        xKey="ts"
+        xFormat="month"
+        series={[{ key: "v", label: "ETH/BTC", color: "var(--s1)" }]}
+        area
+        yDigits={4}
+        height={280}
+        locale={lang}
+        tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
+      />
+      <p className="text-[11px] text-muted">{t.ethBtcNote}</p>
     </div>
   );
 }
