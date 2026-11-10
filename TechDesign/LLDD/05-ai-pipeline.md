@@ -206,6 +206,20 @@ Phase 3 của trang Vĩ mô thế giới: mỗi tuần một đoạn nhận đ�
 
 **Lưu:** `kv` khoá `macro:note` (`StoredMacroNote` trong `macronote-shared.ts`: tuần viết, tuần đã kiểm tra, model, `hash`, bảng rút gọn để so tuần sau, hai bản văn). Web đọc qua `getMacroNote()` và hiện ở panel thứ hai của trang Vĩ mô.
 
+## 3c. Nhận định công nghệ tuần (`technote`, `lib/ai/technote.ts`)
+
+Cùng khuôn với `macronote`, cho trang Công nghệ.
+
+**Khi nào chạy** (`isDue`): tuần ISO (`isoWeek` của `macronote`) khác tuần đã kiểm tra, model `brief` còn ít nhất **3** lượt trong ngày (nhận định này, nhận định vĩ mô và bản tin), lần lỗi trước đã qua 6 giờ.
+
+**Đầu vào** (`techInput`, khoảng 6.000 ký tự): 25 câu chuyện công nghệ lớn nhất trong 7 ngày (tin công nghệ như `getTechNews`, tiêu đề tiếng Anh, gộp bằng `clusterStories`, xếp theo số bài rồi số báo), model mới trên OpenRouter trong 7 ngày kèm giá, lỗ hổng KEV mới trong 7 ngày, sự cố dịch vụ đang mở (bỏ sự cố mở quá `LONG_INCIDENT_DAYS`), 20 cổ phiếu công nghệ (hôm nay, 30 ngày, từ đầu năm), doanh thu tháng chuỗi phần cứng AI Đài Loan, ba tile tuyển dụng, hạn hết hỗ trợ trong 120 ngày tới. Chưa đủ 15 câu chuyện thì báo lỗi.
+
+**Tiết kiệm lượt gọi:** một lần mỗi tuần cho cả hai ngôn ngữ; băm 10 câu chuyện đầu, model mới và lỗ hổng mới, trùng với lần trước thì không gọi.
+
+**Đầu ra:** cùng schema với `macronote` (`headline`, 4–6 `bullets`, 2–4 `watch`, bản `en` và `vi`). Prompt yêu cầu chỉ dùng tiêu đề và số được đưa, ghi "theo tin" khi tiêu đề là tin đồn.
+
+**Lưu:** `kv` khoá `tech:note` (`StoredTechNote` trong `technote-shared.ts`). Web đọc qua `getTechNote()` (`lib/queries-tech.ts`) và hiện ở panel "Công nghệ tuần này" (`TechNoteBody` → `WeeklyNote`, dùng chung với `MacroNoteBody`).
+
 ## 4. Chi phí và hạn mức
 
 **Số đo thật** (Gemini, 2026-10-31):
@@ -231,10 +245,10 @@ Ngày 2026-11-09, `gemini-flash-latest` trỏ tới `gemini-3.8-flash` với h�
 - Mỗi lần gọi qua `generateJson({ …, db })` cộng một vào `kv` khoá `ai:calls:<ngày>:<model>`. Ngày tính theo giờ Thái Bình Dương (`quotaDay`), vì Google reset hạn mức lúc nửa đêm giờ đó. Bộ đếm cũ quá 7 ngày bị xoá.
 - Gặp 429 có "per day" (`isDailyQuotaError`) thì ghi `ai:exhausted:<model>` = ngày đó: model bị khoá đến khi sang ngày mới, các nguồn không gọi thử vô ích nữa.
 - `callsLeft(db, config, tier)` = hạn mức (`dailyLimit`) − số lần đã gọi, bằng 0 khi bị khoá.
-- Chia 20 lượt của model `brief`: bản tin chạy khi còn lượt (`isDue` bỏ qua khi `callsLeft = 0`); nhận định tuần cần còn ≥ 2 lượt; `insights` chỉ dùng model `brief` khi còn hơn `BRIEF_RESERVE` = 4 lượt (bản tin, một lần bấm "Viết lại", nhận định tuần và một lần thử lại), còn lại dùng model `fast`.
+- Chia 20 lượt của model `brief`: bản tin chạy khi còn lượt (`isDue` bỏ qua khi `callsLeft = 0`); nhận định vĩ mô tuần cần còn ≥ 2 lượt, nhận định công nghệ tuần ≥ 3; `insights` chỉ dùng model `brief` khi còn hơn `BRIEF_RESERVE` = 5 lượt (bản tin, một lần bấm "Viết lại", hai nhận định tuần và một lần thử lại), còn lại dùng model `fast`.
 - Bộ đếm chỉ thấy các lần gọi của worker này. Key dùng chung ở nơi khác (AI Studio, máy khác) vẫn tiêu hạn mức thật; khi đó 429 sẽ khoá model như trên.
 
-**Biện pháp giữ chi phí:** gửi theo lô, mỗi tiêu đề chỉ dịch một lần, giới hạn số bản ghi mỗi lần chạy, brief 1 lần/ngày, nhận định vĩ mô 1 lần/tuần, `insights` chỉ gọi model khi có ghi chú mới cần viết (thường vài lần mỗi ngày) và nhường model `brief` khi sắp hết lượt (§4.1). Mỗi lần gọi đều ghi số token vào log qua `ctx.log`.
+**Biện pháp giữ chi phí:** gửi theo lô, mỗi tiêu đề chỉ dịch một lần, giới hạn số bản ghi mỗi lần chạy, brief 1 lần/ngày, nhận định vĩ mô và công nghệ mỗi loại 1 lần/tuần, `insights` chỉ gọi model khi có ghi chú mới cần viết (thường vài lần mỗi ngày) và nhường model `brief` khi sắp hết lượt (§4.1). Mỗi lần gọi đều ghi số token vào log qua `ctx.log`.
 
 ## 5. Chưa cấu hình AI
 

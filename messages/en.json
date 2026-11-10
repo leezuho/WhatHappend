@@ -136,6 +136,18 @@
       "title": "Vietnam's economy",
       "subtitle": "Growth, inflation, the State Bank rate and the IMF outlook"
     },
+    "vn30": {
+      "title": "VN30 stocks",
+      "subtitle": "Market map by market cap, and where foreigners traded today"
+    },
+    "vnForeign": {
+      "title": "Foreign investors",
+      "subtitle": "Net buying and selling on HOSE, VND"
+    },
+    "vnFuel": {
+      "title": "Fuel prices",
+      "subtitle": "Petrolimex retail, ₫ per litre"
+    },
     "vnRates": {
       "title": "Inflation and the State Bank's rate",
       "subtitle": "CPI y/y and the refinancing rate, by month"
@@ -157,12 +169,12 @@
       "subtitle": "Domestic brands vs the world price"
     },
     "vnBank": {
-      "title": "Vietcombank rates",
-      "subtitle": "Transfer and sell, VND per unit"
+      "title": "Exchange rates",
+      "subtitle": "The dollar at three prices, and Vietcombank's table"
     },
     "vnNews": {
       "title": "Vietnam news",
-      "subtitle": "VnExpress"
+      "subtitle": "Domestic headlines by topic"
     },
     "cryptoVitals": {
       "title": "Crypto vital signs",
@@ -171,6 +183,18 @@
     "cryptoTop": {
       "title": "Top coins",
       "subtitle": "By market cap, excluding stablecoins and wrapped tokens"
+    },
+    "cryptoLeverage": {
+      "title": "BTC leverage",
+      "subtitle": "Open interest against price, long/short ratio, funding"
+    },
+    "cryptoEtf": {
+      "title": "Bitcoin ETF flows",
+      "subtitle": "US spot ETFs, net daily, $M"
+    },
+    "cryptoChains": {
+      "title": "Chains: TVL and fees",
+      "subtitle": "Where DeFi money sits and where users pay"
     },
     "cryptoDerivs": {
       "title": "Leverage & local demand",
@@ -255,6 +279,38 @@
     "macroCalendar": {
       "title": "Macro calendar",
       "subtitle": "Data releases and central-bank decisions ahead"
+    },
+    "techNote": {
+      "title": "Technology this week",
+      "subtitle": "AI reads this page's stories and numbers, once a week"
+    },
+    "techValue": {
+      "title": "AI models: quality against price",
+      "subtitle": "LMArena rating and OpenRouter price of the top-rated models"
+    },
+    "techSpace": {
+      "title": "Space",
+      "subtitle": "Geomagnetic storms and the next rocket launches"
+    },
+    "techPkg": {
+      "title": "Package downloads",
+      "subtitle": "Weekly downloads of web frameworks and AI SDKs"
+    },
+    "techCompute": {
+      "title": "Training compute",
+      "subtitle": "The largest AI training runs (Epoch AI)"
+    },
+    "techTw": {
+      "title": "Taiwan's AI hardware chain",
+      "subtitle": "Monthly revenue of TSMC and the AI server makers"
+    },
+    "techJobs": {
+      "title": "Tech hiring",
+      "subtitle": "Software postings, chip output, Hacker News jobs"
+    },
+    "techEol": {
+      "title": "Versions and end of life",
+      "subtitle": "Latest releases and the next support deadline"
     },
     "techMarkets": {
       "title": "Tech stocks",
@@ -355,13 +411,16 @@
     "rising": "rising",
     "falling": "falling",
     "footnote": "Grey text under a number = the period it covers. Hover a column name for what it measures and how it is coloured.",
-    "vnNote": "Vietnam is in no OECD or BIS dataflow: its CPI comes from the IMF, GDP from the World Bank, policy rate from the State Bank, and unemployment is the IMF's yearly estimate. It has no leading indicator, confidence survey, real effective exchange rate or credit gap.",
+    "vnNote": "Vietnam is in no OECD or BIS dataflow: its CPI comes from the IMF, GDP from the World Bank, policy rate from the State Bank, the 10-year yield from Thời báo Ngân hàng's daily recap, and unemployment is the IMF's yearly estimate. It has no leading indicator, confidence survey, real effective exchange rate or credit gap.",
     "us": "United States",
     "world": "Major economies",
     "period": "Period",
     "scale": "Same scale in every cell",
     "cliTitle": "OECD leading indicator, last 24 months; under each: latest GDP growth y/y",
     "cliRef": "100 = growth at trend",
+    "cpiPartsTitle": "US CPI by group, y/y",
+    "cpiParts3m": "{v} from three months earlier",
+    "cpiPartsNote": "BLS seasonally adjusted indexes via FRED. Arrow = change over three months. Services ex shelter (the Fed's \"supercore\") follows wages; shelter follows rents with a lag of about a year.",
     "cpiTitle": "CPI inflation y/y, last 24 months",
     "cpiRef": "Central bank's target",
     "policyRate": "Policy rate",
@@ -450,6 +509,7 @@
     "pulse": "Pulsing = alert or M6+ quake"
   },
   "news": {
+    "related": "+{n} more on this story",
     "all": "All",
     "alsoIn": "also",
     "regions": {
@@ -507,6 +567,35 @@
     }
   },
   "vn": {
+    "fuelAdjusted": "Last adjusted {t}",
+    "fuelZone1": "Zone 1",
+    "fuelZone2": "Zone 2",
+    "fuelNote": "Petrolimex retail prices, ₫ per litre. Zone 2 is remote areas. Prices follow the government's weekly adjustment; the arrow is the change at the last adjustment (red = dearer), shown once one has been recorded here.",
+    "dollarCeiling": "Band ceiling (SBV)",
+    "band": "SBV central rate {c} ₫, band {lo}–{hi}",
+    "toCeiling": "Vietcombank sells {v} ₫ ({pct}%) below the ceiling",
+    "bandHint": "The State Bank sets a central rate every day; banks may trade the dollar within ±5% of it. A bank rate pressed against the ceiling means the State Bank must sell dollars from its reserves or let the band move.",
+    "foreignToday": "{day}: foreigners {dir} {v}",
+    "foreignBuy": "net bought",
+    "foreignSell": "net sold",
+    "foreignSums": "Net over 5 sessions {s5} · 20 sessions {s20} · this year {ytd}",
+    "foreignBuySell": "Bought {b}, sold {s}",
+    "foreignChart": "Foreign net buying on HOSE, last 40 sessions",
+    "foreignNote": "Order-matched and put-through trades by foreign investors on HOSE, VNDirect data; today's bar moves during the session. Persistent selling weighs on large caps and on the dong.",
+    "vn30Note": "Area = market cap (price × shares outstanding), color = today's change. Prices from SSI iBoard, shares from VNDirect.",
+    "vn30Map": "VN30 market map",
+    "vn30Foreign": "Foreign flows in VN30 today",
+    "vn30TopBuy": "Most net bought",
+    "vn30TopSell": "Most net sold",
+    "premiumTitle": "SJC premium over world gold, million ₫/tael",
+    "premiumSeries": "Premium",
+    "dollarTitle": "One dollar, ₫",
+    "dollarMarket": "Interbank (Yahoo)",
+    "dollarVcb": "Vietcombank sell",
+    "dollarP2p": "USDT on P2P",
+    "p2pGap": "P2P minus Vietcombank: {v} ₫ ({pct})",
+    "p2pHint": "How much more people pay for a dollar outside the banking system. A gap that widens is dollar demand the banks are not meeting, the clearest early sign of pressure on the dong.",
+    "historyNote": "SJC, Vietcombank and P2P prices are only stored from late October 2026, so these charts lengthen day by day.",
     "gold": "Gold (VND per tael)",
     "buy": "Buy",
     "sell": "Sell",
@@ -591,6 +680,25 @@
     "noteAssets": "Change since last year's final close, in each asset's own currency (VN-Index in dong). World and emerging-market stocks and Treasuries are ETFs (ACWI, EEM, IEF): price only, without dividends or coupons."
   },
   "crypto": {
+    "musd": "${v}M",
+    "etfDay": "{day}: net flow into spot bitcoin ETFs",
+    "etfSums": "Last 5 days {s5} · last {n} days {all}",
+    "etfChart": "Daily net flows of US spot bitcoin ETFs, $M",
+    "etfNote": "Net creations minus redemptions of the US spot bitcoin ETFs, $ million, from bitbo.io's table (about ten trading days, so the chart lengthens from late October 2026). A day bitbo has not filled shows as 0 or is missing.",
+    "levTitle": "BTC price and perpetual open interest, first day = 100",
+    "levChange": "open interest {oi}, price {price}",
+    "levPrice": "BTC price",
+    "levOi": "Open interest (in BTC)",
+    "lsr": "Long/short accounts",
+    "lsrHint": "Accounts holding a net long BTC perpetual per account holding a net short, on Binance. Far above its average = the crowd leans long, the side that gets squeezed in a sell-off.",
+    "fundingYear": "Funding, annualized",
+    "fundingHint": "What longs pay shorts (positive) or the reverse, per day on average, as a yearly rate. High funding = paying up for leverage.",
+    "avgOf": "(avg {v})",
+    "levNote": "Binance BTCUSDT perpetual, daily. Open interest counted in coins, so a price move alone does not change it: open interest rising faster than price is leverage building; rising while price falls is new shorts. Binance serves only 30 days, so the chart lengthens from 12 Oct 2026.",
+    "fees30d": "Fees 30d",
+    "feesWow": "Fees w/w",
+    "feesWowHint": "Fees paid on the chain over the last 7 days against the 7 days before.",
+    "chainsNote": "The 10 chains with the most value locked in DeFi (DefiLlama). TVL falls with token prices as well as withdrawals; fees show where people actually pay to use a chain.",
     "fng": "Fear & Greed",
     "fngLevels": {
       "Extreme Fear": "Extreme fear",
@@ -649,6 +757,49 @@
     "ethBtcNote": "A rising line means ether beats bitcoin. Traders read a sustained rise as the start of an \"altcoin season\", when money rotates out of bitcoin into riskier coins. Daily closes from Yahoo Finance."
   },
   "tech": {
+    "computeGrowth": "Frontier training runs have grown about {x}× a year since 2018 ({n} frontier models).",
+    "computeNote": "Epoch AI's notable models ({n} with a compute estimate), training compute in FLOP; bars are linear against the largest. Frontier = in the top 10 by compute when released. Many recent models publish no figure and are missing; Epoch's numbers are estimates.",
+    "pkgSpark": "26 weeks of downloads",
+    "pkgWeek": "Last week",
+    "pkg4": "vs 4 wks",
+    "pkg12": "vs 12 wks",
+    "pkgGroups": {"web": "Web frameworks (npm)", "aiJs": "AI SDKs (npm)", "aiPy": "AI libraries (PyPI)"},
+    "pkgNote": "Downloads per complete week, Monday to Sunday UTC (npm downloads API; pypistats.org without mirrors). Downloads count CI runs and installs, not people; read the trend, not the level. Sparkline: 26 weeks.",
+    "kpNow": "Kp {kp} now ({level})",
+    "kpPeak": "next 3 days up to Kp {kp} ({level})",
+    "kpQuiet": "quiet",
+    "kpActive": "active",
+    "kpForecast": "forecast",
+    "kpChart": "Planetary Kp index, 3-hour steps, last 4 days and the forecast",
+    "kpNote": "NOAA SWPC planetary Kp, 0–9, every 3 hours; faded bars are the forecast. Dashed lines: Kp 5 (G1 storm) and Kp 7 (G3: GPS errors, HF radio loss, satellite drag, aurora far south).",
+    "launches": "Next launches",
+    "valueBest": "Cheapest among the better-rated half: {list}",
+    "valueRank": "Arena rank #{rank}",
+    "valuePrices": "{in} in / {out} out per million tokens",
+    "valueTl": "Good value",
+    "valueTr": "Strong but pricey",
+    "valueBl": "Cheap, weaker",
+    "valueBr": "Pricey for its rating",
+    "valueX": "Blended price, $ per million tokens (3 in : 1 out)",
+    "valueY": "Arena rating",
+    "valueClosed": "Closed weights",
+    "valueOpen": "Open weights",
+    "valueModel": "Model",
+    "valueNote": "Rating: LMArena text leaderboard, overall, best variant of each model (people vote between two anonymous answers), {date}. Price: OpenRouter's list price; the axis is logarithmic. Lines split at the medians of the models shown. Models OpenRouter does not sell are left out.",
+    "noteEmpty": "The note is written once a week (Vietnam time) from this page's stories and numbers.",
+    "noteCaveat": "Written by AI from this page's headlines and numbers only; open the stories before relying on it.",
+    "twMonth": "Revenue for {m}, NT$ billion",
+    "twRevenue": "NT$ bn",
+    "twMom": "m/m",
+    "twYoy": "y/y",
+    "twYtd": "YTD y/y",
+    "twNote": "Taiwan-listed companies report each month's revenue by the 10th of the next (TWSE OpenAPI): AI chip and server demand a month after the fact, long before quarterly results. Only the latest month is published, so history builds up here.",
+    "devVsAll": "Software postings {dev} against {all} for all jobs (Indeed, 1 Feb 2020 = 100).",
+    "eolLatest": "Latest release",
+    "eolNext": "Next end of life",
+    "eolIn": "in {n} days",
+    "eolNone": "no date set",
+    "eolNote": "endoflife.date and the npm registry. Red: a supported line reaches end of life within 30 days, after which it gets no security fixes.",
     "groups": {
       "us": "US platforms",
       "chips": "Chips",
@@ -715,6 +866,11 @@
     "kevYear": "1 year"
   },
   "calendar": {
+    "fredScheduled": "Scheduled (FRED); forecast shows in the week of release",
+    "actual": "Actual",
+    "vsForecast": "{v} vs forecast",
+    "onForecast": "in line with forecast",
+    "resultHint": "Actual computed from FRED data once released; may differ by 0.1 from the published figure because of rounding. Green = better news for the economy than forecast (stronger jobs and growth, cooler inflation), red = worse.",
     "econ": "Econ",
     "fomc": "Fed",
     "launch": "Launch",

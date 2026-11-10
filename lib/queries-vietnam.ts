@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { imfId } from "@/config/macro";
 import { OUTLOOK_AHEAD, OUTLOOK_BACK, VN_OUTLOOK } from "@/config/vietnam";
 import { pick, type Locale } from "@/lib/i18n";
-import { vnHazards, vnRatesHistory, type VnHazard, type VnRatesRow } from "@/lib/data/vietnam";
+import { centralBand, dollarHistory, foreignFlows, goldPremiumHistory, type ForeignFlows, vnHazards, vnRatesHistory, type DollarRow, type GoldPremiumRow, type VnHazard, type VnRatesRow } from "@/lib/data/vietnam";
 
 // Read side of the Vietnam page (app/[lang]/vietnam) beyond getVietnam() in
 // lib/queries.ts. Same rules: synchronous SQLite reads behind connection().
@@ -50,4 +50,24 @@ export async function getVnRates(): Promise<VnRatesRow[]> {
 export async function getVnHazards(lang: Locale): Promise<VnHazard[]> {
   await connection();
   return vnHazards(getDb(), lang);
+}
+
+export async function getGoldPremium(): Promise<GoldPremiumRow[]> {
+  await connection();
+  return goldPremiumHistory(getDb());
+}
+
+export async function getDollarHistory(): Promise<DollarRow[]> {
+  await connection();
+  return dollarHistory(getDb());
+}
+
+export async function getForeignFlows(): Promise<ForeignFlows | null> {
+  await connection();
+  return foreignFlows(getDb());
+}
+
+export async function getCentralBand(): Promise<ReturnType<typeof centralBand>> {
+  await connection();
+  return centralBand(getDb());
 }

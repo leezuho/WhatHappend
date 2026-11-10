@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { SERIES } from "@/config/series";
-import { GSO_RELEASE_DAY, VN30F_WEEKDAY, VN_CITIES, VN_HAZARD_BOX, VN_STORM_BOX, type Box } from "@/config/vietnam";
+import { GSO_RELEASE_DAY, VN30F_WEEKDAY, VN_BAND, VN_CENTRAL_RATE, VN_CITIES, VN_FOREIGN, VN_HAZARD_BOX, VN_STORM_BOX, type Box } from "@/config/vietnam";
 import { pick, type Locale } from "@/lib/i18n";
 import { getPoints } from "./series";
 
@@ -8,6 +8,117 @@ import { getPoints } from "./series";
 // CPI against the refinancing rate, hazards near the country, the market calendar.
 
 const DAY = 24 * 3600_000;
+
+// ---------------------------------------------------------------- gold premium, the dollar at three prices
+
+/** 1 lượng (tael) = 37.5 g; 1 troy ounce = 31.1034768 g. */
+export const OZ_PER_LUONG = 37.5 / 31.1034768;
+
+/** The Hanoi calendar day of `ts`, as UTC midnight of that date (the stamp daily Yahoo points use). */
+export function hanoiDay(ts: number): number {
+  const d = new Date(ts + 7 * 3600_000);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+/** The last value of each Hanoi day. */
+function dailyLast(points: { ts: number; value: number }[]): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const p of points) out.set(hanoiDay(p.ts), p.value);
+  return out;
+}
+
+/** The value in force at the end of `day` (a daily series stamped at UTC midnight), at most `maxDays` old. */
+function onDay(points: { ts: number; value: number }[], day: number, maxDays = 5): number | null {
+  let v: number | null = null;
+  for (const p of points) {
+    if (p.ts > day) break;
+    if (day - p.ts <= maxDays * DAY) v = p.value;
+  }
+  return v;
+}
+
+export type GoldPremiumRow = {
+  ts: number;
+  /** SJC bar, sell, million VND per lượng (last price of the day). */
+  sjc: number;
+  /** World gold (COMEX futures × USD/VND) per lượng, million VND; null when either input is missing. */
+  world: number | null;
+  /** sjc − world, million VND per lượng. */
+  premium: number | null;
+};
+
+/** One row per Hanoi day the SJC price was stored: how far the domestic bar sits above world gold. */
+export function goldPremiumHistory(db: DatabaseSync, days = 365, now = Date.now()): GoldPremiumRow[] {
+  const sjc = dailyLast(getPoints(db, SERIES.sjcGold.id, now - days * DAY));
+  const xau = getPoints(db, SERIES.gold.id, now - (days + 10) * DAY);
+  const usd = getPoints(db, SERIES.usdvnd.id, now - (days + 10) * DAY);
+  return [...sjc].map(([ts, sell]) => {
+    const x = onDay(xau, ts);
+    const u = onDay(usd, ts);
+    const world = x !== null && u !== null ? (x * u * OZ_PER_LUONG) / 1e6 : null;
+    return { ts, sjc: sell / 1e6, world, premium: world === null ? null : sell / 1e6 - world };
+  });
+}
+
+export type DollarRow = {
+  ts: number;
+  /** Yahoo's USD/VND (interbank). */
+  market: number | null;
+  /** Vietcombank sell rate. */
+  vcb: number | null;
+  /** USDT on Binance P2P, VND. */
+  p2p: number | null;
+  /** Top of the State Bank's band: central rate × (1 + VN_BAND). */
+  ceiling: number | null;
+};
+
+/**
+ * The dollar at three prices per Hanoi day, from the first day Vietcombank or P2P has a price,
+ * with the top of the State Bank's trading band: a P2P price far above the bank's is dollar
+ * demand the banking system is not meeting, and a bank rate near the ceiling is the State Bank's limit.
+ */
+export function dollarHistory(db: DatabaseSync, days = 365, now = Date.now()): DollarRow[] {
+  const since = now - days * DAY;
+  const vcb = dailyLast(getPoints(db, SERIES.vcbUsd.id, since));
+  const p2p = dailyLast(getPoints(db, SERIES.usdtvnd.id, since));
+  const market = getPoints(db, SERIES.usdvnd.id, since - 10 * DAY);
+  const central = getPoints(db, VN_CENTRAL_RATE, since - 10 * DAY);
+  const stamps = [...vcb.keys(), ...p2p.keys()];
+  if (!stamps.length) return [];
+  const rows: DollarRow[] = [];
+  for (let ts = Math.min(...stamps); ts <= hanoiDay(now); ts += DAY) {
+    const c = onDay(central, ts);
+    const row = { ts, market: onDay(market, ts), vcb: vcb.get(ts) ?? null, p2p: p2p.get(ts) ?? null, ceiling: c === null ? null : Math.round(c * (1 + VN_BAND)) };
+    if (row.vcb !== null || row.p2p !== null) rows.push(row);
+  }
+  return rows;
+}
+
+// ---------------------------------------------------------------- foreign investors on HOSE
+
+export interface ForeignFlows {
+  /** The last `sessions` trading days, oldest first: net, buy and sell value in VND. */
+  rows: { ts: number; net: number; buy: number | null; sell: number | null }[];
+  /** Net over the last 5 and 20 sessions and since the first session of the year, VND. */
+  sum5: number;
+  sum20: number;
+  ytd: number;
+}
+
+export function foreignFlows(db: DatabaseSync, sessions = 40, now = Date.now()): ForeignFlows | null {
+  const year = Date.UTC(new Date(now).getUTCFullYear(), 0, 1);
+  const net = getPoints(db, VN_FOREIGN.net, Math.min(year, now - 90 * DAY));
+  if (!net.length) return null;
+  const buy = new Map(getPoints(db, VN_FOREIGN.buy, net[0].ts).map((p) => [p.ts, p.value]));
+  const sell = new Map(getPoints(db, VN_FOREIGN.sell, net[0].ts).map((p) => [p.ts, p.value]));
+  const sum = (pts: typeof net) => pts.reduce((a, p) => a + p.value, 0);
+  return {
+    rows: net.slice(-sessions).map((p) => ({ ts: p.ts, net: p.value, buy: buy.get(p.ts) ?? null, sell: sell.get(p.ts) ?? null })),
+    sum5: sum(net.slice(-5)),
+    sum20: sum(net.slice(-20)),
+    ytd: sum(net.filter((p) => p.ts >= year)),
+  };
+}
 
 // ---------------------------------------------------------------- inflation vs the policy rate
 
@@ -135,4 +246,12 @@ export function vnMarketDates(from: number, until: number): VnDate[] {
   }
   // A day counts from its start, so today's expiry still shows in the afternoon.
   return out.filter((d) => d.ts + DAY > from && d.ts <= until).sort((a, b) => a.ts - b.ts);
+}
+
+/** The State Bank's latest central rate, its band and how far Vietcombank's sell rate sits below the ceiling. */
+export function centralBand(db: DatabaseSync): { ts: number; central: number; ceiling: number; floor: number; vcb: number | null } | null {
+  const c = getPoints(db, VN_CENTRAL_RATE).at(-1);
+  if (!c) return null;
+  const vcb = getPoints(db, SERIES.vcbUsd.id).at(-1)?.value ?? null;
+  return { ts: c.ts, central: c.value, ceiling: Math.round(c.value * (1 + VN_BAND)), floor: Math.round(c.value * (1 - VN_BAND)), vcb };
 }

@@ -1,15 +1,22 @@
 import clsx from "clsx";
-import { TECH_GROUPS } from "@/config/tech";
-import { TECH_SIGNS } from "@/config/series";
-import { getDict, intlLocale, type Locale } from "@/lib/i18n";
-import { fmtCompact, fmtDate, fmtNumber, fmtPct } from "@/lib/format";
+import { TECH_GROUPS, TW_REVENUE } from "@/config/tech";
+import { TECH_JOBS, TECH_SIGNS } from "@/config/series";
+import { getDict, intlLocale, pick, type Locale } from "@/lib/i18n";
+import { fmtCompact, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtPeriod } from "@/lib/format";
 import { getInsightNotes, getItems, getTechNews, getTiles, getWatchlist, requestNow } from "@/lib/queries";
-import { getTechStocks, type TechStockRow } from "@/lib/queries-tech";
+import { getAllPostings, getPackages, getTechNote, getTechStocks, type TechStockRow } from "@/lib/queries-tech";
 import { splitStatus } from "@/lib/data/tech";
 import type { Impact, ServiceStatus, StatusIncident } from "@/lib/sources/cloudstatus";
 import type { AiModel } from "@/lib/sources/openrouter";
 import type { HfModel, HfPaper } from "@/lib/sources/huggingface";
 import type { KevEntry, KevVendors } from "@/lib/sources/kev";
+import type { TwRevenue } from "@/lib/sources/twse";
+import type { EolRow } from "@/lib/sources/eol";
+import type { AiValue } from "@/lib/sources/arena";
+import type { LobstersItem } from "@/lib/sources/lobsters";
+import type { SpaceWeather } from "@/lib/sources/spaceweather";
+import type { ComputeSummary } from "@/lib/sources/epoch";
+import { QuadrantScatter } from "@/components/charts/QuadrantScatter";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { BarList } from "@/components/charts/BarList";
 import { Treemap } from "@/components/charts/Treemap";
@@ -18,6 +25,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { DetailTile } from "./MarketPanels";
 import { Pct } from "./CryptoPanels";
 import { NewsGrid } from "./NewsGrid";
+import { WeeklyNote } from "./WeeklyNote";
 import { HnList, type HnItem } from "./WorldPanels";
 
 // ---------------------------------------------------------------- helpers
@@ -492,13 +500,20 @@ export async function KevVendorsBody({ lang }: { lang: Locale }) {
 // ---------------------------------------------------------------- Hacker News, news
 
 export async function TechHn({ lang }: { lang: Locale }) {
-  const items: HnItem[] = await getItems("hn", lang, 15);
-  if (!items.length) return <EmptyState lang={lang} />;
+  const [items, lob] = await Promise.all([getItems<HnItem["data"]>("hn", lang, 15), getItems<LobstersItem>("lobsters", lang, 15)]);
+  if (!items.length && !lob.length) return <EmptyState lang={lang} />;
+  // Lobsters in the Hacker News list's shape: score as points, its discussion page as the comments link.
+  const lobsters: HnItem[] = lob.map((l) => ({ ...l, data: { points: l.data.score, comments: l.data.comments, hnUrl: l.data.discussion } }));
   // The list adds no height of its own: it fills what the stock table beside it leaves, and scrolls.
   return (
     <div className="relative min-h-[320px] flex-1">
       <div className="scroll-thin absolute inset-0 overflow-auto pr-1">
-        <HnList items={items} lang={lang} />
+        <Tabs
+          tabs={[
+            { key: "hn", label: "Hacker News", content: <HnList items={items} lang={lang} /> },
+            { key: "lobsters", label: "Lobsters", content: <HnList items={lobsters} lang={lang} /> },
+          ]}
+        />
       </div>
     </div>
   );
@@ -508,4 +523,337 @@ export async function TechNewsBody({ lang }: { lang: Locale }) {
   const [items, now] = await Promise.all([getTechNews(lang, 30), requestNow()]);
   if (!items.length) return <EmptyState lang={lang} />;
   return <NewsGrid items={items} now={now} lang={lang} />;
+}
+
+// ---------------------------------------------------------------- Taiwan's AI hardware chain, monthly sales
+
+export async function TwRevenueBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).tech;
+  const rows = (await getItems<TwRevenue>("tw_revenue", lang, 20)).map((i) => i.data);
+  if (!rows.length) return <EmptyState lang={lang} />;
+  const byCode = new Map(rows.map((r) => [r.code, r]));
+  const month = Math.max(...rows.map((r) => r.month));
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs text-ink-2">{t.twMonth.replace("{m}", fmtPeriod(month, "m", lang))}</p>
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="tabular w-full min-w-[420px] text-xs">
+          <thead className="text-muted">
+            <tr>
+              <th className="py-1 text-left font-normal" />
+              <th className="py-1 text-right font-normal">{t.twRevenue}</th>
+              <th className="py-1 text-right font-normal">{t.twMom}</th>
+              <th className="py-1 text-right font-normal">{t.twYoy}</th>
+              <th className="py-1 text-right font-normal">{t.twYtd}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TW_REVENUE.flatMap((c) => {
+              const r = byCode.get(c.code);
+              return r
+                ? [
+                    <tr key={c.code} className="border-t border-line">
+                      <td className="py-1">
+                        <span className="text-ink">{c.name}</span> <span className="text-[10px] text-muted">{pick(c.role, lang)}</span>
+                        {r.month < month && <span className="ml-1 text-[10px] text-muted">({fmtPeriod(r.month, "m", lang, true)})</span>}
+                      </td>
+                      <td className="py-1 text-right font-medium text-ink">{fmtNumber(r.revenue, lang, r.revenue < 100 ? 1 : 0)}</td>
+                      <td className="py-1 text-right">
+                        <Pct v={r.mom} lang={lang} />
+                      </td>
+                      <td className="py-1 text-right">
+                        <Pct v={r.yoy} lang={lang} />
+                      </td>
+                      <td className="py-1 text-right">
+                        <Pct v={r.ytdYoy} lang={lang} />
+                      </td>
+                    </tr>,
+                  ]
+                : [];
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] leading-snug text-muted">{t.twNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- hiring
+
+export async function TechJobsBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).tech;
+  const [watch, notes, tiles, overall] = await Promise.all([getWatchlist(), getInsightNotes(lang), getTiles(TECH_JOBS), getAllPostings()]);
+  if (tiles.every((x) => !x.data)) return <EmptyState lang={lang} />;
+  const dev = tiles.find((x) => x.key === "softwareJobs")?.data?.value ?? null;
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {tiles.map((x) => (
+          <DetailTile key={x.key} tile={x} lang={lang} watched={watch.includes(x.key)} note={notes[x.key]} />
+        ))}
+      </div>
+      {dev !== null && overall !== null && (
+        <p className="text-xs text-ink-2">{t.devVsAll.replace("{dev}", fmtNumber(dev, lang, 1)).replace("{all}", fmtNumber(overall, lang, 1))}</p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- versions and end of life
+
+const DAY = 24 * 3600_000;
+
+export async function EolBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).tech;
+  const [rows, now] = await Promise.all([getItems<EolRow>("eol", lang, 20), requestNow()]);
+  if (!rows.length) return <EmptyState lang={lang} />;
+  const d = (ts: number) => fmtDate(ts, lang, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  return (
+    <div className="flex flex-col gap-2">
+      <table className="tabular w-full text-xs">
+        <thead className="text-muted">
+          <tr>
+            <th className="py-1 text-left font-normal" />
+            <th className="py-1 text-left font-normal">{t.eolLatest}</th>
+            <th className="py-1 text-right font-normal">{t.eolNext}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(({ data: r }) => {
+            const days = r.nextEol ? Math.ceil((r.nextEol.date - now) / DAY) : null;
+            return (
+              <tr key={r.name} className="border-t border-line align-top">
+                <td className="py-1.5 font-medium text-ink">{r.name}</td>
+                <td className="py-1.5 text-ink-2">
+                  {r.latest ?? r.cycle}
+                  {r.latestDate !== null && <span className="block text-[10px] text-muted">{d(r.latestDate)}</span>}
+                </td>
+                <td className="py-1.5 text-right">
+                  {r.nextEol && days !== null ? (
+                    <>
+                      <span className={clsx(days <= 30 ? "font-semibold text-down" : days <= 180 ? "text-ink" : "text-ink-2")}>
+                        {r.name} {r.nextEol.cycle}: {d(r.nextEol.date)}
+                      </span>
+                      <span className="block text-[10px] text-muted">{t.eolIn.replace("{n}", fmtNumber(days, lang, 0))}</span>
+                    </>
+                  ) : (
+                    <span className="text-muted">{t.eolNone}</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="text-[10px] leading-snug text-muted">{t.eolNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- weekly AI note
+
+export async function TechNoteBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const { note, hasKey } = await getTechNote(lang);
+  if (!note) return <p className="py-2 text-sm text-ink-2">{hasKey ? d.tech.noteEmpty : d.macro.noteNeedsKey}</p>;
+  return <WeeklyNote note={note} lang={lang} caveat={d.tech.noteCaveat} />;
+}
+
+// ---------------------------------------------------------------- AI models: quality against price
+
+const median = (xs: number[]) => {
+  const v = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(v.length / 2);
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+};
+
+/** The best-rated models on LMArena that OpenRouter sells, by blended price (log scale) and rating. */
+export async function AiValueBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const t = d.tech;
+  const rows = (await getItems<AiValue>("ai_value", lang, 45)).map((i) => i.data);
+  if (rows.length < 5) return <EmptyState lang={lang} />;
+  const usd = (v: number) => `$${fmtNumber(v, lang, v < 1 ? 2 : v < 10 ? 1 : 0)}`;
+  const best = rows
+    .filter((r) => r.rating >= median(rows.map((x) => x.rating)))
+    .sort((a, b) => a.blended - b.blended)
+    .slice(0, 3);
+  return (
+    <div className="flex flex-col gap-2">
+      {best.length > 0 && <p className="text-xs text-ink-2">{t.valueBest.replace("{list}", best.map((r) => `${r.name} (${usd(r.blended)})`).join(", "))}</p>}
+      <QuadrantScatter
+        points={rows.map((r) => ({
+          key: r.id,
+          label: r.name,
+          name: `${r.name} · ${r.org}`,
+          x: r.blended,
+          y: r.rating,
+          group: r.open ? 1 : 0,
+          notes: [t.valueRank.replace("{rank}", String(r.rank)), t.valuePrices.replace("{in}", usd(r.priceIn)).replace("{out}", usd(r.priceOut))],
+        }))}
+        split={{ x: median(rows.map((r) => r.blended)), y: median(rows.map((r) => r.rating)) }}
+        quadrants={{ tl: t.valueTl, tr: t.valueTr, bl: t.valueBl, br: t.valueBr }}
+        danger="br"
+        x={{ label: t.valueX, suffix: "", prefix: "$", digits: 2, log: true }}
+        y={{ label: t.valueY, suffix: "", digits: 0 }}
+        groups={[t.valueClosed, t.valueOpen]}
+        locale={lang}
+        height={380}
+        tableLabels={{ table: d.common.showTable, chart: d.common.showChart, name: t.valueModel }}
+      />
+      <p className="text-[10px] leading-snug text-muted">{t.valueNote.replace("{date}", rows[0].date ?? "—")}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- space: geomagnetic storms, launches
+
+const KP_BAR = (kp: number) => (kp >= 7 ? "bg-critical" : kp >= 5 ? "bg-warning" : "bg-s1");
+
+export async function SpaceBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).tech;
+  const [sw, launches, now] = await Promise.all([
+    getItems<SpaceWeather>("spaceweather", lang, 1),
+    getItems<{ provider: string; rocket: string; pad: string; status: string }>("launch", lang, 6),
+    requestNow(),
+  ]);
+  const w = sw[0]?.data;
+  if (!w && !launches.length) return <EmptyState lang={lang} />;
+  const past = w?.kp.filter((p) => p.kind !== "predicted") ?? [];
+  const ahead = w?.kp.filter((p) => p.kind === "predicted" && p.ts >= now - 3 * 3600_000) ?? [];
+  const cur = past[past.length - 1];
+  const peak = ahead.reduce<(typeof ahead)[number] | null>((a, p) => (!a || p.kp > a.kp ? p : a), null);
+  const level = (kp: number) => (kp >= 5 ? `G${Math.min(5, Math.floor(kp) - 4)}` : kp >= 4 ? t.kpActive : t.kpQuiet);
+  const bars = w ? w.kp.filter((p) => p.ts >= now - 4 * 24 * 3600_000) : [];
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {w && (
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="text-sm text-ink">
+            {cur && t.kpNow.replace("{kp}", fmtNumber(cur.kp, lang, 1)).replace("{level}", level(cur.kp))}
+            {peak && <span className="text-ink-2"> · {t.kpPeak.replace("{kp}", fmtNumber(peak.kp, lang, 1)).replace("{level}", level(peak.kp))}</span>}
+          </p>
+          <div className="relative flex h-28 items-end gap-px" role="img" aria-label={t.kpChart}>
+            {[5, 7].map((k) => (
+              <span key={k} aria-hidden className="absolute inset-x-0 border-t border-dashed border-line" style={{ bottom: `${(k / 9) * 100}%` }} />
+            ))}
+            {bars.map((p) => (
+              <span
+                key={p.ts}
+                title={`${fmtDateTime(p.ts, lang)}: Kp ${fmtNumber(p.kp, lang, 2)}${p.kind === "predicted" ? ` (${t.kpForecast})` : ""}`}
+                className={clsx("min-w-0 flex-1 rounded-t-sm", KP_BAR(p.kp), p.kind === "predicted" && "opacity-40")}
+                style={{ height: `${Math.max(2, (p.kp / 9) * 100)}%` }}
+              />
+            ))}
+          </div>
+          <p className="text-[10px] leading-snug text-muted">{t.kpNote}</p>
+        </div>
+      )}
+      {launches.length > 0 && (
+        <div className="flex min-w-0 flex-col gap-1">
+          <h3 className="text-xs font-semibold text-ink-2">{t.launches}</h3>
+          <ul className="flex flex-col">
+            {launches.map((l) => (
+              <li key={l.id} className="border-t border-line py-1.5 text-xs first:border-t-0">
+                <span className="text-ink">{l.title}</span>
+                <span className="block text-[11px] text-muted">
+                  {[l.ts ? fmtDateTime(l.ts, lang) : null, l.data.provider, l.data.pad?.split(",").slice(-1)[0]?.trim(), l.data.status].filter(Boolean).join(" · ")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- package downloads
+
+export async function PackagesBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).tech;
+  const rows = (await getPackages()).filter((r) => r.week !== null);
+  if (!rows.length) return <EmptyState lang={lang} />;
+  const groups = (["web", "aiJs", "aiPy"] as const).map((g) => ({ g, rows: rows.filter((r) => r.group === g) })).filter((x) => x.rows.length);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="tabular w-full min-w-[440px] text-xs">
+          <thead className="text-muted">
+            <tr>
+              <th className="py-1 text-left font-normal" />
+              <th className="py-1 text-right font-normal">{t.pkgWeek}</th>
+              <th className="py-1 text-right font-normal">{t.pkg4}</th>
+              <th className="py-1 text-right font-normal">{t.pkg12}</th>
+              <th className="w-24 py-1 font-normal" />
+            </tr>
+          </thead>
+          {groups.map(({ g, rows: list }) => (
+            <tbody key={g}>
+              <tr>
+                <th colSpan={5} className="pt-2 pb-1 text-left text-[11px] font-semibold text-ink-2">
+                  {t.pkgGroups[g]}
+                </th>
+              </tr>
+              {list.map((r) => (
+                <tr key={`${r.registry}:${r.name}`} className="border-t border-line">
+                  <td className="py-1 font-medium text-ink">{r.name}</td>
+                  <td className="py-1 text-right text-ink">{fmtCompact(r.week!, lang)}</td>
+                  <td className="py-1 text-right">
+                    <Pct v={r.ch4} lang={lang} />
+                  </td>
+                  <td className="py-1 text-right">
+                    <Pct v={r.ch12} lang={lang} />
+                  </td>
+                  <td className="py-1 pl-2">{r.spark.length > 1 && <Sparkline points={r.spark} width={88} height={22} label={`${r.name}, ${t.pkgSpark}`} />}</td>
+                </tr>
+              ))}
+            </tbody>
+          ))}
+        </table>
+      </div>
+      <p className="text-[10px] leading-snug text-muted">{t.pkgNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- training compute of the largest models
+
+const SUP: Record<string, string> = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+
+/** 9.4e26 → "9,4 × 10²⁶". */
+function sci(v: number, lang: Locale): string {
+  const exp = Math.floor(Math.log10(v));
+  return `${fmtNumber(v / 10 ** exp, lang, 1)} × 10${String(exp).replace(/./g, (c) => SUP[c] ?? c)}`;
+}
+
+export async function ComputeBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).tech;
+  const s = (await getItems<ComputeSummary>("ai_compute", lang, 1))[0]?.data;
+  if (!s?.top.length) return <EmptyState lang={lang} />;
+  const max = s.top[0].flop;
+  return (
+    <div className="flex flex-col gap-2">
+      {s.growthPerYear !== null && (
+        <p className="text-sm text-ink">
+          {t.computeGrowth.replace("{x}", fmtNumber(s.growthPerYear, lang, 1)).replace("{n}", String(s.frontierCount))}
+        </p>
+      )}
+      <ul className="flex flex-col">
+        {s.top.map((m) => (
+          <li key={m.model} className="border-t border-line py-1 text-xs first:border-t-0" title={`${m.model} · ${m.org} · ${m.domain ?? ""}`}>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="min-w-0 truncate">
+                <span className="text-ink">{m.model}</span> <span className="text-[10px] text-muted">{m.org} · {fmtPeriod(m.date, "m", lang, true)}</span>
+              </span>
+              <span className="tabular shrink-0 text-ink-2">{sci(m.flop, lang)}</span>
+            </div>
+            <span aria-hidden className="mt-0.5 block h-1 rounded-full bg-s1" style={{ width: `${Math.max(1, Math.round((m.flop / max) * 1000) / 10)}%` }} />
+          </li>
+        ))}
+      </ul>
+      <p className="text-[10px] leading-snug text-muted">{t.computeNote.replace("{n}", String(s.withCompute))}</p>
+    </div>
+  );
 }

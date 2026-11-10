@@ -149,7 +149,7 @@ Index: `events_ts (ts DESC)`.
 
 Web server ghi cờ (ví dụ khi bấm nút "Làm mới" Brief). Worker đọc cờ trong `isDue` của nguồn liên quan.
 
-Các khoá đang dùng: `brief:force` (yêu cầu viết lại bản tin), `ai:calls:<ngày Thái Bình Dương>:<model>` (số lần gọi AI trong ngày) và `ai:exhausted:<model>` (ngày model hết quota), xem LLDD 05 §4.1; `macro:note` (nhận định vĩ mô tuần, JSON `StoredMacroNote`), LLDD 05 §3b.
+Các khoá đang dùng: `brief:force` (yêu cầu viết lại bản tin), `ai:calls:<ngày Thái Bình Dương>:<model>` (số lần gọi AI trong ngày) và `ai:exhausted:<model>` (ngày model hết quota), xem LLDD 05 §4.1; `macro:note` (nhận định vĩ mô tuần, JSON `StoredMacroNote`), LLDD 05 §3b; `tech:note` (nhận định công nghệ tuần, `StoredTechNote`), LLDD 05 §3c. Các nguồn cũng giữ trạng thái nhỏ ở đây (LLDD 02): `vnstocks:shares` (số cổ phiếu lưu hành của VN30, làm mới mỗi ngày), `sbvrate:backfilled-to` (ngày đã lùi tới khi nạp lịch sử tỷ giá trung tâm), `ibrate:done` (60 bài Thời báo Ngân hàng đã đọc).
 
 ### 3.11 `watchlist`
 | Cột | Kiểu | Ý nghĩa |

@@ -148,3 +148,22 @@ export const WORLD_MAP: MapMetric[] = [
   { ind: "PCPIPCH", name: { en: "Inflation", vi: "Lạm phát" }, kind: "sequential", thresholds: [2, 3, 5, 10, 20] },
 ];
 
+
+/**
+ * US CPI by group (FRED, BLS seasonally adjusted indexes), drawn as y/y lines in the
+ * macro page's inflation panel: where sticky inflation sits. Services less rent of
+ * shelter is the Fed's "supercore", the part most tied to wages.
+ */
+export interface CpiPart {
+  key: "energy" | "food" | "goods" | "shelter" | "services";
+  code: string;
+  name: Bi;
+}
+
+export const US_CPI_PARTS: CpiPart[] = [
+  { key: "energy", code: "CPIENGSL", name: { en: "Energy", vi: "Năng lượng" } },
+  { key: "food", code: "CPIUFDSL", name: { en: "Food", vi: "Thực phẩm" } },
+  { key: "goods", code: "CUSR0000SACL1E", name: { en: "Core goods", vi: "Hàng hoá lõi" } },
+  { key: "shelter", code: "CUSR0000SAH1", name: { en: "Shelter", vi: "Nhà ở" } },
+  { key: "services", code: "CUSR0000SASL2RS", name: { en: "Services ex shelter", vi: "Dịch vụ trừ nhà ở" } },
+];

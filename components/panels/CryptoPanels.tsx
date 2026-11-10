@@ -2,11 +2,13 @@ import clsx from "clsx";
 import { CRYPTO_SIGNS, SERIES } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { fmtCompact, fmtDate, fmtNumber, fmtPct, fmtSigned } from "@/lib/format";
-import { getCrypto, getCryptoNews, getInsightNotes, getItems, getRatio, getTiles, getWatchlist, requestNow, type FearGreed, type PolyEvent } from "@/lib/queries";
+import { getBtcLeverage, getCrypto, getEtfFlows, getCryptoNews, getInsightNotes, getItems, getRatio, getTiles, getWatchlist, requestNow, type FearGreed, type PolyEvent } from "@/lib/queries";
+import type { ChainRow } from "@/lib/sources/defillama";
 import { TileDetail } from "@/components/charts/TileDetail";
 import { LineChart } from "@/components/charts/LineChart";
 import { Treemap } from "@/components/charts/Treemap";
 import { Sparkline } from "@/components/charts/Sparkline";
+import { ColumnBars } from "@/components/charts/ColumnBars";
 import { EmptyState } from "@/components/ui/Panel";
 import { DetailTile } from "./MarketPanels";
 import { NewsGrid } from "./NewsGrid";
@@ -413,6 +415,154 @@ export async function CryptoOddsBody({ lang }: { lang: Locale }) {
   return (
     <div className="scroll-thin flex max-h-[420px] flex-col gap-3 overflow-auto pr-1">
       <PolyEvents events={events} lang={lang} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- leverage: open interest against price
+
+export async function LeverageBody({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const t = d.crypto;
+  const lev = await getBtcLeverage();
+  if (!lev) return <EmptyState lang={lang} />;
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs text-ink-2">
+        {t.levTitle}
+        {lev.oiChange !== null && lev.priceChange !== null && (
+          <span className="text-muted">
+            {" · "}
+            {t.levChange.replace("{oi}", fmtPct(lev.oiChange, lang, 1)).replace("{price}", fmtPct(lev.priceChange, lang, 1))}
+          </span>
+        )}
+      </p>
+      <LineChart
+        data={lev.rows}
+        xKey="ts"
+        xFormat="day"
+        series={[
+          { key: "price", label: t.levPrice, color: "var(--s1)" },
+          { key: "oi", label: t.levOi, color: "var(--s2)" },
+        ]}
+        yDigits={0}
+        refY={100}
+        height={180}
+        locale={lang}
+        tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
+      />
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+        {lev.lsr && (
+          <div title={t.lsrHint}>
+            <dt className="text-muted">{t.lsr}</dt>
+            <dd className="tabular text-ink">
+              <span className="font-semibold">{fmtNumber(lev.lsr.last, lang, 2)}</span>{" "}
+              <span className="text-muted">{t.avgOf.replace("{v}", fmtNumber(lev.lsr.avg, lang, 2))}</span>
+            </dd>
+          </div>
+        )}
+        {lev.funding && (
+          <div title={t.fundingHint}>
+            <dt className="text-muted">{t.fundingYear}</dt>
+            <dd className="tabular text-ink">
+              <span className="font-semibold">{fmtNumber(lev.funding.last, lang, 1)}%</span>{" "}
+              <span className="text-muted">{t.avgOf.replace("{v}", `${fmtNumber(lev.funding.avg, lang, 1)}%`)}</span>
+            </dd>
+          </div>
+        )}
+      </dl>
+      <p className="text-[10px] leading-snug text-muted">{t.levNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- spot bitcoin ETF flows
+
+export async function EtfFlowsBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).crypto;
+  const f = await getEtfFlows();
+  if (!f) return <EmptyState lang={lang} />;
+  // "−$367M" / "−367 triệu USD": the sign goes before the currency sign.
+  const m = (v: number) => {
+    const sign = v > 0 ? "+" : v < 0 ? "−" : "";
+    return sign + t.musd.replace("{v}", fmtNumber(Math.abs(v), lang, 0));
+  };
+  const day = (ts: number) => fmtDate(ts, lang, { day: "numeric", month: "numeric", timeZone: "UTC" });
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm text-ink">
+        {t.etfDay.replace("{day}", day(f.latest.ts))}{" "}
+        <span className={clsx("tabular font-semibold", f.latest.total > 0 ? "text-up" : f.latest.total < 0 ? "text-down" : "text-ink")}>{m(f.latest.total)}</span>
+      </p>
+      {f.latest.funds.length > 0 && (
+        <p className="tabular text-xs text-ink-2">
+          {f.latest.funds.map((x, i) => (
+            <span key={x.fund}>
+              {i > 0 && " · "}
+              {x.fund} <span className={clsx(x.value > 0 ? "text-up" : x.value < 0 ? "text-down" : "text-muted")}>{fmtSigned(x.value, lang, 0)}</span>
+            </span>
+          ))}
+        </p>
+      )}
+      <p className="text-xs text-ink-2">{t.etfSums.replace("{s5}", m(f.sum5)).replace("{n}", String(f.rows.length)).replace("{all}", m(f.sumAll))}</p>
+      <ColumnBars
+        rows={f.rows.map((r) => ({ key: String(r.ts), value: r.total, title: `${day(r.ts)}: ${m(r.total)}` }))}
+        tick={(v) => fmtNumber(v, lang, 0)}
+        first={day(f.rows[0].ts)}
+        last={day(f.latest.ts)}
+        label={t.etfChart}
+      />
+      <p className="text-[10px] leading-snug text-muted">{t.etfNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- chains: TVL and fees
+
+export async function ChainsBody({ lang }: { lang: Locale }) {
+  const t = getDict(lang).crypto;
+  const rows = (await getItems<ChainRow>("llama_chains", lang, 12)).map((i) => i.data);
+  if (!rows.length) return <EmptyState lang={lang} />;
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="tabular w-full min-w-[440px] text-xs">
+          <thead className="text-muted">
+            <tr>
+              <th className="py-1 text-left font-normal" />
+              <th className="py-1 text-right font-normal">TVL</th>
+              <th className="py-1 text-right font-normal">7d</th>
+              <th className="py-1 text-right font-normal">30d</th>
+              <th className="py-1 text-right font-normal">{t.fees30d}</th>
+              <th className="py-1 text-right font-normal" title={t.feesWowHint}>
+                {t.feesWow}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((c) => (
+              <tr key={c.name} className="border-t border-line">
+                <td className="py-1 text-ink">
+                  {c.name}
+                  {c.symbol && <span className="ml-1 text-[10px] text-muted">{c.symbol}</span>}
+                </td>
+                <td className="py-1 text-right font-medium text-ink">{usd(c.tvl, lang)}</td>
+                <td className="py-1 text-right">
+                  <Pct v={c.ch7d} lang={lang} />
+                </td>
+                <td className="py-1 text-right">
+                  <Pct v={c.ch30d} lang={lang} />
+                </td>
+                <td className="py-1 text-right text-ink">{usd(c.fees30d, lang)}</td>
+                <td className="py-1 text-right">
+                  <Pct v={c.feesCh7d} lang={lang} digits={0} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] leading-snug text-muted">{t.chainsNote}</p>
     </div>
   );
 }

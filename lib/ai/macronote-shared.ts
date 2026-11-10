@@ -30,3 +30,12 @@ export interface StoredMacroNote {
   en: MacroNoteText;
   vi: MacroNoteText;
 }
+
+/** A weekly AI note (macro or tech) as the page shows it, in one language. */
+export interface NoteView {
+  text: MacroNoteText;
+  /** ISO week, "2026-W46". */
+  week: string;
+  createdAt: number;
+  model: string;
+}

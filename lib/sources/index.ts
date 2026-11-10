@@ -1,11 +1,14 @@
 import { brief } from "@/lib/ai/brief";
 import { insights } from "@/lib/ai/insights";
 import { macronote } from "@/lib/ai/macronote";
+import { technote } from "@/lib/ai/technote";
 import { translate } from "@/lib/ai/translate";
 import { airquality } from "./airquality";
 import { binance } from "./binance";
+import { etfflows } from "./etfflows";
 import { bis } from "./bis";
 import { calendar } from "./calendar";
+import { releases } from "./releases";
 import { cloudstatus } from "./cloudstatus";
 import { cnbc } from "./cnbc";
 import { co2 } from "./co2";
@@ -26,6 +29,14 @@ import { imf } from "./imf";
 import { imfcpi } from "./imfcpi";
 import { kalshi } from "./kalshi";
 import { kev } from "./kev";
+import { twse } from "./twse";
+import { hnhiring } from "./hnhiring";
+import { eol } from "./eol";
+import { arena } from "./arena";
+import { lobsters } from "./lobsters";
+import { spaceweather } from "./spaceweather";
+import { pkgtrends } from "./pkgtrends";
+import { epoch } from "./epoch";
 import { launches } from "./launches";
 import { mempool } from "./mempool";
 import { oecd } from "./oecd";
@@ -38,6 +49,11 @@ import type { Source } from "./types";
 import { usgs } from "./usgs";
 import { vcb } from "./vcb";
 import { vnindex } from "./vnindex";
+import { vnstocks } from "./vnstocks";
+import { vnflows } from "./vnflows";
+import { sbvrate } from "./sbvrate";
+import { petrolimex } from "./petrolimex";
+import { ibrate } from "./ibrate";
 import { who } from "./who";
 import { wikipedia } from "./wikipedia";
 import { worldbank } from "./worldbank";
@@ -62,6 +78,7 @@ export const sources: Source[] = [
   brief,
   insights,
   macronote,
+  technote,
   // map
   usgs,
   gdacs,
@@ -71,6 +88,7 @@ export const sources: Source[] = [
   wikipedia,
   hackernews,
   calendar,
+  releases,
   launches,
   polymarket,
   kalshi,
@@ -81,6 +99,11 @@ export const sources: Source[] = [
   who,
   // Vietnam
   vnindex,
+  vnstocks,
+  vnflows,
+  sbvrate,
+  petrolimex,
+  ibrate,
   sjc,
   vcb,
   sbv,
@@ -91,9 +114,18 @@ export const sources: Source[] = [
   defillama,
   mempool,
   binance,
+  etfflows,
   // technology
   cloudstatus,
   openrouter,
   huggingface,
   kev,
+  twse,
+  hnhiring,
+  eol,
+  arena,
+  lobsters,
+  spaceweather,
+  pkgtrends,
+  epoch,
 ];

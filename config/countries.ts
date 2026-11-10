@@ -14,7 +14,7 @@ export interface Country {
   oecd: string | null;
   /** Policy-rate series where BIS publishes none (Vietnam: the State Bank's refinancing rate, lib/sources/sbv.ts). */
   rate?: string;
-  /** Daily 10-year government bond yield, used when newer than OECD's monthly average (US: FRED; Indonesia: CNBC). */
+  /** Daily 10-year government bond yield, used when newer than OECD's monthly average (US: FRED; Indonesia: CNBC; Vietnam: Thời báo Ngân hàng's recap, lib/sources/ibrate.ts). */
   y10?: string;
   /** Quarterly real GDP growth where OECD has none (Vietnam: World Bank Global Economic Monitor). */
   gdp?: string;
@@ -52,7 +52,7 @@ export const COUNTRIES: Country[] = [
   { imf: "IDN", bis: "ID", bisArea: "ID", oecd: "IDN", y10: "cnbc:ID10Y-ID", fx: { symbol: "IDR=X", perUsd: true }, cpiTarget: 2.5, group: "em", short: "ID", name: { en: "Indonesia", vi: "Indonesia" }, macro: true },
   { imf: "BRA", bis: "BR", bisArea: "BR", oecd: "BRA", fx: { symbol: "BRL=X", perUsd: true }, cpiTarget: 3, group: "em", short: "BR", name: { en: "Brazil", vi: "Brazil" }, overview: true, macro: true },
   { imf: "MEX", bis: "MX", bisArea: "MX", oecd: "MEX", fx: { symbol: "MXN=X", perUsd: true }, cpiTarget: 3, group: "em", short: "MX", name: { en: "Mexico", vi: "Mexico" }, macro: true },
-  { imf: "VNM", bis: null, bisArea: null, oecd: null, rate: SBV_REFI, gdp: "wb:GDP:VNM", fx: { symbol: "USDVND=X", perUsd: true }, cpiTarget: 4.5, group: "em", short: "VN", name: { en: "Vietnam", vi: "Việt Nam" }, overview: true, macro: true },
+  { imf: "VNM", bis: null, bisArea: null, oecd: null, rate: SBV_REFI, gdp: "wb:GDP:VNM", y10: "vn:GB10Y", fx: { symbol: "USDVND=X", perUsd: true }, cpiTarget: 4.5, group: "em", short: "VN", name: { en: "Vietnam", vi: "Việt Nam" }, overview: true, macro: true },
 ];
 
 /**

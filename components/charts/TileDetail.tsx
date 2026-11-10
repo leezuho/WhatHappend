@@ -47,7 +47,7 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
 
   const scale = unit === "K" ? 1e-3 : unit === "$T" ? 1e-6 : 1;
   const color = (price && points && trendColor(points.map((p) => p.value))) || "var(--s1)";
-  const suffix = unit === "K" ? "K" : unit === "$T" ? "T" : unit === "$B" ? (locale === "vi" ? " tỷ $" : "B") : unit === "%" ? "%" : "";
+  const suffix = unit === "K" ? "K" : unit === "$T" ? "T" : unit === "$B" ? (locale === "vi" ? " tỷ $" : "B") : unit === "%" ? "%" : unit === "bp" ? " bp" : "";
 
   return (
     <>

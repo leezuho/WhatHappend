@@ -91,7 +91,7 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         <Panel lang={lang} title={p.news.title} subtitle={p.news.subtitle} sources={["rss", "translate"]} className="md:col-span-2 xl:col-span-8">
           <NewsBody lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.calendar.title} subtitle={p.calendar.subtitle} sources={["calendar", "launches"]} className="md:col-span-2 xl:col-span-4">
+        <Panel lang={lang} title={p.calendar.title} subtitle={p.calendar.subtitle} sources={["calendar", "releases", "launches"]} className="md:col-span-2 xl:col-span-4">
           <CalendarBody lang={lang} />
         </Panel>
 

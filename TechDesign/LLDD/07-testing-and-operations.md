@@ -35,6 +35,14 @@
 | AI với Gemini (V5, V14, V15) | **Đã chạy thật** với key Google AI Studio gói miễn phí:<br/>• `translate`: 220 mục trong 41 giây, tiếng Việt chất lượng tốt.<br/>• `brief`: chạy bằng `gemini-3.8-flash` (alias `gemini-flash-latest`) trên 90 tiêu đề, mất 2–3 phút.<br/>• Nút "Viết lại" → worker → brief mới đã kiểm chứng.<br/>• `gemini-pro-latest` bị 429 `limit: 0`, nên mặc định đổi sang Flash.<br/>• Một lần 503 "high demand", nên đã bật retry SDK. |
 | AI với Claude | Adapter qua kiểm tra kiểu nhưng **chưa gọi thật** (chưa có key) |
 
+**Chụp màn hình biểu đồ vẽ ở client** (`scripts/screenshot.mjs`): `--screenshot` của Chrome chụp trước khi Recharts và MapLibre vẽ xong, và chế độ headless mặc định không có WebGL, nên Đồng hồ chu kỳ và Bản đồ thế giới ra trống. Script điều khiển Chrome qua DevTools protocol, bật WebGL phần mềm (SwiftShader), chờ rồi chụp đúng một panel:
+
+```
+node scripts/screenshot.mjs http://localhost:3000/vi/macro out.png --panel "Bản đồ thế giới" [--dark] [--size 1440x1100] [--wait 12000]
+```
+
+Bản đồ vẽ bằng SwiftShader chậm, nên ở chế độ tối có lúc cần `--wait 25000` mới đủ. Ngày 2026-11-10 đã xem cả hai biểu đồ ở `/vi`, `/en`, sáng và tối; sửa bản đồ thế giới thiếu lớp `wh-map` (nút zoom và dòng nguồn trắng ở chế độ tối).
+
 Lưu ý chất lượng dữ liệu đã biết:
 - Điểm nóng GDELT khá nhiễu (địa điểm gán sai, URL không liên quan).
 - Top vi.wikipedia thường bị bot đẩy lượt xem (vì vậy tab mặc định là Wikipedia EN).

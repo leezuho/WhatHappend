@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SOURCE_META } from "@/config/sources";
+import { BTC_HISTORY } from "@/config/series";
 import { fetchJson } from "./http";
 import { dayTs, replaceItems, upsertSeries } from "./store";
 import type { Source } from "./types";
@@ -35,6 +36,37 @@ export interface PerpRow {
   nextFunding: number;
   oiUsd: number | null;
   oiChange24h: number | null;
+}
+
+const OiDaily = z.array(z.object({ sumOpenInterest: z.string(), timestamp: z.number() }));
+const Lsr = z.array(z.object({ longShortRatio: z.string(), timestamp: z.number() }));
+const FundingHist = z.array(z.object({ fundingRate: z.string(), fundingTime: z.number() }));
+
+
+/** Funding events → the day's average, annualized (percent), stamped at UTC midnight. */
+export function dailyFundingApr(events: { fundingRate: string; fundingTime: number }[]): { ts: number; value: number }[] {
+  const byDay = new Map<number, number[]>();
+  for (const e of events) {
+    const day = dayTs(e.fundingTime);
+    byDay.set(day, [...(byDay.get(day) ?? []), Number(e.fundingRate)]);
+  }
+  return [...byDay]
+    .sort((a, b) => a[0] - b[0])
+    .map(([ts, rates]) => ({ ts, value: annualizeFunding(rates.reduce((a, r) => a + r, 0) / rates.length) }));
+}
+
+async function btcHistory() {
+  const [oi, lsr, funding] = await Promise.all([
+    fetchJson("https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=1d&limit=30", OiDaily),
+    fetchJson("https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=BTCUSDT&period=1d&limit=30", Lsr),
+    fetchJson("https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=93", FundingHist),
+  ]);
+  return {
+    // Open interest in coins, so a price move alone does not change it.
+    oi: oi.map((r) => ({ ts: dayTs(r.timestamp), value: Number(r.sumOpenInterest) })),
+    lsr: lsr.map((r) => ({ ts: dayTs(r.timestamp), value: Number(r.longShortRatio) })),
+    funding: dailyFundingApr(funding),
+  };
 }
 
 export interface P2pQuote {
@@ -101,7 +133,7 @@ export const binance: Source = {
   ...SOURCE_META.binance,
   async run({ db, log }) {
     const now = Date.now();
-    const [perpRes, p2pRes] = await Promise.allSettled([perps(), p2p()]);
+    const [perpRes, p2pRes, histRes] = await Promise.allSettled([perps(), p2p(), btcHistory()]);
     const failed: string[] = [];
     let written = 0;
 
@@ -115,7 +147,14 @@ export const binance: Source = {
       written += upsertSeries(db, "binance:USDTVND", "binance", [{ ts: dayTs(now), value: (q.buy + q.sell) / 2 }]);
     } else failed.push(`p2p: ${p2pRes.reason instanceof Error ? p2pRes.reason.message : p2pRes.reason}`);
 
-    if (failed.length === 2) throw new Error(failed.join(" | "));
+    if (histRes.status === "fulfilled") {
+      const h = histRes.value;
+      written += upsertSeries(db, BTC_HISTORY.oi, "binance", h.oi);
+      written += upsertSeries(db, BTC_HISTORY.lsr, "binance", h.lsr);
+      written += upsertSeries(db, BTC_HISTORY.funding, "binance", h.funding);
+    } else failed.push(`history: ${histRes.reason instanceof Error ? histRes.reason.message : histRes.reason}`);
+
+    if (failed.length === 3) throw new Error(failed.join(" | "));
     if (failed.length) log(failed.join(" | "));
     return written;
   },

@@ -136,6 +136,18 @@
       "title": "Kinh tế Việt Nam",
       "subtitle": "Tăng trưởng, lạm phát, lãi suất NHNN và dự báo của IMF"
     },
+    "vn30": {
+      "title": "Cổ phiếu VN30",
+      "subtitle": "Bản đồ theo vốn hoá và khối ngoại giao dịch mã nào hôm nay"
+    },
+    "vnForeign": {
+      "title": "Khối ngoại",
+      "subtitle": "Mua/bán ròng trên HOSE, theo giá trị"
+    },
+    "vnFuel": {
+      "title": "Giá xăng dầu",
+      "subtitle": "Giá bán lẻ Petrolimex, ₫/lít"
+    },
     "vnRates": {
       "title": "Lạm phát và lãi suất NHNN",
       "subtitle": "CPI so cùng kỳ và lãi suất tái cấp vốn theo tháng"
@@ -157,12 +169,12 @@
       "subtitle": "Các thương hiệu trong nước so với giá thế giới"
     },
     "vnBank": {
-      "title": "Tỷ giá Vietcombank",
-      "subtitle": "Chuyển khoản và bán ra, đồng trên một đơn vị"
+      "title": "Tỷ giá",
+      "subtitle": "Đô la ở ba nơi và bảng tỷ giá Vietcombank"
     },
     "vnNews": {
       "title": "Tin Việt Nam",
-      "subtitle": "VnExpress"
+      "subtitle": "Tin trong nước theo chủ đề"
     },
     "cryptoVitals": {
       "title": "Chỉ số sống còn của crypto",
@@ -171,6 +183,18 @@
     "cryptoTop": {
       "title": "Top đồng coin",
       "subtitle": "Theo vốn hóa, bỏ stablecoin và token wrapped"
+    },
+    "cryptoLeverage": {
+      "title": "Đòn bẩy BTC",
+      "subtitle": "Hợp đồng mở so với giá, tỷ lệ long/short, funding"
+    },
+    "cryptoEtf": {
+      "title": "Dòng tiền ETF bitcoin",
+      "subtitle": "ETF giao ngay ở Mỹ, ròng theo ngày, triệu USD"
+    },
+    "cryptoChains": {
+      "title": "Chain: TVL và phí",
+      "subtitle": "Tiền DeFi nằm ở đâu và người dùng trả phí ở đâu"
     },
     "cryptoDerivs": {
       "title": "Đòn bẩy & nhu cầu trong nước",
@@ -255,6 +279,38 @@
     "macroCalendar": {
       "title": "Lịch vĩ mô",
       "subtitle": "Số liệu sắp công bố và lịch họp các NHTW"
+    },
+    "techNote": {
+      "title": "Công nghệ tuần này",
+      "subtitle": "AI đọc tin và số liệu của trang, mỗi tuần một lần"
+    },
+    "techValue": {
+      "title": "Model AI: chất lượng so với giá",
+      "subtitle": "Điểm LMArena và giá OpenRouter của các model được chấm cao nhất"
+    },
+    "techSpace": {
+      "title": "Không gian",
+      "subtitle": "Bão từ và lịch phóng tên lửa sắp tới"
+    },
+    "techPkg": {
+      "title": "Lượt tải thư viện",
+      "subtitle": "Lượt tải hằng tuần của framework web và SDK AI"
+    },
+    "techCompute": {
+      "title": "Lượng tính toán huấn luyện",
+      "subtitle": "Các lần huấn luyện AI lớn nhất (Epoch AI)"
+    },
+    "techTw": {
+      "title": "Chuỗi phần cứng AI Đài Loan",
+      "subtitle": "Doanh thu tháng của TSMC và các hãng máy chủ AI"
+    },
+    "techJobs": {
+      "title": "Tuyển dụng công nghệ",
+      "subtitle": "Tin tuyển lập trình viên, sản lượng chip, việc làm trên Hacker News"
+    },
+    "techEol": {
+      "title": "Phiên bản và hết hỗ trợ",
+      "subtitle": "Bản mới nhất và hạn hỗ trợ sắp tới"
     },
     "techMarkets": {
       "title": "Cổ phiếu công nghệ",
@@ -355,13 +411,16 @@
     "rising": "tăng",
     "falling": "giảm",
     "footnote": "Chữ xám dưới mỗi số = kỳ của số liệu. Rê chuột lên tên cột để xem cột đo gì và tô màu ra sao.",
-    "vnNote": "Việt Nam không có trong dữ liệu OECD và BIS: CPI lấy từ IMF, GDP từ World Bank, lãi suất điều hành từ NHNN, thất nghiệp là ước tính năm của IMF. Việt Nam không có chỉ báo sớm, khảo sát niềm tin, tỷ giá thực hiệu dụng và khoảng trống tín dụng.",
+    "vnNote": "Việt Nam không có trong dữ liệu OECD và BIS: CPI lấy từ IMF, GDP từ World Bank, lãi suất điều hành từ NHNN, lợi suất 10 năm từ bản tin hằng ngày của Thời báo Ngân hàng, thất nghiệp là ước tính năm của IMF. Việt Nam không có chỉ báo sớm, khảo sát niềm tin, tỷ giá thực hiệu dụng và khoảng trống tín dụng.",
     "us": "Mỹ",
     "world": "Các nền kinh tế lớn",
     "period": "Kỳ",
     "scale": "Cùng thang đo cho mọi ô",
     "cliTitle": "Chỉ báo sớm OECD, 24 tháng qua; dòng dưới: tăng trưởng GDP so cùng kỳ mới nhất",
     "cliRef": "100 = tăng trưởng đúng xu hướng",
+    "cpiPartsTitle": "CPI Mỹ theo nhóm, so cùng kỳ",
+    "cpiParts3m": "{v} so với ba tháng trước",
+    "cpiPartsNote": "Chỉ số đã điều chỉnh mùa vụ của BLS, lấy qua FRED. Mũi tên = thay đổi trong ba tháng. Dịch vụ trừ nhà ở (\"supercore\" mà Fed theo dõi) đi theo tiền lương; nhà ở đi theo giá thuê với độ trễ khoảng một năm.",
     "cpiTitle": "Lạm phát CPI so cùng kỳ, 24 tháng qua",
     "cpiRef": "Mục tiêu của NHTW",
     "policyRate": "Lãi suất điều hành",
@@ -450,6 +509,7 @@
     "pulse": "Nhấp nháy = cảnh báo hoặc động đất ≥ 6"
   },
   "news": {
+    "related": "+{n} bài cùng chuyện",
     "all": "Tất cả",
     "alsoIn": "cùng tin",
     "regions": {
@@ -507,6 +567,35 @@
     }
   },
   "vn": {
+    "fuelAdjusted": "Điều chỉnh gần nhất {t}",
+    "fuelZone1": "Vùng 1",
+    "fuelZone2": "Vùng 2",
+    "fuelNote": "Giá bán lẻ Petrolimex, ₫/lít. Vùng 2 là vùng xa. Giá theo kỳ điều hành hằng tuần của liên bộ; mũi tên là mức đổi ở kỳ gần nhất (đỏ = tăng), hiện khi đã ghi nhận được một kỳ.",
+    "dollarCeiling": "Trần biên độ (NHNN)",
+    "band": "Tỷ giá trung tâm NHNN {c} ₫, biên độ {lo}–{hi}",
+    "toCeiling": "Vietcombank bán ra cách trần {v} ₫ ({pct}%)",
+    "bandHint": "NHNN công bố tỷ giá trung tâm mỗi ngày; ngân hàng được mua bán đô trong biên độ ±5% quanh mức này. Giá ngân hàng chạm trần nghĩa là NHNN phải bán ngoại tệ từ dự trữ hoặc nới biên độ.",
+    "foreignToday": "{day}: khối ngoại {dir} {v}",
+    "foreignBuy": "mua ròng",
+    "foreignSell": "bán ròng",
+    "foreignSums": "Ròng 5 phiên {s5} · 20 phiên {s20} · từ đầu năm {ytd}",
+    "foreignBuySell": "Mua {b}, bán {s}",
+    "foreignChart": "Khối ngoại mua/bán ròng trên HOSE, 40 phiên gần nhất",
+    "foreignNote": "Giao dịch khớp lệnh và thoả thuận của nhà đầu tư nước ngoài trên HOSE, dữ liệu VNDirect; cột hôm nay thay đổi trong phiên. Bán ròng kéo dài gây áp lực lên nhóm vốn hoá lớn và lên tiền đồng.",
+    "vn30Note": "Diện tích = vốn hoá (giá × số cổ phiếu lưu hành), màu = thay đổi hôm nay. Giá từ SSI iBoard, số cổ phiếu từ VNDirect.",
+    "vn30Map": "Bản đồ VN30",
+    "vn30Foreign": "Khối ngoại trong VN30 hôm nay",
+    "vn30TopBuy": "Mua ròng nhiều nhất",
+    "vn30TopSell": "Bán ròng nhiều nhất",
+    "premiumTitle": "Chênh lệch SJC so với vàng thế giới, triệu ₫/lượng",
+    "premiumSeries": "Chênh lệch",
+    "dollarTitle": "Giá một đô la, ₫",
+    "dollarMarket": "Liên ngân hàng (Yahoo)",
+    "dollarVcb": "Vietcombank bán ra",
+    "dollarP2p": "USDT trên P2P",
+    "p2pGap": "Chênh P2P so với Vietcombank: {v} ₫ ({pct})",
+    "p2pHint": "Người mua đô ngoài hệ thống ngân hàng phải trả thêm bao nhiêu. Chênh lệch nới rộng là nhu cầu đô la mà ngân hàng không đáp ứng, dấu hiệu sớm và rõ nhất của áp lực lên tiền đồng.",
+    "historyNote": "Giá SJC, Vietcombank và P2P chỉ được lưu từ cuối tháng 10/2026 nên các biểu đồ này dài dần theo ngày.",
     "gold": "Vàng (VND/lượng)",
     "buy": "Mua",
     "sell": "Bán",
@@ -591,6 +680,25 @@
     "noteAssets": "Thay đổi so với giá đóng cửa cuối năm trước, tính bằng đồng tiền của từng tài sản (VN-Index bằng VND). Cổ phiếu thế giới, cổ phiếu mới nổi và trái phiếu Mỹ là quỹ ETF (ACWI, EEM, IEF): chỉ tính giá, chưa gồm cổ tức và lãi coupon."
   },
   "crypto": {
+    "musd": "{v} triệu USD",
+    "etfDay": "{day}: dòng tiền ròng vào các ETF bitcoin giao ngay",
+    "etfSums": "5 ngày gần nhất {s5} · {n} ngày {all}",
+    "etfChart": "Dòng tiền ròng hằng ngày vào ETF bitcoin giao ngay của Mỹ, triệu USD",
+    "etfNote": "Phát hành trừ mua lại chứng chỉ quỹ của các ETF bitcoin giao ngay ở Mỹ, triệu USD, từ bảng của bitbo.io (khoảng mười phiên gần nhất, nên biểu đồ dài dần từ cuối 10/2026). Ngày bitbo chưa cập nhật hiện là 0 hoặc bị thiếu.",
+    "levTitle": "Giá BTC và hợp đồng mở hợp đồng vĩnh cửu, ngày đầu = 100",
+    "levChange": "hợp đồng mở {oi}, giá {price}",
+    "levPrice": "Giá BTC",
+    "levOi": "Hợp đồng mở (tính bằng BTC)",
+    "lsr": "Tài khoản long/short",
+    "lsrHint": "Số tài khoản đang long ròng hợp đồng vĩnh cửu BTC trên mỗi tài khoản short ròng, trên Binance. Cao hơn hẳn mức trung bình = đám đông nghiêng về long, phía dễ bị thanh lý khi giá giảm.",
+    "fundingYear": "Funding, quy năm",
+    "fundingHint": "Phí bên long trả bên short (dương) hoặc ngược lại, bình quân ngày, quy ra năm. Funding cao = đang trả đắt để dùng đòn bẩy.",
+    "avgOf": "(TB {v})",
+    "levNote": "Hợp đồng vĩnh cửu BTCUSDT trên Binance, theo ngày. Hợp đồng mở tính bằng BTC nên không đổi chỉ vì giá: hợp đồng mở tăng nhanh hơn giá là đòn bẩy đang tích tụ; tăng trong khi giá giảm là vị thế short mới. Binance chỉ trả 30 ngày nên biểu đồ dài dần từ 12/10/2026.",
+    "fees30d": "Phí 30 ngày",
+    "feesWow": "Phí tuần/tuần",
+    "feesWowHint": "Phí trả trên chain 7 ngày qua so với 7 ngày trước đó.",
+    "chainsNote": "10 chain có nhiều giá trị khoá trong DeFi nhất (DefiLlama). TVL giảm cả khi giá token giảm lẫn khi tiền rút ra; phí cho biết người dùng thực sự trả tiền để dùng chain nào.",
     "fng": "Sợ hãi & Tham lam",
     "fngLevels": {
       "Extreme Fear": "Cực kỳ sợ hãi",
@@ -649,6 +757,49 @@
     "ethBtcNote": "Đường đi lên nghĩa là ether mạnh hơn bitcoin. Giới giao dịch xem một đợt tăng kéo dài là dấu hiệu bắt đầu \"mùa altcoin\", khi tiền chảy từ bitcoin sang các coin rủi ro hơn. Giá đóng cửa ngày từ Yahoo Finance."
   },
   "tech": {
+    "computeGrowth": "Lượng tính toán của các lần huấn luyện hàng đầu tăng khoảng {x}× mỗi năm kể từ 2018 ({n} model tiên phong).",
+    "computeNote": "Danh sách model đáng chú ý của Epoch AI ({n} model có ước tính), lượng tính toán huấn luyện tính bằng FLOP; thanh dài theo tỷ lệ tuyến tính so với lần lớn nhất. Tiên phong = nằm trong top 10 về tính toán lúc ra mắt. Nhiều model gần đây không công bố nên vắng mặt; số của Epoch là ước tính.",
+    "pkgSpark": "lượt tải 26 tuần",
+    "pkgWeek": "Tuần qua",
+    "pkg4": "So 4 tuần",
+    "pkg12": "So 12 tuần",
+    "pkgGroups": {"web": "Framework web (npm)", "aiJs": "SDK AI (npm)", "aiPy": "Thư viện AI (PyPI)"},
+    "pkgNote": "Lượt tải mỗi tuần trọn vẹn, thứ Hai đến Chủ nhật giờ UTC (API lượt tải của npm; pypistats.org, không tính mirror). Lượt tải tính cả máy CI và cài đặt lại, không phải số người; nên đọc xu hướng hơn là con số. Sparkline: 26 tuần.",
+    "kpNow": "Kp hiện tại {kp} ({level})",
+    "kpPeak": "3 ngày tới cao nhất Kp {kp} ({level})",
+    "kpQuiet": "yên tĩnh",
+    "kpActive": "hoạt động",
+    "kpForecast": "dự báo",
+    "kpChart": "Chỉ số Kp toàn cầu theo bước 3 giờ, 4 ngày qua và dự báo",
+    "kpNote": "Chỉ số Kp toàn cầu của NOAA SWPC, 0–9, mỗi 3 giờ; cột nhạt là dự báo. Vạch đứt: Kp 5 (bão từ G1) và Kp 7 (G3: GPS sai lệch, mất sóng radio HF, vệ tinh bị kéo, cực quang xuống vĩ độ thấp).",
+    "launches": "Lịch phóng sắp tới",
+    "valueBest": "Rẻ nhất trong nửa được chấm cao hơn: {list}",
+    "valueRank": "Hạng Arena #{rank}",
+    "valuePrices": "{in} vào / {out} ra mỗi triệu token",
+    "valueTl": "Đáng tiền",
+    "valueTr": "Mạnh nhưng đắt",
+    "valueBl": "Rẻ, yếu hơn",
+    "valueBr": "Đắt so với điểm",
+    "valueX": "Giá gộp, $ mỗi triệu token (3 vào : 1 ra)",
+    "valueY": "Điểm Arena",
+    "valueClosed": "Đóng trọng số",
+    "valueOpen": "Mở trọng số",
+    "valueModel": "Model",
+    "valueNote": "Điểm: bảng xếp hạng văn bản của LMArena, hạng chung, lấy biến thể tốt nhất của mỗi model (người dùng chọn giữa hai câu trả lời ẩn danh), {date}. Giá: giá niêm yết của OpenRouter; trục giá dạng logarit. Hai đường chia tại trung vị của các model trên hình. Model OpenRouter không bán thì không có mặt.",
+    "noteEmpty": "Nhận định được viết mỗi tuần một lần (giờ Việt Nam) từ tin và số liệu trên trang này.",
+    "noteCaveat": "AI viết chỉ từ tiêu đề tin và số liệu trên trang này; hãy mở bài gốc trước khi dựa vào.",
+    "twMonth": "Doanh thu {m}, tỷ Đài tệ",
+    "twRevenue": "Tỷ NT$",
+    "twMom": "So tháng trước",
+    "twYoy": "So cùng kỳ",
+    "twYtd": "Luỹ kế năm",
+    "twNote": "Doanh nghiệp niêm yết ở Đài Loan công bố doanh thu từng tháng trước ngày 10 tháng sau (TWSE OpenAPI): nhu cầu chip và máy chủ AI sau một tháng, sớm hơn nhiều so với báo cáo quý. Chỉ có tháng mới nhất nên lịch sử được tích luỹ dần ở đây.",
+    "devVsAll": "Tin tuyển lập trình viên ở mức {dev}, so với {all} của mọi ngành (Indeed, 1/2/2020 = 100).",
+    "eolLatest": "Bản mới nhất",
+    "eolNext": "Sắp hết hỗ trợ",
+    "eolIn": "còn {n} ngày",
+    "eolNone": "chưa có ngày",
+    "eolNote": "endoflife.date và npm. Đỏ: một dòng phiên bản đang được hỗ trợ sẽ hết hỗ trợ trong 30 ngày, sau đó không còn bản vá bảo mật.",
     "groups": {
       "us": "Big Tech Mỹ",
       "chips": "Chuỗi bán dẫn",
@@ -715,6 +866,11 @@
     "kevYear": "1 năm"
   },
   "calendar": {
+    "fredScheduled": "Lịch dự kiến (FRED); dự báo hiện vào tuần công bố",
+    "actual": "Thực tế",
+    "vsForecast": "{v} so với dự báo",
+    "onForecast": "đúng dự báo",
+    "resultHint": "Số thực tế tính từ dữ liệu FRED sau khi công bố; có thể lệch 0,1 so với số chính thức do làm tròn. Xanh = tin tốt hơn dự báo cho nền kinh tế (việc làm, tăng trưởng mạnh hơn, lạm phát mát hơn), đỏ = xấu hơn.",
     "econ": "Kinh tế",
     "fomc": "Fed",
     "launch": "Phóng tàu",

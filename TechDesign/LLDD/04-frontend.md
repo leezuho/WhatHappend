@@ -59,7 +59,7 @@ Hàng 7  Góc Việt Nam [xl:12]
 | Căng thẳng thị trường | `StressPanel` (small multiples VIX, HY OAS, STLFSI, GPR MA7) | `yahoo`, `fred`, `gpr` |
 | Nhịp đập kinh tế Mỹ | `EconomyPulse` (8 KPI tile: Claims, Sahm, GDPNow, CPI y/y, Fed funds, 5y5y, Fed BS, GSCPI) | `fred`, `gscpi` |
 | Tin tức | `NewsBody` → `NewsList` (client, lọc region/topic) | `rss`, `translate` |
-| Lịch | `CalendarBody` (`WorldPanels.tsx`) | `calendar`, `launches` |
+| Lịch | `CalendarBody` (`WorldPanels.tsx`). Số liệu Mỹ đã công bố có dòng "Thực tế" (`CalendarEntry.result`): số tô `up` khi tốt hơn dự báo cho nền kinh tế, `down` khi xấu hơn (theo `polarity` trong `config/calendar.ts`), kèm độ lệch so với dự báo; mục có kết quả còn hiện 18 giờ sau giờ công bố, mục khác 3 giờ | `calendar`, `launches` |
 | Trending | `TrendingBody` (tab Wikipedia EN / HN / Wikipedia VI) | `wikipedia`, `hackernews` |
 | Prediction | `PredictionBody` | `polymarket`, `kalshi` |
 | Hành tinh & sức khỏe | `EnvBody` | `co2`, `gistemp`, `airquality`, `who` |
@@ -91,6 +91,7 @@ Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Mọi panel đ�
 Hàng 1  Chỉ số sống còn của crypto [xl:12]: 8 tile CRYPTO_SIGNS + thẻ Fear & Greed
 Hàng 2  Top coin [xl:8]                  │ Đòn bẩy & nhu cầu trong nước [xl:4]
         Bản đồ thị trường [xl:7]         │ ETH/BTC [xl:5]
+        Đòn bẩy BTC [xl:4] │ Dòng tiền ETF bitcoin [xl:4] │ Chain: TVL và phí [xl:4]
 Hàng 3  Mạng Bitcoin [xl:4] │ Coin đang hot [xl:4] │ Kèo crypto [xl:4]
 Hàng 4  Tin crypto [xl:12] (2 cột từ md)
 ```
@@ -101,6 +102,9 @@ Hàng 4  Tin crypto [xl:12] (2 cột từ md)
 | Top coin | `TopCoinsBody`: giá, 1h/24h/7d, vốn hóa, so với ATH, sparkline 7 ngày. Dưới `sm` chỉ còn #, mã, giá, 24h, 7d | `coingecko` |
 | Đòn bẩy & nhu cầu trong nước | `DerivsBody`: funding 8h và quy năm, OI và % đổi 24h; USDT/VND P2P (giá mua/bán, so với USD bán ra Vietcombank) | `binance`, `vcb` |
 | Bản đồ thị trường | `CoinMapBody` → `Treemap`: 20 top coin, diện tích theo vốn hoá, màu theo % 24 giờ (bước 1/3/6%), tỷ lệ khung 2:1; title mỗi ô ghi vốn hoá, tỷ trọng, 24h, 7d; bấm mở CoinGecko | `coingecko` |
+| Đòn bẩy BTC | `LeverageBody` (`btcLeverage` trong `lib/data/crypto.ts`): `LineChart` giá BTC và hợp đồng mở (tính bằng BTC) cùng đưa về 100 ở ngày đầu, kèm % thay đổi cả kỳ; tỷ lệ tài khoản long/short và funding quy năm, mỗi số kèm trung bình kỳ | `binance`, `yahoo` |
+| Dòng tiền ETF bitcoin | `EtfFlowsBody` (`etfFlows` trong `lib/data/crypto.ts`): dòng tiền ròng phiên gần nhất và theo quỹ, tổng 5 phiên và cả kỳ, `ColumnBars` tối đa 40 phiên | `etfflows` |
+| Chain: TVL và phí | `ChainsBody`: bảng 10 chain (kind `llama_chains`): TVL, 7d, 30d, phí 30 ngày, phí 7 ngày so với 7 ngày trước | `defillama` |
 | ETH/BTC | `EthBtcBody`: `ratioSeries(yahoo:ETH-USD, yahoo:BTC-USD)` 1 năm (chỉ ngày cả hai có giá), số hiện tại, % trong năm, biên độ 1 năm | `yahoo` |
 | Mạng Bitcoin | `NetworkBody`: ngày halving ước tính, meter tiến độ epoch, phí sat/vB, điều chỉnh độ khó, hashrate so với 30 ngày trước | `mempool` |
 | Coin đang hot | `TrendingCoinsBody` | `coingecko` |
@@ -111,7 +115,7 @@ Hàng 4  Tin crypto [xl:12] (2 cột từ md)
 
 ## 3b. Trang Vĩ mô thế giới (`app/[lang]/macro/page.tsx`, `components/panels/MacroPanels.tsx`)
 
-Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Đọc qua `lib/queries-macro.ts` (`getScorecard`, `getCycleClock`, `getOecdLines`, `getPolicyLines`, `getReer`, `getConfidence`, `getDebtTable`, `getMacroNote`, `getWorldMap`) và `getTiles`, `getCalendar` có sẵn. Bảng sức khoẻ và đồng hồ chu kỳ tính trong `lib/data/macro.ts` (`scorecardRows`, `cycleRows`, không phụ thuộc Next), để worker viết nhận định tuần từ đúng các con số đó. 16 nước lấy từ `MACRO_COUNTRIES` (cờ `macro` trong `config/countries.ts`); trang tổng quan vẫn dùng 9 nước có cờ `overview`. Việt Nam là hàng cuối, để so sánh. Nó không có `oecd`, `bis`, `bisArea`, nên lấy số từ nơi khác: CPI tháng từ `imfcpi`, GDP quý từ `worldbank` (`gdp`), lãi suất điều hành từ `sbv` (`rate`), thất nghiệp là số năm IMF; lợi suất 10 năm, chỉ báo sớm, niềm tin, REER và khoảng trống tín dụng để "—" hoặc bỏ qua, và dòng `missing` dưới small multiples liệt kê nó. Chú thích `macro.vnNote` dưới bảng ghi nguồn của hàng này.
+Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Đọc qua `lib/queries-macro.ts` (`getScorecard`, `getCycleClock`, `getOecdLines`, `getPolicyLines`, `getReer`, `getConfidence`, `getDebtTable`, `getMacroNote`, `getWorldMap`) và `getTiles`, `getCalendar` có sẵn. Bảng sức khoẻ và đồng hồ chu kỳ tính trong `lib/data/macro.ts` (`scorecardRows`, `cycleRows`, không phụ thuộc Next), để worker viết nhận định tuần từ đúng các con số đó. 16 nước lấy từ `MACRO_COUNTRIES` (cờ `macro` trong `config/countries.ts`); trang tổng quan vẫn dùng 9 nước có cờ `overview`. Việt Nam là hàng cuối, để so sánh. Nó không có `oecd`, `bis`, `bisArea`, nên lấy số từ nơi khác: CPI tháng từ `imfcpi`, GDP quý từ `worldbank` (`gdp`), lãi suất điều hành từ `sbv` (`rate`), lợi suất 10 năm từ `ibrate` (`y10` = `vn:GB10Y`), thất nghiệp là số năm IMF; chỉ báo sớm, niềm tin, REER và khoảng trống tín dụng để "—" hoặc bỏ qua, và dòng `missing` dưới small multiples liệt kê nó. Chú thích `macro.vnNote` dưới bảng ghi nguồn của hàng này.
 
 Chọn nguồn cho từng ô: lãi suất điều hành đọc qua `policyRateId(c)` (`bis:<bis>` hoặc `c.rate`). CPI, GDP quý và lợi suất 10 năm có nhiều ứng viên, lấy series có điểm mới nhất bằng `freshest()` (`lib/data/series.ts`): CPI giữa `oecd:CPI` và `imf:CPI_M`, GDP giữa `oecd:GDP` và `c.gdp`, lợi suất giữa `c.y10` (số ngày: FRED cho Mỹ, CNBC cho Indonesia) và `oecd:IRLT`. Số ngày cũ hơn 7 ngày thì ô hiện kèm ngày (`freq: "w"`).
 
@@ -138,8 +142,8 @@ Hàng 11 Tín hiệu suy thoái [xl:7] │ Lịch vĩ mô [xl:5]
 | Tăng trưởng và lạm phát | `GrowthInflationPanel` → `QuadrantScatter`: mỗi nước một chấm, x = GDP so cùng kỳ quý gần nhất − trung bình 2015–19 (IMF), y = CPI bình quân cùng quý − mục tiêu (`growthInflation` trong `lib/data/macro.ts`); 4 góc Đình lạm (tô `critical`/7%) · Quá nóng · Suy yếu · Ổn định; rê chuột một nước thì hiện đuôi 4 quý trước | `oecd`, `imfcpi`, `worldbank`, `imf` |
 | Nợ công và ngân sách | `FiscalPanel` → `QuadrantScatter`: x = cân đối ngân sách năm nay, y = nợ chính phủ năm nay (IMF, từ `getDebtTable`); mốc thâm hụt 3% và nợ 90% GDP, góc trên trái là Rủi ro tài khoá | `imf` |
 | Tăng trưởng | `GrowthPanel`: tile GDPNow, WEI, CFNAI, sản xuất công nghiệp, bán lẻ │ small multiples CLI 24 tháng (đường 100), dòng dưới mỗi ô là GDP quý mới nhất (lấy từ `getScorecard`) | `oecd`, `fred` |
-| Lạm phát | `InflationPanel`: tile CPI, CPI lõi, PCE lõi, 5y5y, giá lương thực IMF │ small multiples CPI 24 tháng (OECD hoặc IMF, nguồn nào mới hơn), đường đứt = mục tiêu của từng NHTW, chấm = `cpiStatus` | `oecd`, `imfcpi`, `fred` |
-| Tiền tệ & thanh khoản | `MoneyPanel`: tile lãi suất Fed, thanh khoản ròng, NFCI, lợi suất thực 10 năm │ small multiples lãi suất điều hành (`--s1`) và lãi suất thực (`--s2`) 36 tháng, mỗi NHTW một ô (Đức, Pháp, Ý gộp vào ECB; Việt Nam là NHNN), thang riêng; dưới là `ZeroBars` tỷ giá thực hiệu dụng so với trung bình 10 năm | `bis`, `sbv`, `oecd`, `imfcpi`, `fred` |
+| Lạm phát | `InflationPanel`: tile CPI, CPI lõi, PCE lõi, 5y5y, giá lương thực IMF; dưới tile là `UsCpiParts`: `LineChart` 24 tháng CPI so cùng kỳ theo 5 nhóm `US_CPI_PARTS` (`config/macro.ts`: năng lượng, thực phẩm, hàng hoá lõi, nhà ở, dịch vụ trừ nhà ở) và danh sách số tháng mới nhất kèm thay đổi 3 tháng (`usCpiParts` trong `lib/data/macro.ts`) │ small multiples CPI 24 tháng (OECD hoặc IMF, nguồn nào mới hơn), đường đứt = mục tiêu của từng NHTW, chấm = `cpiStatus` | `oecd`, `imfcpi`, `fred` |
+| Tiền tệ & thanh khoản | `MoneyPanel`: tile lãi suất Fed, Fed được định giá 12 tháng (`fedPriced`, đơn vị `bp`), thanh khoản ròng, NFCI, lợi suất thực 10 năm │ small multiples lãi suất điều hành (`--s1`) và lãi suất thực (`--s2`) 36 tháng, mỗi NHTW một ô (Đức, Pháp, Ý gộp vào ECB; Việt Nam là NHNN), thang riêng; dưới là `ZeroBars` tỷ giá thực hiệu dụng so với trung bình 10 năm | `bis`, `sbv`, `oecd`, `imfcpi`, `fred` |
 | Việc làm & tiêu dùng | `JobsPanel`: tile việc làm phi nông nghiệp, thất nghiệp, claims, UMich │ small multiples thất nghiệp 24 tháng (thang riêng, chấm = `unemploymentStatus`); dưới là bảng niềm tin người tiêu dùng / doanh nghiệp OECD tách đôi | `oecd`, `fred` |
 | Nợ & ngân sách | `DebtPanel`: tile nợ liên bang/GDP, chi trả lãi, chênh lệch IG, HY, EM │ bảng 16 nước: nợ công năm nay, so với 2019, cân đối ngân sách, khoảng trống tín dụng BIS (tô màu theo `debtStatus`, `budgetStatus`, `creditGapStatus`) | `imf`, `bis`, `fred` |
 | Tín hiệu suy thoái | `RecessionPanel`: bảng `RECESSION_SIGNALS` (tên, số mới nhất + kỳ, sparkline, ngưỡng theo dõi · báo động, trạng thái chấm + chữ) cộng một dòng "số nền kinh tế có CLI ở pha Suy yếu" (⅓ = theo dõi, ½ = báo động); câu đầu đếm số tín hiệu đang bật | `fred`, `oecd` |
@@ -171,23 +175,27 @@ Hàng 11 Tín hiệu suy thoái [xl:7] │ Lịch vĩ mô [xl:5]
 Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Bảng vàng, bảng Vietcombank, độ rộng thị trường và danh sách tin là các khối `GoldTable`, `VcbTable`, `VnBreadth`, `VnNewsList` trong `ContentPanels.tsx`, dùng chung với `VietnamBody` (Góc Việt Nam ở trang tổng quan, có liên kết `vn.more` sang trang này). Đọc qua `getVietnam(lang, newsLimit)`, `getTiles` và `getVietnamOutlook` (`lib/queries-vietnam.ts`).
 
 ```
-Hàng 1  Thị trường Việt Nam [xl:12]: 5 tile VIETNAM_MARKETS + dòng độ rộng
-Hàng 2  Kinh tế Việt Nam [xl:12]: 3 tile VIETNAM_ECONOMY + lãi suất thực (2fr) │ bảng IMF (3fr)
+Hàng 1  Thị trường Việt Nam [xl:12]: 8 tile VIETNAM_MARKETS (4 chỉ số, 4 giá đô/vàng) + dòng độ rộng
+Hàng 1b Cổ phiếu VN30 [xl:8]: treemap │ khối ngoại trong VN30      Khối ngoại [xl:4]
+Hàng 2  Kinh tế Việt Nam [xl:12]: 4 tile VIETNAM_ECONOMY + lãi suất thực (2fr) │ bảng IMF (3fr)
         Lạm phát và lãi suất NHNN [xl:7] │ VN-Index và khu vực [xl:5]
-Hàng 3  Giá vàng [xl:4] │ Tỷ giá Vietcombank [xl:4] │ Tin Việt Nam [xl:4]
-Hàng 4  Lịch thị trường Việt Nam [xl:6] │ Thiên tai gần Việt Nam [xl:6]
+Hàng 3  Giá vàng [xl:6]: bảng │ biểu đồ chênh lệch      Tỷ giá [xl:6]: biểu đồ ba giá đô │ bảng Vietcombank
+Hàng 4  Tin Việt Nam [xl:8] │ cột [xl:4]: Lịch thị trường Việt Nam + Giá xăng dầu + Thiên tai gần Việt Nam (cùng bố cục hàng tin của trang tổng quan)
 ```
 
 | Panel | Component | `sources` |
 |---|---|---|
-| Thị trường Việt Nam | `VnMarkets`: tile VN-Index, USD/VND, USD Vietcombank (`vcbUsd`), USDT/VND, vàng SJC (`sjcGold`, lưu VND/lượng, hiện triệu qua `scale`), đều mở `TileDetail`; dòng `VnBreadth` (độ rộng HOSE và giá trị khớp lệnh) | `vnindex`, `yahoo`, `vcb`, `binance`, `sjc` |
-| Kinh tế Việt Nam | `VnEconomy`: tile GDP quý (`vnGdp`, `wb:GDP:VNM`), CPI tháng (`vnCpi`, `imf:CPI_M:VNM`), tái cấp vốn (`vnRefi`, `sbv:REFI`); lãi suất thực = tái cấp vốn − CPI; bảng `VN_OUTLOOK` (`config/vietnam.ts`) theo năm, năm nay nền `surface-2`, năm sau nghiêng và nhạt, cột cuối là nhóm `OEMDC` năm nay. Nút `vn.compare` sang `/macro` | `worldbank`, `imfcpi`, `sbv`, `imf` |
+| Thị trường Việt Nam | `VnMarkets`: tile VN-Index, VN30, HNX-Index, UPCoM (`vnstocks`), USD/VND, USD Vietcombank (`vcbUsd`), USDT/VND, vàng SJC (`sjcGold`, lưu VND/lượng, hiện triệu qua `scale`), đều mở `TileDetail`; dòng `VnBreadth` (độ rộng HOSE và giá trị khớp lệnh) | `vnindex`, `vnstocks`, `yahoo`, `vcb`, `binance`, `sjc` |
+| Cổ phiếu VN30 | `Vn30Map`: `Treemap` 30 mã (kind `vn30`), diện tích = vốn hoá, màu = % hôm nay (bước 1/3/5%); cột phải là 5 mã khối ngoại mua ròng và 5 mã bán ròng nhiều nhất hôm nay | `vnstocks` |
+| Khối ngoại | `VnForeign` (`foreignFlows` trong `lib/data/vietnam.ts`): mua/bán ròng phiên gần nhất, tổng ròng 5 phiên, 20 phiên và từ đầu năm; `ColumnBars` (cột xanh/đỏ quanh đường 0, HTML vẽ ở server) 40 phiên | `vnflows` |
+| Kinh tế Việt Nam | `VnEconomy`: tile GDP quý (`vnGdp`, `wb:GDP:VNM`), CPI tháng (`vnCpi`, `imf:CPI_M:VNM`), tái cấp vốn (`vnRefi`, `sbv:REFI`), liên ngân hàng qua đêm (`vnIbOn`, `sbv:IB_ON`, cảnh báo trên 6%, nguy hiểm trên 10%), lưới 2×2; lãi suất thực = tái cấp vốn − CPI; bảng `VN_OUTLOOK` (`config/vietnam.ts`) theo năm, năm nay nền `surface-2`, năm sau nghiêng và nhạt, cột cuối là nhóm `OEMDC` năm nay. Nút `vn.compare` sang `/macro` | `worldbank`, `imfcpi`, `sbv`, `imf` |
 | Lạm phát và lãi suất NHNN | `VnRates` → `LineChart` theo tháng (`vnRatesHistory` trong `lib/data/vietnam.ts`): CPI so cùng kỳ và lãi suất tái cấp vốn tại cuối mỗi tháng (đường bậc thang, `ChartSeries.step`), từ tháng CPI đầu tiên, tối đa 4 năm | `imfcpi`, `sbv` |
 | VN-Index và khu vực | `VnRegion` → `BarList` (chế độ `highlight`): từ đầu năm của 9 chỉ số châu Á – Thái Bình Dương trong `getWorldMarkets`, VN-Index màu `s1`, còn lại xám; dòng trên ghi thứ hạng | `yahoo`, `vnindex` |
-| Giá vàng | `VnGold` → `GoldTable` | `sjc`, `yahoo` |
-| Tỷ giá Vietcombank | `VnBank` → `VcbTable` | `vcb` |
-| Tin Việt Nam | `VnNews` → `VnNewsList`, 15 tin VnExpress vùng `vietnam` | `rss`, `translate` |
+| Giá vàng | `VnGold` → `GoldTable` và `LineChart` chênh lệch SJC − vàng thế giới theo ngày (`goldPremiumHistory` trong `lib/data/vietnam.ts`: giá SJC cuối mỗi ngày giờ Hà Nội so với `GC=F` × `USDVND=X` × `OZ_PER_LUONG` đang hiệu lực ngày đó, triệu ₫/lượng). Giá SJC chỉ có từ 31/10/2026 (vang.today không có lịch sử) nên biểu đồ dài dần | `sjc`, `yahoo` |
+| Tỷ giá | `VnBank` → `LineChart` giá một đô ở ba nơi theo ngày (`dollarHistory`: Yahoo liên ngân hàng, Vietcombank bán ra, USDT P2P; bắt đầu từ ngày đầu tiên có giá Vietcombank hoặc P2P), đường đứt là trần biên độ (tỷ giá trung tâm × 1,05, `ChartSeries.dashed`), dòng tỷ giá trung tâm và biên độ kèm khoảng cách từ Vietcombank bán ra tới trần, dòng chênh P2P − Vietcombank, và `VcbTable` | `vcb`, `yahoo`, `binance`, `sbvrate` |
+| Tin Việt Nam | `VnNews` → `NewsList` như trang tổng quan (3 thẻ ảnh lớn, chip chủ đề, ảnh nhỏ). `getVietnamNews`: tin 3 ngày có region `vietnam` từ mọi báo trừ báo chuyên mục (VnExpress trong nước và báo nước ngoài được AI gắn `vietnam`), tối đa 60 tin. Danh sách chỉ có một vùng nên `NewsList` ẩn hàng chip vùng và đưa chip "Tất cả" sang hàng chủ đề. Góc Việt Nam ở trang tổng quan vẫn dùng `VnNewsList` (6 tiêu đề, cùng điều kiện lọc) | `rss`, `translate` |
 | Lịch thị trường Việt Nam | `CalendarBody` với `days=45`, `kinds=["vn","fomc"]`: ngày đáo hạn VN30F (thứ Năm thứ ba, `nthWeekday`), ngày Cục Thống kê công bố số liệu tháng (ngày 6, tháng cuối quý ghi kèm GDP quý) do `vnMarketDates` tính, chưa xét ngày lễ; cộng họp FOMC | `calendar` |
+| Giá xăng dầu | `VnFuel`: bảng giá vùng 1, vùng 2 (kind `fuel_vn`), thời điểm điều chỉnh gần nhất, mũi tên mức đổi ở kỳ gần nhất (đỏ = tăng) | `petrolimex` |
 | Thiên tai gần Việt Nam | `VnHazards` (`vnHazards`): sự kiện 14 ngày của bản đồ, bỏ GDELT; bão lấy trong khung 0–30°B, 100–135°Đ (`VN_STORM_BOX`), loại khác trong 5–25°B, 100–118°Đ (`VN_HAZARD_BOX`); xếp theo khoảng cách tới Hà Nội, Đà Nẵng hoặc TP.HCM gần nhất. Không có gì thì in một câu "không có", không phải ô trống | `gdacs`, `eonet`, `usgs` |
 
 Các series Việt Nam mới nằm trong `SERIES` nên cũng vào bộ dò "chỉ số nổi bật" (`lib/signals/notable.ts`) của trang tổng quan, ví dụ CPI vượt 4,5%.
@@ -198,8 +206,13 @@ Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Bảng cổ phi
 
 ```
 Hàng 1  Cổ phiếu công nghệ [xl:8]        │ cột [xl:4]: Dịch vụ nào đang trục trặc? + Dân lập trình đang đọc gì
+        Công nghệ tuần này [xl:12] (AI, mỗi tuần một lần)
 Hàng 2  Model AI mới [xl:7]              │ Nghiên cứu AI [xl:5]
+        Model AI: chất lượng so với giá [xl:8] │ Lượng tính toán huấn luyện [xl:4]
+        Chuỗi phần cứng AI Đài Loan [xl:7] │ Tuyển dụng công nghệ [xl:5]
+        Lượt tải thư viện [xl:7]           │ Phiên bản và hết hỗ trợ [xl:5]
 Hàng 3  Lỗ hổng đang bị khai thác [xl:8] (2 cột từ md) │ Hãng nào đang bị nhắm [xl:4]
+        Không gian [xl:12]: Kp │ lịch phóng
 Hàng 4  Tin công nghệ [xl:12] (2 cột từ md)
 ```
 
@@ -207,11 +220,19 @@ Hàng 4  Tin công nghệ [xl:12] (2 cột từ md)
 |---|---|---|
 | Cổ phiếu công nghệ | `TechMarkets`: tile Nasdaq và SOX (`TECH_SIGNS`, mở `TileDetail`); dòng tổng vốn hoá và số mã tăng của 8 Big Tech Mỹ; tab Bảng: 20 mã theo 4 nhóm (`TECH_GROUPS`: Big Tech Mỹ, chuỗi bán dẫn, châu Á, Việt Nam): giá theo đồng tiền của sàn, % hôm nay, 30 ngày, từ đầu năm, vốn hoá quy USD, sparkline 1 năm (dưới `sm` chỉ còn tên, giá, hôm nay); tab Bản đồ: `Treemap` diện tích theo vốn hoá USD, màu theo % phiên (bước 0,5/1,5/3%) | `yahoo` |
 | Dịch vụ nào đang trục trặc? | `StatusBoard`: 8 ô (chấm màu trạng thái kèm nhãn chữ, mở trang trạng thái), dòng tổng "N/8 dịch vụ đang báo sự cố", tối đa 6 sự cố đang mở xếp theo mức độ (vùng, giai đoạn, "từ ngày"). Sự cố mở quá 14 ngày (`LONG_INCIDENT_DAYS`) được tách ra (`splitStatus` trong `lib/data/tech.ts`): không tính vào mức của ô và dòng tổng, ô ghi "+N sự cố kéo dài", danh sách nằm trong `<details>` cuối panel. Mức chỉ hạ khi sự cố kéo dài là thứ duy nhất giải thích nó; chỉ báo của trang trạng thái nặng hơn mọi sự cố thì vẫn giữ. Dịch vụ không đọc được hiện chấm xám và "Không đọc được trang trạng thái" | `cloudstatus` |
-| Dân lập trình đang đọc gì | `TechHn` → `HnList`, 15 tin. Danh sách đặt `absolute inset-0` trong một khung `flex-1`, nên không góp chiều cao: nó lấp phần bảng cổ phiếu bên cạnh để lại và tự cuộn (tối thiểu 320px khi xếp một cột) | `hackernews` |
+| Dân lập trình đang đọc gì | `TechHn` → `Tabs` Hacker News / Lobsters, mỗi tab một `HnList` 15 tin (Lobsters đổi sang cùng dạng: điểm, số bình luận, trang thảo luận). Danh sách đặt `absolute inset-0` trong một khung `flex-1`, nên không góp chiều cao: nó lấp phần bảng cổ phiếu bên cạnh để lại và tự cuộn (tối thiểu 320px khi xếp một cột) | `hackernews`, `lobsters` |
 | Model AI mới | `NewModels`: dòng tổng (số model 30 ngày, số mở trọng số), bảng tên + hãng + nhãn "mở", ngày lên, giá vào/ra (USD/1 triệu token, "Miễn phí" khi cả hai bằng 0), ngữ cảnh (128K, 1M); cao tối đa 420px, cuộn | `openrouter` |
 | Nghiên cứu AI | `AiResearch`: `Tabs` Bài nghiên cứu (tiêu đề đã dịch, tooltip là tiêu đề gốc, lượt bình chọn, tổ chức hoặc tác giả, GitHub) / Model đang hot (task, lượt thích, lượt tải) | `huggingface`, `translate` |
+| Công nghệ tuần này | `TechNoteBody` → `WeeklyNote` (dùng chung với `MacroNoteBody`): nhận định tuần do `technote` viết; chưa có thì một câu giải thích (chưa đến lượt hoặc thiếu `AI_API_KEY`) | `technote` |
+| Model AI: chất lượng so với giá | `AiValueBody` → `QuadrantScatter` với trục x logarit (`AxisSpec.log`, `logAxis`: hai đầu là mốc 1 hoặc 3 × 10ⁿ gần nhất): 45 model điểm cao nhất (kind `ai_value`), x = giá gộp $/triệu token, y = điểm Arena, chia bốn góc tại trung vị, góc "đắt so với điểm" tô đỏ nhạt; xanh = đóng trọng số, cam = mở; dòng trên ghi 3 model rẻ nhất trong nửa điểm cao | `arena` |
+| Lượng tính toán huấn luyện | `ComputeBody`: dòng tốc độ tăng của các lần huấn luyện tiên phong, 12 lần lớn nhất (model, tổ chức, tháng, FLOP dạng "9,4 × 10²⁶") với thanh tuyến tính so với lần lớn nhất | `epoch` |
+| Chuỗi phần cứng AI Đài Loan | `TwRevenueBody`: bảng 7 công ty (`TW_REVENUE`, kèm vai trò), doanh thu tháng (tỷ Đài tệ), so tháng trước, so cùng kỳ, luỹ kế năm; công ty chưa có tháng mới nhất ghi kèm tháng của nó | `twse` |
+| Tuyển dụng công nghệ | `TechJobsBody`: tile `TECH_JOBS` (tin tuyển lập trình viên Indeed, sản lượng bán dẫn Mỹ so cùng kỳ, tin tuyển "Who is hiring?" của HN theo tháng đã kết thúc), dòng so tin tuyển lập trình viên với mọi ngành (`getAllPostings`, FRED `IHLIDXUS`) | `fred`, `hnhiring` |
+| Lượt tải thư viện | `PackagesBody` (`packageRows` trong `lib/data/tech.ts`): ba nhóm (framework web, SDK AI npm, thư viện AI PyPI), lượt tải tuần trọn gần nhất, % so với 4 và 12 tuần trước, sparkline 26 tuần | `pkgtrends` |
+| Phiên bản và hết hỗ trợ | `EolBody`: mỗi sản phẩm một dòng: bản mới nhất và ngày phát hành, dòng còn hỗ trợ sắp hết hạn sớm nhất và số ngày còn lại (đỏ đậm khi ≤ 30 ngày) | `eol` |
 | Lỗ hổng đang bị khai thác | `ExploitedVulns`: dòng tổng (số lỗ hổng 30 ngày, số dùng trong ransomware); mỗi dòng: ngày thêm, hãng + sản phẩm, nhãn Ransomware, tên lỗi (bỏ phần hãng/sản phẩm lặp lại), CVE (link NVD), hạn vá | `kev` |
 | Hãng nào đang bị nhắm | `KevVendorsBody`: `Tabs` 90 ngày / 1 năm, mỗi tab một `BarList` (chế độ `single`) 12 hãng có nhiều lỗ hổng được thêm nhất (`items` `kev_vendors`), dòng trên ghi tổng và tỷ trọng ba hãng đầu; title mỗi thanh ghi số dùng trong ransomware | `kev` |
+| Không gian | `SpaceBody`: Kp hiện tại và cao nhất 3 ngày tới (yên tĩnh, hoạt động, G1–G5), cột Kp mỗi 3 giờ của 4 ngày qua và dự báo (cột dự báo nhạt; xanh dưới Kp 5, vàng G1–G2, đỏ từ G3; vạch đứt ở Kp 5 và 7); bên phải 6 vụ phóng sắp tới (kind `launch`, dùng chung với lịch trang chủ) | `spaceweather`, `launches` |
 | Tin công nghệ | `TechNewsBody` → `NewsGrid` (`getTechNews`, 30 tin) | `rss`, `translate` |
 
 Màu trạng thái dịch vụ: bình thường `good`, bảo trì `s1`, gián đoạn nhẹ hoặc chưa rõ mức `warning`, gián đoạn lớn `serious`, sự cố nghiêm trọng `critical`; chữ nhãn luôn đi kèm nên không chỉ dựa vào màu.
@@ -281,7 +302,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `Ticker` (server) | Hai bản sao danh sách trượt ngang với CSS `@keyframes ticker` 90 giây; dừng khi rê chuột; tắt khi `prefers-reduced-motion` |
 | `RegimeBadge` (server) | `<details>` hiện nhãn regime; mở ra thấy điểm, z-score từng thành phần và ngưỡng |
 | `Tabs` | Tab phía client bọc các pane đã render ở server (dùng cho Trending) |
-| `NewsList` | Lọc theo region rồi topic (chip có `aria-pressed`), hiện tối đa 40 tin, "x phút trước" tính từ `now` do server truyền vào. Trên cùng là tối đa 3 thẻ ảnh lớn (`pickFeatured`): trong 15 tin đầu, lấy tin có ảnh được nhiều báo đưa nhất (`alsoIn`), hòa thì lấy tin mới hơn. Các tin còn lại có ảnh nhỏ bên phải. Khi gộp cùng câu chuyện, tin thiếu ảnh mượn ảnh của bản ở báo khác. Tin crypto (`CryptoNewsBody`) cũng có ảnh nhỏ |
+| `NewsList` | Lọc theo region rồi topic (chip có `aria-pressed`), hiện tối đa 40 tin, "x phút trước" tính từ `now` do server truyền vào. Trên cùng là tối đa 3 thẻ ảnh lớn (`pickFeatured`): trong 15 tin đầu, lấy tin có ảnh được nhiều báo đưa nhất (`alsoIn`), hòa thì lấy tin mới hơn. Các tin còn lại có ảnh nhỏ bên phải. Khi gộp cùng câu chuyện, tin thiếu ảnh mượn ảnh của bản ở báo khác. Tin crypto (`CryptoNewsBody`) cũng có ảnh nhỏ. Gộp hai bước trong `readNews`: tiêu đề trùng hệt (`title_key`) rồi `clusterStories` (`lib/data/news.ts`) gộp tiêu đề khác chữ cùng chuyện, so trên tiêu đề đã dịch sang ngôn ngữ đang xem: ít nhất 2 từ chung (bỏ stopword en/vi) và tổng trọng số hiếm (idf) của từ chung ≥ 35% trọng số của tiêu đề ngắn hơn (`SAME_STORY`). Tin giữ lại là tin mới nhất của cụm; các tiêu đề bị gộp nằm sau nút "+N bài cùng chuyện" (`Related`, dùng cả ở `NewsGrid`) vì cách so từ vẫn có thể gộp nhầm hai sự kiện giống nhau |
 | `MapView` | Xem §9 |
 | `BriefRefresh` | POST `/api/brief`, rồi `router.refresh()`; hiện "Đã yêu cầu…" khi đang chờ |
 | `TileDetail` | Bọc KPI tile thành nút; mở `<dialog>` với lịch sử 3T/1N/2N/5N tải từ `/api/series/[key]`, và nút ghim/bỏ ghim (POST `/api/watchlist`). Series đã ghim hiện ở hàng "Bạn đã ghim" dưới Vital Signs |

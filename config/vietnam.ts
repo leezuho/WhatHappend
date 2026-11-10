@@ -51,3 +51,31 @@ export const VN_CITIES: { name: Bi; lat: number; lng: number }[] = [
 export const VN30F_WEEKDAY = 4;
 /** The Statistics Office publishes the month's economic data on the 6th of the next month (Decree 62/2024). */
 export const GSO_RELEASE_DAY = 6;
+
+// Indices besides the VN-Index (lib/sources/vnstocks.ts): series id, SSI iBoard
+// index id (live level), VNDirect code (daily history).
+
+export interface VnIndexDef {
+  id: string;
+  ssi: string;
+  vnd: string;
+}
+
+export const VN_INDICES: VnIndexDef[] = [
+  { id: "vn:VN30", ssi: "VN30", vnd: "VN30" },
+  { id: "vn:HNX", ssi: "HNXIndex", vnd: "HNX" },
+  { id: "vn:UPCOM", ssi: "HNXUpcomIndex", vnd: "UPCOM" },
+];
+
+/** Foreign investors' daily trading on HOSE (lib/sources/vnflows.ts, VNDirect), VND. */
+export const VN_FOREIGN = { net: "vnd:FOREIGN_NET:VNINDEX", buy: "vnd:FOREIGN_BUY:VNINDEX", sell: "vnd:FOREIGN_SELL:VNINDEX" } as const;
+
+/** The State Bank's daily central USD/VND rate (lib/sources/sbvrate.ts); banks trade within ±VN_BAND of it. */
+export const VN_CENTRAL_RATE = "sbv:CENTRAL";
+export const VN_BAND = 0.05;
+
+/** Average interbank VND rates by tenor (lib/sources/ibrate.ts), % a year. */
+export const VN_INTERBANK = { on: "sbv:IB_ON", w1: "sbv:IB_1W", w2: "sbv:IB_2W", m1: "sbv:IB_1M" } as const;
+
+/** Vietnam's 10-year government bond yield on the secondary market, from the same recap (hnx.vn's own curve is out of Node's reach). */
+export const VN_GB10Y = "vn:GB10Y";

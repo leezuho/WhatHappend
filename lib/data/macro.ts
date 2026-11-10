@@ -1,8 +1,8 @@
 import type { DatabaseSync } from "node:sqlite";
 import { MACRO_COUNTRIES, policyRateId, type Country } from "@/config/countries";
-import { imfCpiId, imfId, oecdId, type ScoreCol } from "@/config/macro";
+import { imfCpiId, imfId, oecdId, US_CPI_PARTS, type CpiPart, type ScoreCol } from "@/config/macro";
 import { SERIES, type Freq } from "@/config/series";
-import { freshest, getPoints } from "@/lib/data/series";
+import { freshest, getPoints, yoyOf } from "@/lib/data/series";
 import { pick, type Locale } from "@/lib/i18n";
 import type { Point } from "@/lib/sources/store";
 import {
@@ -260,4 +260,34 @@ export function growthInflation(db: DatabaseSync, lang: Locale, now: number, tai
     if (!last) return [];
     return [{ short: c.short, name: pick(c.name, lang), group: c.group, ...last, trail: quarters.slice(-1 - tail, -1) }];
   });
+}
+
+// ---------------------------------------------------------------- US CPI by group
+
+export interface CpiPartsView {
+  /** One row per month: ts plus each group's y/y change (null when that group has no reading yet). */
+  rows: ({ ts: number } & Record<CpiPart["key"], number | null>)[];
+  /** Latest month of each group, with the change in percentage points from three months earlier. */
+  last: { key: CpiPart["key"]; name: string; value: number; change3: number | null; ts: number }[];
+}
+
+/** US_CPI_PARTS as y/y lines over the last `months` months (FRED indexes, stored as levels). */
+export function usCpiParts(db: DatabaseSync, lang: Locale, months = 24): CpiPartsView {
+  const yoy = new Map(US_CPI_PARTS.map((p) => [p.key, yoyOf(getPoints(db, `fred:${p.code}`))]));
+  const stamps = [...new Set([...yoy.values()].flatMap((pts) => pts.map((p) => p.ts)))].sort((a, b) => a - b).slice(-months);
+  const at = new Map([...yoy].map(([k, pts]) => [k, new Map(pts.map((p) => [p.ts, p.value]))]));
+  const rows = stamps.map((ts) => {
+    const row = { ts } as CpiPartsView["rows"][number];
+    for (const p of US_CPI_PARTS) row[p.key] = at.get(p.key)!.get(ts) ?? null;
+    return row;
+  });
+  const last = US_CPI_PARTS.flatMap((p) => {
+    const pts = yoy.get(p.key)!;
+    const cur = pts[pts.length - 1];
+    if (!cur) return [];
+    const d = new Date(cur.ts);
+    const before = at.get(p.key)!.get(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 3, 1));
+    return [{ key: p.key, name: pick(p.name, lang), value: cur.value, change3: before === undefined ? null : cur.value - before, ts: cur.ts }];
+  });
+  return { rows, last };
 }

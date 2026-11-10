@@ -57,6 +57,18 @@ export function difference(a: Point[], b: Point[]): Point[] {
   });
 }
 
+/**
+ * a − b in basis points on a's dates, b taken as the value in force (at most 5 days old): the 1-year
+ * Treasury yield (business days) against the daily effective fed funds rate gives the change in the
+ * policy rate the market prices over the next year.
+ */
+export function spreadBp(a: Point[], b: Point[]): Point[] {
+  return a.flatMap((p) => {
+    const v = valueAt(b, p.ts, 5 * DAY);
+    return v === null ? [] : [{ ts: p.ts, value: Math.round((p.value - v) * 100) }];
+  });
+}
+
 /** Standard normal CDF (Abramowitz–Stegun 7.1.26, error below 1.5e-7). */
 export function normCdf(x: number): number {
   const z = Math.abs(x) / Math.SQRT2;

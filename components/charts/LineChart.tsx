@@ -23,6 +23,8 @@ export interface ChartSeries {
   color: string;
   /** Draw as steps (a rate set by decision, flat between changes) instead of a smooth curve. */
   step?: boolean;
+  /** A limit or reference rather than a measurement (a trading band's edge): thinner, dashed. */
+  dashed?: boolean;
 }
 
 export type XFormat = "day" | "month" | "year" | "category";
@@ -75,7 +77,11 @@ export function LineChart({ data, xKey, series, height = 200, xFormat, yDigits =
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-ink-2">
             {series.map((s) => (
               <li key={s.key} className="flex items-center gap-1.5">
-                <span aria-hidden className="inline-block h-0.5 w-3 rounded" style={{ background: s.color }} />
+                <span
+                  aria-hidden
+                  className="inline-block h-0.5 w-3 rounded"
+                  style={s.dashed ? { backgroundImage: `linear-gradient(90deg, ${s.color} 60%, transparent 60%)`, backgroundSize: "4px 2px" } : { background: s.color }}
+                />
                 {s.label}
               </li>
             ))}
@@ -177,7 +183,8 @@ export function LineChart({ data, xKey, series, height = 200, xFormat, yDigits =
                   key={s.key}
                   dataKey={s.key}
                   stroke={s.color}
-                  strokeWidth={2}
+                  strokeWidth={s.dashed ? 1.5 : 2}
+                  strokeDasharray={s.dashed ? "5 4" : undefined}
                   strokeLinejoin="round"
                   strokeLinecap="round"
                   dot={false}

@@ -23,6 +23,7 @@ export const SOURCE_META = {
   brief: { intervalMs: 24 * HOUR, needsAi: true },
   insights: { intervalMs: 30 * MIN, needsAi: true },
   macronote: { intervalMs: 24 * HOUR, needsAi: true },
+  technote: { intervalMs: 24 * HOUR, needsAi: true },
   // Map
   usgs: { intervalMs: 10 * MIN },
   gdacs: { intervalMs: 30 * MIN },
@@ -30,7 +31,9 @@ export const SOURCE_META = {
   // Trending, calendar, prediction
   wikipedia: { intervalMs: 3 * HOUR },
   hackernews: { intervalMs: 20 * MIN },
-  calendar: { intervalMs: 3 * HOUR },
+  // ForexFactory asks for at most one request an hour; hourly also picks up FRED actuals soon after a release.
+  calendar: { intervalMs: HOUR },
+  releases: { intervalMs: 24 * HOUR },
   launches: { intervalMs: 3 * HOUR },
   polymarket: { intervalMs: 15 * MIN },
   kalshi: { intervalMs: 15 * MIN },
@@ -41,6 +44,11 @@ export const SOURCE_META = {
   who: { intervalMs: 6 * HOUR },
   // Vietnam
   vnindex: { intervalMs: 3 * MIN },
+  vnstocks: { intervalMs: 5 * MIN },
+  vnflows: { intervalMs: 30 * MIN },
+  sbvrate: { intervalMs: 6 * HOUR },
+  petrolimex: { intervalMs: HOUR },
+  ibrate: { intervalMs: 6 * HOUR },
   sjc: { intervalMs: 30 * MIN },
   vcb: { intervalMs: HOUR },
   sbv: { intervalMs: 12 * HOUR },
@@ -51,11 +59,20 @@ export const SOURCE_META = {
   defillama: { intervalMs: 6 * HOUR },
   mempool: { intervalMs: 10 * MIN },
   binance: { intervalMs: 15 * MIN },
+  etfflows: { intervalMs: 3 * HOUR },
   // Technology
   cloudstatus: { intervalMs: 10 * MIN },
   openrouter: { intervalMs: 6 * HOUR },
   huggingface: { intervalMs: 3 * HOUR },
   kev: { intervalMs: 6 * HOUR },
+  twse: { intervalMs: 12 * HOUR },
+  hnhiring: { intervalMs: 24 * HOUR },
+  eol: { intervalMs: 24 * HOUR },
+  arena: { intervalMs: 24 * HOUR },
+  lobsters: { intervalMs: 30 * MIN },
+  spaceweather: { intervalMs: HOUR },
+  pkgtrends: { intervalMs: 24 * HOUR },
+  epoch: { intervalMs: 24 * HOUR },
 } satisfies Record<string, SourceMeta>;
 
 export type SourceId = keyof typeof SOURCE_META;

@@ -25,6 +25,17 @@ export interface ScatterPoint {
 
 type Corner = "tl" | "tr" | "bl" | "br";
 
+interface AxisSpec {
+  label: string;
+  suffix: string;
+  digits: number;
+  signed?: boolean;
+  /** Printed before numbers ("$"). */
+  prefix?: string;
+  /** Log scale (positive values spread over decades, such as prices); ticks at 1 and 3 × 10ⁿ. */
+  log?: true;
+}
+
 interface Props {
   points: ScatterPoint[];
   /** Where the quadrants meet. */
@@ -32,8 +43,8 @@ interface Props {
   quadrants: Record<Corner, string>;
   /** Quadrant shaded as the risk zone. */
   danger?: Corner;
-  x: { label: string; suffix: string; digits: number; signed?: boolean };
-  y: { label: string; suffix: string; digits: number; signed?: boolean };
+  x: AxisSpec;
+  y: AxisSpec;
   /** Legend names of the two groups. */
   groups: [string, string];
   locale: "vi" | "en";
@@ -60,6 +71,25 @@ function axis(values: number[], split: number) {
   const ticks: number[] = [];
   for (let i = 0; lo + i * step <= hi + 1e-9; i++) ticks.push(lo + i * step);
   return { lo, hi, ticks };
+}
+
+/**
+ * A log axis in log10 units, with ticks in data units at 1 and 3 × 10ⁿ. The ends are the nearest such
+ * ticks with some air past the outermost dots, not whole decades, so a $0.13–$20 spread is not drawn
+ * from $0.01 to $100.
+ */
+export function logAxis(values: number[], split: number) {
+  const pos = [split, ...values].filter((v) => v > 0);
+  const min = Math.min(...pos) * 0.85;
+  const max = Math.max(...pos) * 1.15;
+  const steps = (d: number) => [10 ** d, 3 * 10 ** d];
+  const lowDecade = Math.floor(Math.log10(min));
+  const lo = steps(lowDecade).filter((t) => t <= min).pop()!;
+  const highDecade = Math.floor(Math.log10(max));
+  const hi = [...steps(highDecade), 10 ** (highDecade + 1)].find((t) => t >= max)!;
+  const ticks: number[] = [];
+  for (let d = lowDecade; d <= highDecade + 1; d++) for (const t of steps(d)) if (t >= lo * 0.999 && t <= hi * 1.001) ticks.push(t);
+  return { lo: Math.log10(lo), hi: Math.log10(hi), ticks };
 }
 
 interface Box {
@@ -116,28 +146,34 @@ export function QuadrantScatter({ points, split, quadrants, danger, x, y, groups
     return () => ro.disconnect();
   }, [table]);
   const loc = locale === "vi" ? "vi-VN" : "en-US";
-  const num = (v: number, a: Props["x"]) =>
-    `${a.signed && v > 0 ? "+" : v < 0 ? "−" : ""}${new Intl.NumberFormat(loc, { minimumFractionDigits: a.digits, maximumFractionDigits: a.digits }).format(Math.abs(v))}${a.suffix}`;
-  const tick = (v: number) => `${v < 0 ? "−" : ""}${new Intl.NumberFormat(loc, { maximumFractionDigits: 1 }).format(Math.abs(v))}`;
+  const num = (v: number, a: AxisSpec) =>
+    `${a.signed && v > 0 ? "+" : v < 0 ? "−" : ""}${a.prefix ?? ""}${new Intl.NumberFormat(loc, { minimumFractionDigits: a.digits, maximumFractionDigits: a.digits }).format(Math.abs(v))}${a.suffix}`;
+  const tick = (v: number, a: AxisSpec) => `${v < 0 ? "−" : ""}${a.prefix ?? ""}${new Intl.NumberFormat(loc, { maximumFractionDigits: a.log ? 2 : 1 }).format(Math.abs(v))}`;
+  const tx = (a: AxisSpec, v: number) => (a.log ? Math.log10(v) : v);
 
   const all = points.flatMap((p) => [p, ...(p.trail ?? [])]);
-  const ax = axis(
+  const ax = (x.log ? logAxis : axis)(
     all.map((p) => p.x),
     split.x,
   );
-  const ay = axis(
+  const ay = (y.log ? logAxis : axis)(
     all.map((p) => p.y),
     split.y,
   );
-  const px = (v: number) => ((v - ax.lo) / (ax.hi - ax.lo)) * 100;
-  const py = (v: number) => (1 - (v - ay.lo) / (ay.hi - ay.lo)) * 100;
+  // Positions in % of the plot, rounded: the browser keeps six significant digits of a CSS value, so a
+  // full-precision float in a style would not match the server HTML when React hydrates.
+  const r3 = (v: number) => Math.round(v * 1000) / 1000;
+  const px = (v: number) => r3(((tx(x, v) - ax.lo) / (ax.hi - ax.lo)) * 100);
+  const py = (v: number) => r3((1 - (tx(y, v) - ay.lo) / (ay.hi - ay.lo)) * 100);
+  /** "calc(12.5% - 6px)": the browser rewrites "+ -6px" that way, so it is written that way. */
+  const shift = (base: number, d: number) => `calc(${base}% ${d < 0 ? "-" : "+"} ${Math.abs(d)}px)`;
   const sx = px(split.x);
   const sy = py(split.y);
   const corner: Record<Corner, { left: number; top: number; width: number; height: number }> = {
     tl: { left: 0, top: 0, width: sx, height: sy },
-    tr: { left: sx, top: 0, width: 100 - sx, height: sy },
-    bl: { left: 0, top: sy, width: sx, height: 100 - sy },
-    br: { left: sx, top: sy, width: 100 - sx, height: 100 - sy },
+    tr: { left: sx, top: 0, width: r3(100 - sx), height: sy },
+    bl: { left: 0, top: sy, width: sx, height: r3(100 - sy) },
+    br: { left: sx, top: sy, width: r3(100 - sx), height: r3(100 - sy) },
   };
   const on = points.find((p) => p.key === active) ?? null;
   const labels = placeLabels(
@@ -187,7 +223,7 @@ export function QuadrantScatter({ points, split, quadrants, danger, x, y, groups
           <div className="relative" style={{ height }}>
             {ay.ticks.map((t) => (
               <span key={t} className="tabular absolute right-1 -translate-y-1/2 text-[10px] text-muted" style={{ top: `${py(t)}%` }}>
-                {tick(t)}
+                {tick(t, y)}
               </span>
             ))}
           </div>
@@ -262,7 +298,7 @@ export function QuadrantScatter({ points, split, quadrants, danger, x, y, groups
                       aria-hidden
                       onMouseEnter={() => setActive(p.key)}
                       className="absolute text-[10px] leading-3 font-semibold whitespace-nowrap text-ink-2"
-                      style={{ left: `calc(${px(p.x)}% + ${place.dx}px)`, top: `calc(${py(p.y)}% + ${place.dy}px)` }}
+                      style={{ left: shift(px(p.x), place.dx), top: shift(py(p.y), place.dy) }}
                     >
                       {p.label}
                     </span>
@@ -300,7 +336,7 @@ export function QuadrantScatter({ points, split, quadrants, danger, x, y, groups
           <div className="relative">
             {ax.ticks.map((t) => (
               <span key={t} className="tabular absolute top-0.5 -translate-x-1/2 text-[10px] text-muted" style={{ left: `${px(t)}%` }}>
-                {tick(t)}
+                {tick(t, x)}
               </span>
             ))}
           </div>

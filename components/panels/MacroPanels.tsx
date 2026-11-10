@@ -1,10 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
 import clsx from "clsx";
 import { MACRO_US, WORLD_PULSE, type SeriesDef, type SeriesKey } from "@/config/series";
-import { RECESSION_SIGNALS, SCORE_COLS, type ScoreColDef } from "@/config/macro";
+import { RECESSION_SIGNALS, SCORE_COLS, US_CPI_PARTS, type ScoreColDef } from "@/config/macro";
 import { MACRO_COUNTRIES } from "@/config/countries";
 import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtDateTime, fmtNumber, fmtPeriod, fmtSigned, fmtValue } from "@/lib/format";
+import { fmtNumber, fmtPeriod, fmtSigned, fmtValue } from "@/lib/format";
 import { getInsightNotes, getTiles, getWatchlist } from "@/lib/queries";
 import {
   getConfidence,
@@ -17,6 +17,7 @@ import {
   getPolicyLines,
   getReer,
   getScorecard,
+  getUsCpiParts,
   type CountryLine,
   type ConfidenceCell,
   type ScoreCell,
@@ -29,44 +30,20 @@ import { QuadrantScatter } from "@/components/charts/QuadrantScatter";
 import { WorldChoropleth } from "@/components/charts/WorldChoropleth";
 import { SmallMultiples, type MultipleRow } from "@/components/charts/SmallMultiples";
 import { Sparkline } from "@/components/charts/Sparkline";
+import { LineChart } from "@/components/charts/LineChart";
 import { EmptyState } from "@/components/ui/Panel";
 import { DetailTile } from "./MarketPanels";
+import { WeeklyNote } from "./WeeklyNote";
 
 // Panels of the world-macro page (app/[lang]/macro).
 
 // ---------------------------------------------------------------- weekly AI note
 
 export async function MacroNoteBody({ lang }: { lang: Locale }) {
-  const d = getDict(lang);
-  const m = d.macro;
+  const m = getDict(lang).macro;
   const { note, hasKey } = await getMacroNote(lang);
   if (!note) return <p className="py-2 text-sm text-ink-2">{hasKey ? m.noteEmpty : m.noteNeedsKey}</p>;
-  const [year, week] = note.week.split("-W");
-  return (
-    <article className="flex flex-col gap-3">
-      <p className="font-display text-base leading-snug font-semibold text-ink">{note.text.headline}</p>
-      <ol className="grid grid-cols-1 gap-x-8 gap-y-3 lg:grid-cols-2">
-        {note.text.bullets.map((b, i) => (
-          <li key={i} className="text-sm leading-snug">
-            <span className="font-semibold text-ink">{b.title}.</span> <span className="text-ink-2">{b.body}</span>
-          </li>
-        ))}
-      </ol>
-      {note.text.watch.length > 0 && (
-        <div>
-          <h3 className="mb-1 text-xs font-semibold text-ink-2">{d.brief.watch}</h3>
-          <ul className="list-disc pl-4 text-xs text-ink-2">
-            {note.text.watch.map((w, i) => (
-              <li key={i}>{w}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <p className="border-t border-line pt-2 text-[11px] text-muted">
-        {m.noteMeta.replace("{week}", `${Number(week)}/${year}`).replace("{date}", fmtDateTime(note.createdAt, lang)).replace("{model}", note.model)} · {m.noteCaveat}
-      </p>
-    </article>
-  );
+  return <WeeklyNote note={note} lang={lang} caveat={m.noteCaveat} />;
 }
 
 // ---------------------------------------------------------------- world map
@@ -421,13 +398,63 @@ export async function GrowthPanel({ lang }: { lang: Locale }) {
   );
 }
 
+const PART_COLORS = ["var(--s4)", "var(--s3)", "var(--s1)", "var(--s2)", "var(--s7)"];
+
+/** US CPI by group, y/y: which part of the basket keeps inflation up. */
+async function UsCpiParts({ lang }: { lang: Locale }) {
+  const m = getDict(lang).macro;
+  const { rows, last } = await getUsCpiParts(lang);
+  if (!last.length) return null;
+  return (
+    <div className="mt-4 flex flex-col gap-1.5">
+      <p className="text-xs text-ink-2">
+        {m.cpiPartsTitle} <span className="text-muted">· {fmtPeriod(last[0].ts, "m", lang)}</span>
+      </p>
+      <LineChart
+        data={rows}
+        xKey="ts"
+        xFormat="month"
+        series={last.map((p) => ({ key: p.key, label: p.name, color: PART_COLORS[US_CPI_PARTS.findIndex((x) => x.key === p.key)] }))}
+        yDigits={1}
+        ySuffix="%"
+        refY={0}
+        height={180}
+        locale={lang}
+        tableLabels={{ table: getDict(lang).common.showTable, chart: getDict(lang).common.showChart }}
+      />
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
+        {last.map((p) => (
+          <li key={p.key} className="flex items-baseline justify-between gap-2" title={p.change3 === null ? undefined : m.cpiParts3m.replace("{v}", fmtSigned(p.change3, lang, 1, " pp"))}>
+            <span className="truncate text-ink-2">{p.name}</span>
+            <span className="tabular whitespace-nowrap">
+              <span className="font-medium text-ink">{fmtSigned(p.value, lang, 1, "%")}</span>
+              {p.change3 !== null && Math.abs(p.change3) >= 0.05 && (
+                <span className="ml-1 text-[10px] text-muted">
+                  {p.change3 > 0 ? "▲" : "▼"}
+                  {fmtNumber(Math.abs(p.change3), lang, 1)}
+                </span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-[11px] text-muted">{m.cpiPartsNote}</p>
+    </div>
+  );
+}
+
 export async function InflationPanel({ lang }: { lang: Locale }) {
   const d = getDict(lang);
   const cpi = await getOecdLines("CPI", lang);
   return (
     <ThemeLayout
       lang={lang}
-      us={<UsTiles keys={MACRO_US.inflation} lang={lang} />}
+      us={
+        <>
+          <UsTiles keys={MACRO_US.inflation} lang={lang} />
+          <UsCpiParts lang={lang} />
+        </>
+      }
       world={
         cpi.length ? (
           <div className="flex flex-col gap-1">

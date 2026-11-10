@@ -49,6 +49,18 @@ export async function CalendarBody({ lang, days, kinds }: { lang: Locale; days?:
                       </span>
                     )}
                   </div>
+                  {e.result && (
+                    <div className="mt-0.5 text-[11px] text-ink-2" title={d.calendar.resultHint}>
+                      {d.calendar.actual}{" "}
+                      <span className={clsx("tabular font-semibold", e.result.better === null ? "text-ink" : e.result.better ? "text-up" : "text-down")}>{e.result.actual}</span>
+                      {e.result.surprise !== null && (
+                        <span className="text-muted">
+                          {" · "}
+                          {e.result.surprise === 0 ? d.calendar.onForecast : d.calendar.vsForecast.replace("{v}", fmtSigned(e.result.surprise, lang, e.result.actual.includes(".") ? 1 : 0, e.result.actual.endsWith("K") ? "K" : ""))}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {e.detail && <div className="mt-0.5 text-[11px] text-muted">{e.detail}</div>}
                 </div>
               </li>

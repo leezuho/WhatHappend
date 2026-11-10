@@ -1,6 +1,7 @@
 import type { Bi } from "@/lib/i18n";
 import { FX_SYMBOLS } from "@/config/countries";
 import { MARKET_EXTRA_SYMBOLS, WORLD_INDEX_SYMBOLS } from "@/config/markets";
+import { US_CPI_PARTS } from "@/config/macro";
 import { TECH_FX, TECH_SYMBOLS } from "@/config/tech";
 
 // Every number the dashboard shows, with its bilingual name, formatting,
@@ -23,7 +24,7 @@ export interface SeriesDef {
   name: Bi;
   short: string;
   /** "$T": value in $ millions shown as trillions (FRED). "$B": value in $ billions, shown as B or T. */
-  unit: "" | "%" | "pp" | "$" | "₫" | "K" | "$T" | "$B";
+  unit: "" | "%" | "pp" | "bp" | "$" | "₫" | "K" | "$T" | "$B";
   digits: number;
   polarity: Polarity;
   /** How to express the daily change: percent of price, or absolute (for yields/spreads). */
@@ -206,6 +207,39 @@ export const SERIES = {
     delta: "pct",
     price: true,
     explain: { en: "Ho Chi Minh City Stock Exchange benchmark.", vi: "Chỉ số chuẩn của Sở Giao dịch Chứng khoán TP.HCM." },
+  }),
+  vn30: s({
+    id: "vn:VN30",
+    name: { en: "VN30", vi: "VN30" },
+    short: "VN30",
+    unit: "",
+    digits: 2,
+    polarity: "up-good",
+    delta: "pct",
+    price: true,
+    explain: { en: "The 30 largest, most traded HOSE stocks; the index VN30 futures settle on.", vi: "30 cổ phiếu lớn và thanh khoản nhất HOSE; chỉ số cơ sở của hợp đồng tương lai VN30." },
+  }),
+  hnx: s({
+    id: "vn:HNX",
+    name: { en: "HNX-Index", vi: "HNX-Index" },
+    short: "HNX",
+    unit: "",
+    digits: 2,
+    polarity: "up-good",
+    delta: "pct",
+    price: true,
+    explain: { en: "Hanoi Stock Exchange: smaller companies, many banks, builders and securities firms.", vi: "Sở Giao dịch Chứng khoán Hà Nội: doanh nghiệp nhỏ hơn, nhiều ngân hàng, xây dựng và chứng khoán." },
+  }),
+  upcom: s({
+    id: "vn:UPCOM",
+    name: { en: "UPCoM-Index", vi: "UPCoM-Index" },
+    short: "UPCoM",
+    unit: "",
+    digits: 2,
+    polarity: "up-good",
+    delta: "pct",
+    price: true,
+    explain: { en: "Unlisted public companies traded on HNX's UPCoM board, often state firms before a listing.", vi: "Công ty đại chúng chưa niêm yết giao dịch trên sàn UPCoM của HNX, nhiều doanh nghiệp nhà nước trước khi lên sàn." },
   }),
   usdvnd: s({
     id: "yahoo:USDVND=X",
@@ -579,6 +613,62 @@ export const SERIES = {
       vi: "Bảng cân đối Fed trừ tiền gửi qua kênh reverse repo và tài khoản Kho bạc tại Fed: lượng USD thực sự còn trong thị trường. Tài sản rủi ro bám khá sát chỉ số này từ 2020.",
     },
   }),
+  softwareJobs: s({
+    id: "fred:IHLIDXUSTPSOFTDEVE",
+    name: { en: "US software developer job postings (Indeed)", vi: "Tin tuyển lập trình viên ở Mỹ (Indeed)" },
+    short: "Dev jobs",
+    unit: "",
+    digits: 1,
+    polarity: "up-good",
+    delta: "pct",
+    explain: {
+      en: "Indeed's index of software development postings, 1 Feb 2020 = 100 (7-day average). It peaked near 230 in 2022 and has sat below its pre-pandemic level since 2023, well under postings overall (FRED IHLIDXUS).",
+      vi: "Chỉ số tin tuyển dụng phát triển phần mềm của Indeed, 1/2/2020 = 100 (bình quân 7 ngày). Đỉnh gần 230 năm 2022 và nằm dưới mức trước dịch từ 2023, thấp hơn hẳn tin tuyển dụng nói chung (FRED IHLIDXUS).",
+    },
+  }),
+  chipOutput: s({
+    id: "fred:IPG3344S",
+    name: { en: "US semiconductor output (y/y)", vi: "Sản lượng bán dẫn Mỹ (so cùng kỳ)" },
+    short: "Chip output",
+    unit: "%",
+    digits: 1,
+    polarity: "up-good",
+    delta: "abs",
+    deltaUnit: "pp",
+    freq: "m",
+    transform: "yoy",
+    explain: {
+      en: "Federal Reserve industrial production index for semiconductors and electronic components, against a year earlier: the physical side of the chip cycle in the US.",
+      vi: "Chỉ số sản xuất công nghiệp của Fed cho bán dẫn và linh kiện điện tử, so với cùng kỳ năm trước: phần sản xuất thật của chu kỳ chip ở Mỹ.",
+    },
+  }),
+  hnHiring: s({
+    id: "hn:WHOISHIRING",
+    name: { en: "Hacker News “Who is hiring?” posts", vi: "Tin tuyển trên Hacker News “Who is hiring?”" },
+    short: "HN hiring",
+    unit: "",
+    digits: 0,
+    polarity: "up-good",
+    delta: "pct",
+    freq: "m",
+    explain: {
+      en: "Job posts in the monthly Hacker News thread, mostly startups and small tech firms. The current month keeps growing for a few weeks after the thread opens on the first weekday.",
+      vi: "Số tin tuyển trong chủ đề hằng tháng trên Hacker News, phần lớn là startup và công ty công nghệ nhỏ. Tháng hiện tại còn tăng vài tuần sau khi chủ đề mở vào ngày làm việc đầu tháng.",
+    },
+  }),
+  fedPriced: s({
+    id: "calc:FEDPRICED_US",
+    name: { en: "Fed priced, next 12 months", vi: "Fed được định giá 12 tháng tới" },
+    short: "Fed priced",
+    unit: "bp",
+    digits: 0,
+    polarity: "neutral",
+    delta: "abs",
+    explain: {
+      en: "The 1-year Treasury yield minus the effective fed funds rate, in basis points: roughly how far the market expects the Fed's rate to average below (negative) or above today's over the next 12 months. −50 bp is about two 25 bp cuts' worth on average; cuts spread through the year mean a lower end point. Treasury bills trade slightly off the expected policy rate, so read the direction and the change, not the exact count.",
+      vi: "Lợi suất trái phiếu Kho bạc 1 năm trừ lãi suất Fed hiệu dụng, tính bằng điểm cơ bản: thị trường kỳ vọng lãi suất của Fed trong 12 tháng tới, tính bình quân, thấp hơn (âm) hay cao hơn hôm nay bao nhiêu. −50 bp tương đương khoảng hai lần cắt 25 bp tính bình quân; nếu cắt rải trong năm thì mức cuối kỳ còn thấp hơn. Tín phiếu Kho bạc thường lệch nhẹ so với lãi suất điều hành kỳ vọng, nên nên đọc chiều và mức thay đổi hơn là con số chính xác.",
+    },
+  }),
   nfci: s({
     id: "fred:NFCI",
     name: { en: "US financial conditions (NFCI)", vi: "Điều kiện tài chính Mỹ (NFCI)" },
@@ -804,6 +894,20 @@ export const SERIES = {
       vi: "Giá tiêu dùng so với cùng kỳ năm trước (IMF, theo số của Tổng cục Thống kê). Mục tiêu Quốc hội đặt ra khoảng 4,5%.",
     },
   }),
+  vnIbOn: s({
+    id: "sbv:IB_ON",
+    name: { en: "Interbank overnight rate (VND)", vi: "Lãi suất liên ngân hàng qua đêm (VND)" },
+    short: "VN O/N",
+    unit: "%",
+    digits: 2,
+    polarity: "neutral",
+    delta: "abs",
+    threshold: { dir: "above", warn: 6, crit: 10 },
+    explain: {
+      en: "Average rate banks charge each other overnight in dong, published daily by the State Bank: the system's liquidity gauge. It jumped above 10% in the squeezes of late 2022 and 2024.",
+      vi: "Lãi suất bình quân các ngân hàng cho nhau vay qua đêm bằng VND, NHNN công bố hằng ngày: thước đo thanh khoản của hệ thống. Từng vọt lên trên 10% trong các đợt căng thẳng cuối 2022 và 2024.",
+    },
+  }),
   vnRefi: s({
     id: "sbv:REFI",
     name: { en: "SBV refinancing rate", vi: "Lãi suất tái cấp vốn NHNN" },
@@ -822,10 +926,10 @@ export const SERIES = {
 export type SeriesKey = keyof typeof SERIES;
 
 /** Market tiles of the Vietnam page: stocks, the dollar at three prices (market, bank, crypto), gold. */
-export const VIETNAM_MARKETS: SeriesKey[] = ["vnindex", "usdvnd", "vcbUsd", "usdtvnd", "sjcGold"];
+export const VIETNAM_MARKETS: SeriesKey[] = ["vnindex", "vn30", "hnx", "upcom", "usdvnd", "vcbUsd", "usdtvnd", "sjcGold"];
 
 /** Economy tiles of the Vietnam page: growth, prices, policy rate. */
-export const VIETNAM_ECONOMY: SeriesKey[] = ["vnGdp", "vnCpi", "vnRefi"];
+export const VIETNAM_ECONOMY: SeriesKey[] = ["vnGdp", "vnCpi", "vnRefi", "vnIbOn"];
 
 /** The 12 tiles, in reading order: equities, rates, dollar, fear, commodities, crypto, Vietnam. */
 export const VITAL_SIGNS: SeriesKey[] = ["spx", "ndx", "us10y", "curve", "dxy", "vix", "brent", "gold", "copper", "btc", "vnindex", "usdvnd"];
@@ -833,8 +937,17 @@ export const VITAL_SIGNS: SeriesKey[] = ["spx", "ndx", "us10y", "curve", "dxy", 
 /** Tiles of the crypto page, in reading order: majors, market size, sentiment and liquidity, Vietnam. */
 export const CRYPTO_SIGNS: SeriesKey[] = ["btc", "eth", "sol", "cryptoMcap", "btcDom", "dvol", "stables", "usdtvnd"];
 
+/** Daily BTC perpetual history the binance source keeps as series (Binance only serves the last 30 days of open interest and ratios). */
+export const BTC_HISTORY = { oi: "binance:OI:BTC", lsr: "binance:LSR:BTC", funding: "binance:FUNDAPR:BTC" } as const;
+
+/** US spot bitcoin ETF daily net flows, $M (etfflows source): the total and the largest funds by name. */
+export const BTC_ETF = { total: "etf:BTC:TOTAL", prefix: "etf:BTC:", funds: ["IBIT", "FBTC", "GBTC", "ARKB", "BITB"] } as const;
+
 /** Every series the crypto page owns (its tiles plus the Fear & Greed card). */
 export const CRYPTO_KEYS: SeriesKey[] = [...CRYPTO_SIGNS, "fng"];
+
+/** Hiring and output tiles of the technology page. */
+export const TECH_JOBS: SeriesKey[] = ["softwareJobs", "chipOutput", "hnHiring"];
 
 /** Index tiles of the technology page: the broad tech market and the chip cycle. */
 export const TECH_SIGNS: SeriesKey[] = ["ndx", "sox"];
@@ -846,7 +959,7 @@ export const WORLD_PULSE: SeriesKey[] = ["worldGdp", "worldCpi", "commodities", 
 export const MACRO_US = {
   growth: ["gdpnow", "wei", "cfnai", "indpro", "retail"],
   inflation: ["cpi", "coreCpi", "corePce", "breakeven", "food"],
-  money: ["fedfunds", "netLiq", "nfci", "realYield"],
+  money: ["fedfunds", "fedPriced", "netLiq", "nfci", "realYield"],
   jobs: ["payrolls", "unrate", "claims", "umcsent"],
   debt: ["usDebt", "interest", "ig", "hy", "emSpread"],
 } as const satisfies Record<string, readonly SeriesKey[]>;
@@ -868,9 +981,10 @@ export const YAHOO_SYMBOLS = [
 
 /**
  * FRED inputs of the derived series (lib/signals/macro.ts): ECB and BoJ balance sheets, their exchange rates,
- * the 10Y−3M spread, and the reverse repo and Treasury account that net liquidity subtracts.
+ * the 10Y−3M spread, the reverse repo and Treasury account that net liquidity subtracts, and the daily
+ * effective fed funds rate the 1-year yield is read against (Fed path priced).
  */
-export const FRED_CALC_CODES = ["ECBASSETSW", "JPNASSETS", "DEXUSEU", "DEXJPUS", "T10Y3M", "RRPONTSYD", "WTREGEN"];
+export const FRED_CALC_CODES = ["ECBASSETSW", "JPNASSETS", "DEXUSEU", "DEXJPUS", "T10Y3M", "RRPONTSYD", "WTREGEN", "DFF"];
 
 /** FRED series codes to pull. */
 export const FRED_CODES = [
@@ -890,4 +1004,8 @@ export const FRED_CODES = [
   "DGS20",
   "DGS30",
   ...FRED_CALC_CODES,
+  // all-industry postings, the yardstick for software postings (tech page)
+  "IHLIDXUS",
+  // US CPI by group (macro page, inflation panel)
+  ...US_CPI_PARTS.map((p) => p.code),
 ];

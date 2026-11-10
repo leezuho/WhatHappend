@@ -3,9 +3,23 @@ import { getDb } from "@/lib/db";
 import { MACRO_COUNTRIES, policyRateId, type Country } from "@/config/countries";
 import { bisId, imfId, oecdId, WORLD_MAP, type OecdCode } from "@/config/macro";
 import { freshest, getPoints } from "@/lib/data/series";
-import { cpiIds, cycleRows, EMPTY, growthInflation, imfCell, lastPoint, scorecardRows, type ClockRow, type GrowthInflationPoint, type ScoreCell, type ScoreRow } from "@/lib/data/macro";
+import {
+  cpiIds,
+  cycleRows,
+  EMPTY,
+  growthInflation,
+  imfCell,
+  lastPoint,
+  scorecardRows,
+  usCpiParts,
+  type ClockRow,
+  type CpiPartsView,
+  type GrowthInflationPoint,
+  type ScoreCell,
+  type ScoreRow,
+} from "@/lib/data/macro";
 import { aiStatus } from "@/lib/ai/config";
-import { MACRO_NOTE_KEY, type MacroNoteText, type StoredMacroNote } from "@/lib/ai/macronote-shared";
+import { MACRO_NOTE_KEY, type NoteView, type StoredMacroNote } from "@/lib/ai/macronote-shared";
 import { pick, type Locale } from "@/lib/i18n";
 import type { Point } from "@/lib/sources/store";
 import {
@@ -37,6 +51,11 @@ export async function getScorecard(lang: Locale): Promise<ScoreRow[]> {
 export async function getCycleClock(lang: Locale): Promise<ClockRow[]> {
   await connection();
   return cycleRows(getDb(), lang, Date.now());
+}
+
+export async function getUsCpiParts(lang: Locale): Promise<CpiPartsView> {
+  await connection();
+  return usCpiParts(getDb(), lang);
 }
 
 export async function getGrowthInflation(lang: Locale): Promise<GrowthInflationPoint[]> {
@@ -246,12 +265,7 @@ export async function getDebtTable(lang: Locale): Promise<{ year: number; rows: 
 
 // ---------------------------------------------------------------- weekly AI note
 
-export interface MacroNoteView {
-  text: MacroNoteText;
-  week: string;
-  createdAt: number;
-  model: string;
-}
+export type MacroNoteView = NoteView;
 
 /** The latest weekly macro note (lib/ai/macronote.ts) in the page's language, and whether an AI key is set. */
 export async function getMacroNote(lang: Locale): Promise<{ note: MacroNoteView | null; hasKey: boolean }> {

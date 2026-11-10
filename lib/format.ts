@@ -70,6 +70,8 @@ export function fmtValue(def: SeriesDef, value: number, locale: Locale): string 
       return `${n}%`;
     case "pp":
       return `${value > 0 ? "+" : ""}${n}`;
+    case "bp":
+      return fmtSigned(value, locale, def.digits, " bp");
     case "₫":
       return `${n} ₫`;
     case "K":
@@ -92,6 +94,7 @@ export function fmtDelta(def: SeriesDef, d: TileData, locale: Locale): string | 
     if (def.deltaUnit === "pp") return fmtSigned(d.change, locale, 2, " pp");
     if (def.unit === "%" || def.unit === "pp") return fmtSigned(d.change * 100, locale, 0, " bp");
     if (def.unit === "K") return fmtSigned(d.change / 1000, locale, 0, "K");
+    if (def.unit === "bp") return fmtSigned(d.change, locale, 0, " bp");
     return fmtSigned(d.change, locale, def.digits);
   }
   return d.changePct === null ? null : fmtPct(d.changePct, locale);

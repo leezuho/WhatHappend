@@ -166,7 +166,7 @@ export function WorldChoropleth({
       </div>
 
       {view === "map" ? (
-        <div className="relative h-[340px] overflow-hidden rounded-lg md:h-[420px]">
+        <div className="wh-map relative h-[340px] overflow-hidden rounded-lg md:h-[420px]">
           {failed ? (
             <p className="p-4 text-xs text-muted">{labels.noData}</p>
           ) : (

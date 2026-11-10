@@ -1,5 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
-import { TECH_FX, TECH_STOCKS, type TechGroup } from "@/config/tech";
+import { PACKAGES, pkgId, TECH_FX, TECH_STOCKS, type PackageDef, type TechGroup } from "@/config/tech";
 import type { Point } from "@/lib/sources/store";
 import type { TechCap } from "@/lib/sources/yahoo";
 import type { Impact, ServiceStatus, StatusIncident } from "@/lib/sources/cloudstatus";
@@ -109,4 +109,32 @@ export function splitStatus(s: ServiceStatus, now = Date.now()): SplitStatus {
   if (s.level === null || !long.length) return { level: s.level, current, long };
   const explainedByLong = long.some((i) => i.impact === s.level) && !current.some((i) => i.impact === s.level);
   return { level: explainedByLong ? worst(current.map((i) => i.impact)) : s.level, current, long };
+}
+
+// ---------------------------------------------------------------- package downloads
+
+export interface PackageRow {
+  registry: "npm" | "pypi";
+  name: string;
+  group: PackageDef["group"];
+  /** Downloads in the last complete week. */
+  week: number | null;
+  /** % change of the last week against 4 and 12 weeks earlier. */
+  ch4: number | null;
+  ch12: number | null;
+  /** Weekly totals, oldest first, for the sparkline. */
+  spark: Point[];
+}
+
+/** One row per tracked package, in config order, from the weekly series pkgtrends stores. */
+export function packageRows(db: DatabaseSync): PackageRow[] {
+  return PACKAGES.map((p) => {
+    const pts = getPoints(db, pkgId(p));
+    const last = pts[pts.length - 1];
+    const back = (n: number) => {
+      const then = pts[pts.length - 1 - n];
+      return last && then && then.value > 0 ? (last.value / then.value - 1) * 100 : null;
+    };
+    return { registry: p.registry, name: p.name, group: p.group, week: last?.value ?? null, ch4: back(4), ch12: back(12), spark: pts.slice(-26) };
+  });
 }

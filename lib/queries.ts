@@ -7,6 +7,8 @@ import type { GoldQuote } from "@/lib/sources/sjc";
 import type { CoinRow, CryptoGlobal, TrendingCoin } from "@/lib/sources/coingecko";
 import type { BtcNetwork } from "@/lib/sources/mempool";
 import type { P2pQuote, PerpRow } from "@/lib/sources/binance";
+import type { CalendarData } from "@/lib/sources/calendar";
+import { US_RELEASES } from "@/config/calendar";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { SERIES, type SeriesDef, type SeriesKey } from "@/config/series";
 import { COUNTRIES, policyRateId } from "@/config/countries";
@@ -17,7 +19,9 @@ import { freshest, getPoints, getTile, getWatchlistKeys, tileOf, type TileData }
 import { cpiIds, lastPoint } from "@/lib/data/macro";
 import { assetClassRows, commodityRows, ratioSeries, spreadHistory, worldIndexRows, type AssetClassRow, type CommodityRow, type SpreadHistory, type WorldIndexRow } from "@/lib/data/markets";
 import { imfId } from "@/config/macro";
-import { vnMarketDates } from "@/lib/data/vietnam";
+import { OZ_PER_LUONG, vnMarketDates } from "@/lib/data/vietnam";
+import { clusterStories } from "@/lib/data/news";
+import { btcLeverage, etfFlows, type BtcLeverage, type EtfFlows } from "@/lib/data/crypto";
 import type { Point } from "@/lib/sources/store";
 import { computeRegime, type RegimeResult } from "@/lib/signals/risk-regime";
 import { FORCE_KEY, type StoredBrief } from "@/lib/ai/brief-shared";
@@ -122,6 +126,8 @@ export interface NewsItem {
   publishedAt: number;
   /** Other outlets carrying the same story. */
   alsoIn: string[];
+  /** Other headlines on the same story, folded into this one (clusterStories). */
+  related: { title: string; source: string; url: string }[];
 }
 
 interface ArticleRow {
@@ -147,7 +153,7 @@ function readNews(lang: Locale, where: string, params: (string | number)[], limi
        FROM articles WHERE published_at >= ? AND (${where}) ORDER BY published_at DESC LIMIT ?`,
     )
     .all(Date.now() - 3 * 24 * 3600_000, ...params, limit * 4) as unknown as ArticleRow[];
-  return collapseStories(rows, lang).slice(0, limit);
+  return clusterStories(collapseStories(rows, lang), lang).slice(0, limit);
 }
 
 const marks = (names: string[]) => names.map(() => "?").join(",");
@@ -175,6 +181,15 @@ export async function getTechNews(lang: Locale, limit = 40): Promise<NewsItem[]>
   );
 }
 
+/** Stories about Vietnam from any world outlet (VnExpress's domestic feeds, plus foreign outlets the AI tagged `vietnam`). */
+const VN_NEWS_WHERE = `region = 'vietnam' AND source NOT IN (${marks(DESK_OUTLETS)})`;
+
+/** The Vietnam page's news panel: same shape as `getNews`, so it renders through `NewsList`. */
+export async function getVietnamNews(lang: Locale, limit = 60): Promise<NewsItem[]> {
+  await connection();
+  return readNews(lang, VN_NEWS_WHERE, DESK_OUTLETS, limit);
+}
+
 function collapseStories(rows: ArticleRow[], lang: Locale): NewsItem[] {
   // Collapse the same story across outlets (newest copy wins).
   const seen = new Map<string, NewsItem>();
@@ -196,6 +211,7 @@ function collapseStories(rows: ArticleRow[], lang: Locale): NewsItem[] {
       image: r.image,
       publishedAt: r.published_at,
       alsoIn: [],
+      related: [],
     });
   }
   return [...seen.values()];
@@ -457,8 +473,6 @@ export interface VietnamData {
   news: NewsItem[];
 }
 
-/** 1 lượng (tael) = 37.5 g; 1 troy ounce = 31.1034768 g. */
-const OZ_PER_LUONG = 37.5 / 31.1034768;
 
 export async function getVietnam(lang: Locale, newsLimit = 6): Promise<VietnamData> {
   await connection();
@@ -469,7 +483,7 @@ export async function getVietnam(lang: Locale, newsLimit = 6): Promise<VietnamDa
   const usdvnd = getTile(db, SERIES.usdvnd);
   const xau = getTile(db, SERIES.gold);
   const breadth = items("vn_breadth")[0];
-  const news = readNews(lang, "source = 'VnExpress' AND region = 'vietnam'", [], newsLimit);
+  const news = newsLimit > 0 ? readNews(lang, VN_NEWS_WHERE, DESK_OUTLETS, newsLimit) : [];
   return {
     vnindex: getTile(db, SERIES.vnindex),
     usdvnd,
@@ -524,7 +538,12 @@ export interface CalendarEntry {
   impact?: string;
   allDay?: boolean;
   url?: string | null;
+  /** A released US number read off FRED: `better` says whether beating the forecast was good news (null when on forecast or no forecast). */
+  result?: { actual: string; surprise: number | null; better: boolean | null };
 }
+
+/** Released events with a result stay listed this long; the rest drop 3 hours after their time. */
+const RESULT_SHOWN = 18 * 3600_000;
 
 /** The PBoC's loan-prime-rate fixings from this month on: the 20th at 9:15 Beijing, moved off weekends (holidays are not modelled). */
 function lprFixings(now: number, until: number): number[] {
@@ -545,21 +564,36 @@ export async function getCalendar(lang: Locale, days = 21, kinds: CalendarEntry[
   await connection();
   const now = Date.now();
   const until = now + days * 24 * 3600_000;
-  const econ = await getItems<{ country: string; impact: string; forecast: string | null; previous: string | null }>("calendar", lang);
+  const econ = await getItems<CalendarData>("calendar", lang);
   const launches = await getItems<{ provider: string; rocket: string; pad: string; status: string; precision: string | null }>("launch", lang);
+  const usReleases = await getItems<{ rid: number }>("us_releases", lang, 100);
+  // FRED's dates fill the weeks after ForexFactory's: from the day after its last event (all of them when it is empty).
+  const ffEnd = econ.reduce((a, e) => Math.max(a, e.ts ?? 0), 0);
+  const ffEndDay = ffEnd ? Math.floor(ffEnd / (24 * 3600_000)) * 24 * 3600_000 + 24 * 3600_000 : 0;
   const t = getDict(lang).calendar;
   const entries: CalendarEntry[] = [
     ...econ.flatMap((e) =>
-      e.ts && e.ts >= now - 3 * 3600_000
+      e.ts
         ? [{
             kind: "econ" as const,
             ts: e.ts,
             title: `${e.data.country} · ${e.title}`,
             impact: e.data.impact,
             detail: [e.data.forecast && `${t.forecast} ${e.data.forecast}`, e.data.previous && `${t.previous} ${e.data.previous}`].filter(Boolean).join(" · ") || null,
+            result: e.data.actual
+              ? {
+                  actual: e.data.actual,
+                  surprise: e.data.surprise ?? null,
+                  better: e.data.surprise ? (e.data.surprise > 0) === (e.data.polarity === "up-good") : null,
+                }
+              : undefined,
           }]
         : [],
     ),
+    ...usReleases.flatMap((r) => {
+      const def = US_RELEASES.find((x) => x.rid === r.data.rid);
+      return r.ts && r.ts >= ffEndDay && def ? [{ kind: "econ" as const, ts: r.ts, title: `USD · ${pick(def.name, lang)}`, impact: "High", detail: t.fredScheduled }] : [];
+    }),
     ...FOMC_MEETINGS.map((m) => ({
       kind: "fomc" as const,
       ts: Date.parse(`${m.end}T18:00:00Z`), // decision at 2pm New York on the last day
@@ -602,7 +636,7 @@ export async function getCalendar(lang: Locale, days = 21, kinds: CalendarEntry[
   // The next Fed meeting always shows, even beyond the window: it is the event markets plan around.
   const nextFomc = entries.find((e) => e.kind === "fomc" && e.ts >= now);
   return entries
-    .filter((e) => kinds.includes(e.kind) && ((e.ts >= now - 3 * 3600_000 && e.ts <= until) || e === nextFomc))
+    .filter((e) => kinds.includes(e.kind) && ((e.ts >= now - (e.result ? RESULT_SHOWN : 3 * 3600_000) && e.ts <= until) || e === nextFomc))
     .sort((a, b) => a.ts - b.ts);
 }
 
@@ -670,6 +704,16 @@ export interface CryptoData {
 }
 
 /** Everything the crypto page reads, once per request (several panels share it). */
+export async function getBtcLeverage(): Promise<BtcLeverage | null> {
+  await connection();
+  return btcLeverage(getDb());
+}
+
+export async function getEtfFlows(): Promise<EtfFlows | null> {
+  await connection();
+  return etfFlows(getDb());
+}
+
 export const getCrypto = cache(async (lang: Locale): Promise<CryptoData> => {
   await connection();
   const db = getDb();

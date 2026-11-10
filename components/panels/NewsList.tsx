@@ -8,6 +8,7 @@ import { Thumb } from "@/components/ui/Thumb";
 interface Labels {
   all: string;
   alsoIn: string;
+  related: string;
   regions: Record<string, string>;
   topics: Record<string, string>;
   untagged: string;
@@ -35,23 +36,32 @@ export function NewsList({ items, now, labels, locale }: { items: NewsItem[]; no
   const featured = pickFeatured(filtered);
   const shown = filtered.filter((i) => !featured.includes(i));
   const tagged = items.some((i) => i.topic);
+  // A one-region list (the Vietnam page's) has nothing to filter by region: "All" moves to the topic row.
+  const byRegion = regions.length > 1;
 
   return (
     <div className="flex min-h-0 flex-col gap-2">
-      <div className="flex flex-wrap gap-1" role="group" aria-label={labels.regionGroup}>
-        <Chip active={!region} onClick={() => (setRegion(null), setTopic(null))}>
-          {labels.all}
-        </Chip>
-        {regions.map(([r, n]) => (
-          <Chip key={r} active={region === r} onClick={() => (setRegion(r === region ? null : r), setTopic(null))}>
-            {labels.regions[r] ?? r} <span className="text-muted">{n}</span>
+      {byRegion && (
+        <div className="flex flex-wrap gap-1" role="group" aria-label={labels.regionGroup}>
+          <Chip active={!region} onClick={() => (setRegion(null), setTopic(null))}>
+            {labels.all}
           </Chip>
-        ))}
-      </div>
+          {regions.map(([r, n]) => (
+            <Chip key={r} active={region === r} onClick={() => (setRegion(r === region ? null : r), setTopic(null))}>
+              {labels.regions[r] ?? r} <span className="text-muted">{n}</span>
+            </Chip>
+          ))}
+        </div>
+      )}
       {tagged ? (
         <div className="flex flex-wrap gap-1" role="group" aria-label={labels.topicGroup}>
+          {!byRegion && (
+            <Chip active={!topic} onClick={() => setTopic(null)}>
+              {labels.all}
+            </Chip>
+          )}
           {topics.map(([t, n]) => (
-            <Chip key={t} small active={topic === t} onClick={() => setTopic(t === topic ? null : t)}>
+            <Chip key={t} small={byRegion} active={topic === t} onClick={() => setTopic(t === topic ? null : t)}>
               {labels.topics[t] ?? t} <span className="text-muted">{n}</span>
             </Chip>
           ))}
@@ -91,16 +101,42 @@ export function NewsList({ items, now, labels, locale }: { items: NewsItem[]; no
 
 function Meta({ n, now, loc, labels }: { n: NewsItem; now: number; loc: string; labels: Labels }) {
   return (
-    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
-      <span className="font-medium text-ink-2">{n.source}</span>
-      <span className="tabular">{ago(n.publishedAt, now, loc)}</span>
-      {n.topic && <span>{labels.topics[n.topic] ?? n.topic}</span>}
-      {n.alsoIn.length > 0 && (
-        <span>
-          {labels.alsoIn}: {n.alsoIn.join(", ")}
-        </span>
-      )}
-    </div>
+    <>
+      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
+        <span className="font-medium text-ink-2">{n.source}</span>
+        <span className="tabular">{ago(n.publishedAt, now, loc)}</span>
+        {n.topic && <span>{labels.topics[n.topic] ?? n.topic}</span>}
+        {n.alsoIn.length > 0 && (
+          <span>
+            {labels.alsoIn}: {n.alsoIn.join(", ")}
+          </span>
+        )}
+      </div>
+      <Related n={n} label={labels.related} />
+    </>
+  );
+}
+
+/** The other headlines folded into this story, behind a "+N" toggle. */
+export function Related({ n, label }: { n: Pick<NewsItem, "related">; label: string }) {
+  if (!n.related.length) return null;
+  return (
+    <details className="group mt-0.5 text-[11px]">
+      <summary className="cursor-pointer list-none text-ink-2 hover:text-ink [&::-webkit-details-marker]:hidden">
+        {label.replace("{n}", String(n.related.length))} <span className="group-open:hidden">▾</span>
+        <span className="hidden group-open:inline">▴</span>
+      </summary>
+      <ul className="mt-1 flex flex-col gap-1 border-l border-line pl-2">
+        {n.related.map((r, i) => (
+          <li key={i} className="leading-snug">
+            <a href={r.url} target="_blank" rel="noreferrer" className="text-ink-2 hover:text-ink hover:underline">
+              {r.title}
+            </a>{" "}
+            <span className="text-muted">· {r.source}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 

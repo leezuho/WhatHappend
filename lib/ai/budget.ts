@@ -17,9 +17,9 @@ const GEMINI_FREE_BRIEF = 20;
 
 /**
  * Calls of the "brief" model that the optional jobs (indicator notes) leave untouched each day: the daily brief,
- * one "Regenerate" press, and the weekly macro note with one retry.
+ * one "Regenerate" press, the weekly macro and tech notes, and one retry.
  */
-export const BRIEF_RESERVE = 4;
+export const BRIEF_RESERVE = 5;
 
 /** The quota day a timestamp falls in (YYYY-MM-DD, Pacific time). */
 export function quotaDay(now: number): string {

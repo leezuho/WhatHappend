@@ -6,7 +6,20 @@ import { TopBar } from "@/components/TopBar";
 import { AutoRefresh } from "@/components/ui/AutoRefresh";
 import { Panel } from "@/components/ui/Panel";
 import { RegimeBadge, Ticker } from "@/components/panels/MarketPanels";
-import { CoinMapBody, CryptoNewsBody, CryptoOddsBody, CryptoVitals, DerivsBody, EthBtcBody, NetworkBody, TopCoinsBody, TrendingCoinsBody } from "@/components/panels/CryptoPanels";
+import {
+  ChainsBody,
+  CoinMapBody,
+  CryptoNewsBody,
+  CryptoOddsBody,
+  CryptoVitals,
+  EtfFlowsBody,
+  DerivsBody,
+  EthBtcBody,
+  LeverageBody,
+  NetworkBody,
+  TopCoinsBody,
+  TrendingCoinsBody,
+} from "@/components/panels/CryptoPanels";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/crypto">): Promise<Metadata> {
   const { lang } = await params;
@@ -61,6 +74,17 @@ export default async function CryptoPage({ params }: PageProps<"/[lang]/crypto">
         </Panel>
         <Panel lang={lang} title={p.cryptoEthBtc.title} subtitle={p.cryptoEthBtc.subtitle} sources={["yahoo"]} className="md:col-span-2 xl:col-span-5">
           <EthBtcBody lang={lang} />
+        </Panel>
+
+        {/* Row 2c: leverage building or unwinding, institutional money, where on-chain money sits */}
+        <Panel lang={lang} title={p.cryptoLeverage.title} subtitle={p.cryptoLeverage.subtitle} sources={["binance", "yahoo"]} className="xl:col-span-4">
+          <LeverageBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.cryptoEtf.title} subtitle={p.cryptoEtf.subtitle} sources={["etfflows"]} className="xl:col-span-4">
+          <EtfFlowsBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.cryptoChains.title} subtitle={p.cryptoChains.subtitle} sources={["defillama"]} className="md:col-span-2 xl:col-span-4">
+          <ChainsBody lang={lang} />
         </Panel>
 
         {/* Row 3: chain, attention, odds */}

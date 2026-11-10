@@ -105,7 +105,7 @@ export default async function MacroPage({ params }: PageProps<"/[lang]/macro">) 
         <Panel lang={lang} title={p.recession.title} subtitle={p.recession.subtitle} sources={["fred", "oecd"]} className="md:col-span-2 xl:col-span-7">
           <RecessionPanel lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.macroCalendar.title} subtitle={p.macroCalendar.subtitle} sources={["calendar"]} className="md:col-span-2 xl:col-span-5">
+        <Panel lang={lang} title={p.macroCalendar.title} subtitle={p.macroCalendar.subtitle} sources={["calendar", "releases"]} className="md:col-span-2 xl:col-span-5">
           <CalendarBody lang={lang} days={28} kinds={["econ", "fomc", "cb"]} />
         </Panel>
       </main>

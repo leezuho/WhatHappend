@@ -11,7 +11,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | Id | Nhóm | Endpoint chính | Chu kỳ | Đích lưu |
 |---|---|---|---|---|
 | `yahoo` | Thị trường | `yahoo-finance2` (`quote`, `chart`) | 3 phút (lịch sử: 1 giờ) | `quotes`, `observations` `yahoo:<symbol>`, `items` `tech_caps` |
-| `fred` | Vĩ mô Mỹ | `fred.stlouisfed.org/graph/fredgraph.csv` | 6 giờ | `observations` `fred:<code>`, chuỗi dẫn xuất `calc:GLOBAL_LIQ`, `calc:NETLIQ_US`, `calc:RECPROB_US` |
+| `fred` | Vĩ mô Mỹ | `fred.stlouisfed.org/graph/fredgraph.csv` | 6 giờ | `observations` `fred:<code>`, chuỗi dẫn xuất `calc:GLOBAL_LIQ`, `calc:NETLIQ_US`, `calc:RECPROB_US`, `calc:FEDPRICED_US` |
 | `imf` | Vĩ mô thế giới | IMF DataMapper API v1 | 24 giờ | `observations` `imf:<ind>:<iso3 hoặc nhóm>` |
 | `bis` | Lãi suất điều hành, tỷ giá thực hiệu dụng, khoảng trống tín dụng | BIS SDMX `WS_CBPOL`, `WS_EER`, `WS_CREDIT_GAP` | 12 giờ | `observations` `bis:<area>`, `bis:REER:<area>`, `bis:GAP:<area>` |
 | `oecd` | Vĩ mô thế giới | OECD SDMX REST (CSV) | 24 giờ | `observations` `oecd:<CLI\|CPI\|UNE\|GDP\|IRLT>:<area>` |
@@ -29,7 +29,8 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `gdelt` | Bản đồ | GDELT 2.0 events export (ZIP) | 15 phút | `events` (`conflict`, `protest`) |
 | `wikipedia` | Xu hướng | Wikimedia top pageviews | 3 giờ | `items` `wiki_en`, `wiki_vi` |
 | `hackernews` | Xu hướng | HN Algolia `front_page` | 20 phút | `items` `hn` |
-| `calendar` | Lịch | ForexFactory this-week JSON | 3 giờ | `items` `calendar` |
+| `calendar` | Lịch | ForexFactory this-week JSON, số thực tế từ FRED | 1 giờ | `items` `calendar` |
+| `releases` | Lịch | Lịch công bố của FRED (HTML) | 24 giờ | `items` `us_releases` |
 | `launches` | Lịch | Launch Library 2 `2.3.0` | 3 giờ | `items` `launch` |
 | `polymarket` | Dự đoán | Polymarket Gamma `events` | 15 phút | `items` `polymarket`, `polymarket_crypto` |
 | `kalshi` | Dự đoán | Kalshi trade-api v2 (`KXFED`) | 15 phút | `items` `kalshi_fed` |
@@ -38,6 +39,11 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `airquality` | Môi trường | Open-Meteo Air Quality | 1 giờ | `items` `airquality` |
 | `who` | Sức khỏe | WHO Disease Outbreak News API | 6 giờ | `items` `who` |
 | `vnindex` | Việt Nam | SSI iBoard | 3 phút | `quotes`, `observations` `vn:VNINDEX`, `items` `vn_breadth` |
+| `vnstocks` | Việt Nam | SSI iBoard, VNDirect | 5 phút | `quotes`, `observations` `vn:VN30`, `vn:HNX`, `vn:UPCOM`, `items` `vn30`, `kv` `vnstocks:shares` |
+| `vnflows` | Việt Nam | VNDirect finfo | 30 phút | `observations` `vnd:FOREIGN_NET/BUY/SELL:VNINDEX` |
+| `sbvrate` | Việt Nam | Techcombank (bản sao tỷ giá trung tâm NHNN) | 6 giờ | `observations` `sbv:CENTRAL`, `kv` `sbvrate:backfilled-to` |
+| `petrolimex` | Việt Nam | API cổng Petrolimex | 1 giờ | `items` `fuel_vn`, `observations` `petrolimex:<ID>:z1` |
+| `ibrate` | Việt Nam | Thời báo Ngân hàng (bản tin "Điểm lại thông tin kinh tế") | 6 giờ | `observations` `sbv:IB_ON`, `sbv:IB_1W`, `sbv:IB_2W`, `sbv:IB_1M`, `kv` `ibrate:done` |
 | `sjc` | Việt Nam | vang.today (dự phòng: PNJ) | 30 phút | `items` `gold_vn`, `observations` `goldvn:<code>:sell` |
 | `vcb` | Việt Nam | Vietcombank exchange-rates JSON | 1 giờ | `items` `vcb`, `observations` `vcb:USD:sell` |
 | `sbv` | Việt Nam | Không gọi mạng: lãi suất tái cấp vốn khai báo trong `config/policy-rates.ts` | 12 giờ | `observations` `sbv:REFI` |
@@ -45,13 +51,22 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `coingecko` | Crypto | CoinGecko `global`, `coins/markets`, `search/trending` | 5 phút | `quotes`/`observations` `cg:*`, `items` `crypto_global`, `crypto_top`, `crypto_trending` |
 | `fng` | Crypto | alternative.me Fear & Greed | 1 giờ | `observations` `fng:crypto`, `items` `crypto_fng` |
 | `deribit` | Crypto | Deribit DVOL (BTC) | 1 giờ | `observations` `deribit:DVOL-BTC` |
-| `defillama` | Crypto | DefiLlama stablecoin charts | 6 giờ | `observations` `llama:stablecoins` |
+| `defillama` | Crypto | DefiLlama stablecoin charts, TVL và phí theo chain | 6 giờ | `observations` `llama:stablecoins`, `items` `llama_chains` |
 | `mempool` | Crypto | mempool.space | 10 phút | `items` `btc_network` |
-| `binance` | Crypto | Binance USDⓈ-M futures + P2P | 15 phút | `items` `crypto_perps`, `usdt_p2p`, `observations` `binance:USDTVND` |
+| `binance` | Crypto | Binance USDⓈ-M futures + P2P | 15 phút | `items` `crypto_perps`, `usdt_p2p`, `observations` `binance:USDTVND`, `binance:OI:BTC`, `binance:LSR:BTC`, `binance:FUNDAPR:BTC` |
+| `etfflows` | Crypto | bitbo.io (bảng dòng tiền ETF bitcoin giao ngay) | 3 giờ | `observations` `etf:BTC:TOTAL`, `etf:BTC:<quỹ>`, `items` `btc_etf_latest` |
 | `cloudstatus` | Công nghệ | Trang trạng thái AWS, Google Cloud, Azure, Cloudflare, GitHub, Vercel, OpenAI, Claude | 10 phút | `items` `status` |
 | `openrouter` | Công nghệ | OpenRouter `api/v1/models` | 6 giờ | `items` `ai_models` |
 | `huggingface` | Công nghệ | Hugging Face `api/daily_papers`, `api/models?sort=trendingScore` | 3 giờ | `items` `hf_papers`, `hf_models` |
 | `kev` | Công nghệ | CISA Known Exploited Vulnerabilities (JSON) | 6 giờ | `items` `kev`, `kev_vendors` |
+| `twse` | Công nghệ | TWSE OpenAPI (doanh thu tháng) | 12 giờ | `items` `tw_revenue`, `observations` `twse:REV:<mã>` |
+| `hnhiring` | Công nghệ | HN Algolia + HN Firebase API | 24 giờ | `observations` `hn:WHOISHIRING` |
+| `eol` | Công nghệ | endoflife.date, npm registry | 24 giờ | `items` `eol` |
+| `arena` | Công nghệ | LMArena (Hugging Face dataset) + giá OpenRouter | 24 giờ | `items` `ai_value` |
+| `lobsters` | Công nghệ | lobste.rs/hottest.json | 30 phút | `items` `lobsters` |
+| `spaceweather` | Công nghệ | NOAA SWPC (Kp, thang NOAA) | 1 giờ | `items` `spaceweather` |
+| `pkgtrends` | Công nghệ | npm downloads API, pypistats.org | 24 giờ | `observations` `pkg:<npm|pypi>:<gói>` |
+| `epoch` | Công nghệ | Epoch AI notable models (CSV) | 24 giờ | `items` `ai_compute` |
 
 Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC và lịch họp các NHTW khác không lấy từ API mà đặt trong `config/fomc.ts` và `config/central-banks.ts` (§5.2).
 
@@ -82,11 +97,12 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC và l�
 - **Mã:** lấy từ `FRED_CODES`:
   - Các series trong `config/series.ts`: `T10Y2Y`, `DGS2`, `BAMLH0A0HYM2`, `STLFSI4`, `ICSA`, `SAHMREALTIME`, `GDPNOW`, `WALCL`, `T5YIFR`, `CPIAUCSL`, `FEDFUNDS`, `USEPUINDXD`.
   - Các kỳ hạn của đường cong lợi suất: `DGS1MO` … `DGS30`.
-  - Trang Vĩ mô: `DTWEXBGS` (USD rổ rộng), `PALLFNFINDEXM` (giá hàng hoá IMF), `GEPUCURRENT` (bất định chính sách toàn cầu), và đầu vào của chuỗi dẫn xuất (`FRED_CALC_CODES`): `ECBASSETSW` (€ triệu), `JPNASSETS` (100 triệu yên), `DEXUSEU`, `DEXJPUS`, `T10Y3M`, `RRPONTSYD` ($ tỷ, ngày), `WTREGEN` ($ triệu, tuần).
+  - Trang Vĩ mô: `DTWEXBGS` (USD rổ rộng), `PALLFNFINDEXM` (giá hàng hoá IMF), `GEPUCURRENT` (bất định chính sách toàn cầu), và đầu vào của chuỗi dẫn xuất (`FRED_CALC_CODES`): `ECBASSETSW` (€ triệu), `JPNASSETS` (100 triệu yên), `DEXUSEU`, `DEXJPUS`, `T10Y3M`, `RRPONTSYD` ($ tỷ, ngày), `WTREGEN` ($ triệu, tuần), `DFF` (lãi suất Fed hiệu dụng, ngày). CPI Mỹ theo nhóm (`US_CPI_PARTS` trong `config/macro.ts`, chỉ số đã điều chỉnh mùa vụ): `CPIENGSL`, `CPIUFDSL`, `CUSR0000SACL1E`, `CUSR0000SAH1`, `CUSR0000SASL2RS`.
   - Panel chủ đề của trang Vĩ mô (`MACRO_US`, `RECESSION_SIGNALS`): `WEI`, `CFNAI`, `INDPRO`, `RSAFS`, `CPILFESL`, `PCEPILFE`, `PFOODINDEXM`, `NFCI`, `DFII10`, `PAYEMS`, `UNRATE`, `UMCSENT`, `GFDEGDQ188S`, `A091RC1Q027SBEA`, `BAMLC0A0CM`, `BAMLEMCBPIOAS`, `RECPROUSM156N`, `T10Y3M`. Chuỗi lưu dạng mức (chỉ số giá, số việc làm) nhưng hiển thị dạng thay đổi thì khai `transform` trong `SeriesDef` (`yoy`: so cùng kỳ; `diff`: so kỳ trước) và `scale`; phép đổi nằm ở `displayPoints()` trong `lib/data/series.ts`, dùng chung cho ô KPI và drawer.
 - **Chuỗi dẫn xuất:** cuối mỗi lần chạy, `writeDerived()` tính lại từ dữ liệu đã lưu (hàm thuần trong `lib/signals/macro.ts`):
   - `calc:GLOBAL_LIQ`: `WALCL + ECBASSETSW × DEXUSEU + JPNASSETS × 100 / DEXJPUS`, đơn vị $ triệu, theo ngày của `WALCL`. Tuần nào thiếu đầu vào (ECB cũ hơn 14 ngày, BOJ cũ hơn 75 ngày, tỷ giá cũ hơn 10 ngày) thì bỏ qua chứ không cộng thiếu.
   - `calc:NETLIQ_US`: thanh khoản ròng Mỹ = `WALCL / 1000 − RRPONTSYD − WTREGEN / 1000`, đơn vị $ tỷ, theo ngày của `WALCL`. Tuần nào RRP cũ hơn 7 ngày hoặc TGA cũ hơn 10 ngày thì bỏ qua.
+  - `calc:FEDPRICED_US`: `(DGS1 − DFF) × 100`, đơn vị bp, theo ngày của `DGS1`, DFF lấy giá trị đang hiệu lực (cũ tối đa 5 ngày). Âm = thị trường kỳ vọng lãi suất bình quân 12 tháng tới thấp hơn hiện nay. Tín phiếu thường lệch nhẹ so với lãi suất điều hành kỳ vọng nên chỉ là ước lượng.
   - `calc:RECPROB_US`: mô hình probit của NY Fed, `Φ(−0,5333 − 0,6330 × s) × 100` với `s` là chênh lệch 10Y–3M bình quân tháng; tháng hiện tại dùng các ngày đã có.
 - **CSV:** header là `observation_date,<CODE>`; giá trị thiếu là ô rỗng (bản cũ dùng `.`, cả hai đều bị bỏ qua).
 - **Cách gọi:** mỗi mã 1 request, cách nhau 300 ms. Nguồn chỉ FAIL khi hơn một nửa số mã lỗi.
@@ -277,9 +293,11 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
   - Không có trường `actual`.
   - Chỉ có tuần hiện tại (`nextweek.json` trả 404).
   - Nên gọi tối đa 1 lần/giờ.
-- **Lọc:** giữ `impact = High` của mọi nước, và `Medium` của USD/CNY/EUR; chỉ lấy sự kiện từ 6 giờ trước trở đi.
-- **Lưu:** kind `calendar`, `data = { country, impact, forecast, previous }`.
+- **Lọc:** giữ `impact = High` của mọi nước, và `Medium` của USD/CNY/EUR; lấy sự kiện từ 24 giờ trước trở đi (để giữ kết quả của số vừa công bố).
+- **Số thực tế:** với sự kiện USD đã qua giờ công bố có trong `CALENDAR_ACTUALS` (`config/calendar.ts`: CPI, CPI lõi, CPI y/y, PCE, PCE lõi, PPI, việc làm phi nông nghiệp, thất nghiệp, lương giờ, đơn trợ cấp thất nghiệp, bán lẻ, bán lẻ lõi, GDP), đọc series FRED tương ứng cho kỳ mà bản tin đó công bố (`refPeriod`: tháng trước tháng công bố, quý trước quý công bố, tuần kết thúc thứ Bảy trước ngày công bố với claims) rồi tính như ForexFactory in (`mom`, `yoy`, `diff`, `level`). Đọc trong DB trước (series do `fred` lưu); chưa có kỳ đó thì gọi CSV của FRED cho riêng mã đó một lần và lưu vào `observations`. Kỳ công bố bị lùi (ví dụ đóng cửa chính phủ) thì không có kết quả chứ không lấy nhầm kỳ cũ. Tính từ chỉ số của FRED nên có thể lệch 0,1 so với số chính thức do làm tròn. Đã đối chiếu với trường `previous` ngày 2026-11-10: CPI 0,6%, CPI lõi 0,3%, PPI 1,3%, claims 189K đều khớp.
+- **Lưu:** kind `calendar`, `data = { country, impact, forecast, previous, actual?, surprise?, polarity? }`; `surprise` = thực tế − dự báo theo đơn vị của dự báo.
 - **Lưu ý:** cuối tuần (thứ Bảy) danh sách thường rỗng cho tới khi tuần mới được đăng.
+- **Các tuần sau (`releases`, `lib/sources/releases.ts`, `US_RELEASES` trong `config/calendar.ts`):** `https://fred.stlouisfed.org/releases/calendar?rid=<id>&vs=<YYYY-MM-DD>&ve=<YYYY-MM-DD>` là trang HTML không cần key, mỗi mã một lần gọi: hàng ngày in đậm ("Tuesday November 10, 2026") rồi hàng giờ ("7:30 am" + link `/release?rid=`). Giờ theo US Central, đổi sang UTC theo `America/Chicago` (có giờ mùa hè). FRED chỉ có lịch khoảng 1–2 tháng tới. Bảy bản tin: CPI (10), việc làm (50), GDP (53), thu nhập và PCE (54), bán lẻ (9), PPI (46), JOLTS (192). Lưu `items` `us_releases` (`data = { rid }`). `getCalendar` chỉ lấy các ngày sau ngày cuối cùng của ForexFactory nên không trùng; mục này không có dự báo (ghi "Lịch dự kiến (FRED)"). API lịch của FRED cần key và lịch ICS của BLS trả 403, nên dùng trang HTML.
 - **FOMC:** đặt cứng trong `config/fomc.ts` (`FOMC_MEETINGS`), lấy từ federalreserve.gov. Danh sách tính tới hết 2027; cần cập nhật khi Fed công bố năm mới. UI tự gộp FOMC vào lịch.
 - **NHTW khác** (chỉ hiện ở lịch của trang Vĩ mô): đặt cứng trong `config/central-banks.ts` (`CB_MEETINGS`): ECB, BoE, BoJ, BoC, RBA, BoK, RBI, BI, Copom, Banxico, mỗi ngân hàng kèm link nguồn chính thức, đọc ngày 2026-11-09. Ngày 2027 của BI, Banxico và RBI (từ 4/2027) chưa công bố lúc đó. PBoC không họp định kỳ: LPR công bố ngày 20 hằng tháng lúc 9:15 Bắc Kinh, rơi vào cuối tuần thì lùi sang thứ Hai (`LPR_DAY`; ngày lễ Trung Quốc chưa tính). `getCalendar(lang, days, kinds)` chọn loại mục: trang tổng quan `econ`, `fomc`, `launch`; trang Vĩ mô `econ`, `fomc`, `cb`.
 
@@ -347,13 +365,27 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
 - **Giá hiện tại:** `https://iboard-query.ssi.com.vn/exchange-index/VNINDEX?hasHistory=false`.
   - Trường `data.indexValue`, `change`, `changePercent`, `time` → ghi vào `quotes`.
   - Trường `advances`, `declines`, `nochanges`, `totalValue` → ghi vào kind `vn_breadth`. `totalValue` là giá trị khớp lệnh (VND); giao dịch thoả thuận nằm riêng ở `totalValuePT`, tổng hai thứ là `allValue`.
-  - Cùng response còn có `totalBuyForeignQtty`, `totalSellForeignQtty` (khối lượng cổ phiếu khối ngoại mua/bán, không có giá trị VND), chưa dùng.
+  - Cùng response còn có `totalBuyForeignQtty`, `totalSellForeignQtty` (khối lượng cổ phiếu khối ngoại mua/bán, không có giá trị VND, lớn hơn số của VNDirect nên có thể gồm cả bảng khác), không dùng; giá trị khối ngoại lấy từ `vnflows`.
 - **Lịch sử:** `https://iboard-api.ssi.com.vn/statistics/charts/history?resolution=1D&symbol=VNINDEX&from=<unix>&to=<unix>` trả các mảng `t` (giây) và `c`.
   - Có dưới 200 điểm thì backfill 430 ngày.
 - **Dự phòng (chưa tích hợp):**
   - DNSE: `services.entrade.com.vn/chart-api/v2/ohlcs/index`
-  - VNDirect: `api-finfo.vndirect.com.vn/v4/vnmarket_prices`
+  - VNDirect: `api-finfo.vndirect.com.vn/v4/vnmarket_prices` (đã dùng cho VN30, HNX, UPCoM ở `vnstocks`)
   - TCBS không dùng được vì bị Cloudflare chặn.
+
+### 7.1b `vnstocks` — VN30, HNX-Index, UPCoM và cổ phiếu VN30 (`lib/sources/vnstocks.ts`, `VN_INDICES` trong `config/vietnam.ts`)
+- **Giá hiện tại của chỉ số:** cùng endpoint SSI với VN-Index, mã `VN30`, `HNXIndex`, `HNXUpcomIndex` (`UPCOM`, `HNX` trả `data:{}`) → `quotes`.
+- **Lịch sử chỉ số:** VNDirect `https://api-finfo.vndirect.com.vn/v4/vnmarket_prices?sort=date:desc&q=code:<VN30|HNX|UPCOM>&size=<n>` (`close` là điểm chỉ số). Không dùng lịch sử của SSI vì `HNXIndex` và `HNXUpcomIndex` trả giá trị chia 1000 (0,26 thay vì 256, thử 2026-11-10). Dưới 200 điểm thì lấy 300 phiên, sau đó 5 phiên mỗi lần.
+- **Cổ phiếu VN30:** `https://iboard-query.ssi.com.vn/stock/group/VN30`, 30 dòng `stockSymbol, companyNameVi/En, matchedPrice, refPrice, priceChangePercent, nmTotalTradedValue, buyForeignValue, sellForeignValue`, giá tính bằng **VND** (không phải nghìn đồng). Trước phiên chưa có `matchedPrice` thì dùng `refPrice`, thay đổi 0. Dưới 25 dòng thì lỗi.
+- **Số cổ phiếu lưu hành:** VNDirect `https://api-finfo.vndirect.com.vn/v4/ratios/latest?order=reportDate&where=code:<30 mã>&filter=itemCode:51004` (`OUTSTANDING_SHARES`), mỗi ngày gọi một lần, lưu ở `kv` `vnstocks:shares`; lỗi thì dùng số hôm trước. Thiếu `order` hoặc `filter` thì API trả 404. Vốn hoá = giá × số cổ phiếu.
+- **Lưu:** kind `vn30`, `data = { symbol, name {en, vi}, price, changePct, traded, foreignNet, mcap }`.
+- Host `finfo-api.vndirect.com.vn` từ chối kết nối; chỉ dùng `api-finfo`.
+
+### 7.1c `vnflows` — Khối ngoại trên HOSE (`lib/sources/vnflows.ts`)
+- **URL:** `https://api-finfo.vndirect.com.vn/v4/foreigns?q=code:VNINDEX&sort=tradingDate&size=<n>`, mới nhất trước, lịch sử từ 2018. Trường `tradingDate, buyVal, sellVal, netVal` (VND), `buyVol, sellVol, netVol` (cổ phiếu). Dòng hôm nay cập nhật trong phiên.
+- Dưới 200 điểm thì lấy 400 phiên, sau đó 10 phiên mỗi lần.
+- **Lưu:** `vnd:FOREIGN_NET:VNINDEX`, `vnd:FOREIGN_BUY:VNINDEX`, `vnd:FOREIGN_SELL:VNINDEX` (`VN_FOREIGN`), mỗi phiên một điểm.
+- **Dự phòng (chưa tích hợp):** CafeF `https://cafef.vn/du-lieu/Ajax/PageNew/DataHistory/GDKhoiNgoai.ashx?Symbol=VNINDEX&PageIndex=1&PageSize=30` (`GTDGRong`, VND; trang 30 dòng; chỉ có dòng hôm nay sau giờ đóng cửa). Khớp VNDirect tới từng đồng ở 6/8 ngày kiểm tra (2026-11-10).
 
 ### 7.2 `sjc` — Giá vàng (`lib/sources/sjc.ts`)
 - **Lưu ý:** `sjc.com.vn` (cả `PriceService.ashx` và `/xml/tygiavang.xml`) trả **403 Cloudflare challenge**, nên không gọi trực tiếp được.
@@ -398,6 +430,7 @@ Trang `/[lang]/crypto` đọc các nguồn dưới đây. Không nguồn nào c�
 - **URL:** `stablecoins.llama.fi/stablecoincharts/all`. Luôn trả toàn bộ lịch sử (khoảng 1,3 MB) nên chạy 6 giờ/lần.
 - **Xử lý:** cộng mọi loại peg trong `totalCirculatingUSD` (giống con số tổng trên defillama.com), đổi ra tỷ USD, giữ 430 ngày.
 - **Lưu:** `observations` `llama:stablecoins`.
+- **Chain:** `api.llama.fi/v2/chains` (TVL hiện tại mỗi chain, USD), lấy 10 chain lớn nhất; mỗi chain gọi thêm `v2/historicalChainTvl/<tên>` (TVL theo ngày, `date` tính bằng giây) để tính thay đổi 7 và 30 ngày, và `overview/fees/<tên>?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true` (`total24h`, `total30d`, `change_7dover7d`; khoảng 0,7 MB mỗi chain). Chain không có trang phí thì để null. Lưu `items` `llama_chains` (`ChainRow`). Phần stablecoin và phần chain chạy độc lập; nguồn chỉ FAIL khi cả hai lỗi.
 
 ### 8.5 `mempool` (`lib/sources/mempool.ts`)
 - **URL:** `mempool.space/api/blocks/tip/height`, `/v1/difficulty-adjustment`, `/v1/fees/recommended`, `/v1/mining/hashrate/1m`.
@@ -407,7 +440,14 @@ Trang `/[lang]/crypto` đọc các nguồn dưới đây. Không nguồn nào c�
 ### 8.6 `binance` (`lib/sources/binance.ts`)
 - **Hợp đồng vĩnh cửu:** `fapi.binance.com/fapi/v1/premiumIndex?symbol=` và `/futures/data/openInterestHist?period=1h&limit=25` cho BTC, ETH, SOL. Funding quy năm = rate × 3 × 365 (kỳ funding 8 giờ). Lưu `items` `crypto_perps`.
 - **P2P USDT/VND (không chính thức):** `POST p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search` với `tradeType` `BUY` (người dùng mua, quảng cáo bán, giá tăng dần) và `SELL`. Lấy trung vị 10 quảng cáo đầu mỗi chiều. Hai chiều có thể chéo nhau vì mỗi quảng cáo có hạn mức và điều kiện riêng. Lưu `items` `usdt_p2p` và `observations` `binance:USDTVND` (giá giữa). Trang so giá mua với giá bán USD của Vietcombank.
-- **Chặn theo quốc gia:** Binance trả 451 cho một số nước (có Mỹ). Hai phần chạy độc lập: một phần lỗi thì ghi log, nguồn chỉ FAIL khi cả hai lỗi. Lưu ý khi chọn region để deploy.
+- **Lịch sử BTC theo ngày** (`BTC_HISTORY` trong `config/series.ts`): `futures/data/openInterestHist?symbol=BTCUSDT&period=1d&limit=30` (`sumOpenInterest`, tính bằng BTC, lưu `binance:OI:BTC`), `futures/data/globalLongShortAccountRatio?…&period=1d&limit=30` (`longShortRatio`, lưu `binance:LSR:BTC`), `fapi/v1/fundingRate?symbol=BTCUSDT&limit=93` (các kỳ funding 8 giờ, gộp thành bình quân ngày quy năm, `dailyFundingApr`, lưu `binance:FUNDAPR:BTC`). Binance chỉ trả 30 ngày gần nhất nên series dài dần từ 12/10/2026.
+- **Chặn theo quốc gia:** Binance trả 451 cho một số nước (có Mỹ). Ba phần (hợp đồng vĩnh cửu, P2P, lịch sử BTC) chạy độc lập: phần nào lỗi thì ghi log, nguồn chỉ FAIL khi cả ba lỗi. Lưu ý khi chọn region để deploy.
+
+### 8.6b `etfflows` (`lib/sources/etfflows.ts`)
+- **URL:** `https://bitbo.io/treasuries/etf-flows/`, HTML có một bảng: hàng tiêu đề `Date, IBIT, FBTC, GBTC, BTC, BITB, ARKB, …, Totals`, rồi khoảng 10 phiên gần nhất ("Nov 06, 2026"), triệu USD, cuối bảng là các dòng Total, Average, Maximum, Minimum (bỏ qua). Tiêu đề không còn cột `Totals` thì lỗi.
+- Farside (`farside.co.uk`) trả 403 Cloudflare; SoSoValue (`api.sosovalue.xyz`, `sosovalue.com`) 403; endpoint biểu đồ của The Block trả 410; Coinglass public lỗi (thử 2026-11-10).
+- **Lưu:** `etf:BTC:TOTAL` và `etf:BTC:<quỹ>` cho IBIT, FBTC, GBTC, ARKB, BITB (`BTC_ETF` trong `config/series.ts`), mỗi phiên một điểm, nên lịch sử dài dần; `items` `btc_etf_latest` là phiên mới nhất đủ mọi quỹ.
+- **Lưu ý:** bảng của bitbo có thể thiếu ngày hoặc ghi 0 cho ngày chưa cập nhật (ngày 10/11/2026: thiếu 3/11, 26/10 ghi −0,0).
 
 ### 8.7 Tin và kèo crypto
 - **RSS:** CoinDesk, Cointelegraph, The Block, Decrypt, Coin68 (`crypto: true` trong `config/feeds.ts`). Các bài này **không** vào danh sách tin thế giới và đầu vào Brief; trang crypto đọc chúng cùng bài có `topic = crypto` từ các báo khác (`getCryptoNews`). Coin68 dùng `coin68.com/rss/tin-moi-nhat.rss` (`/feed/` trả HTML).
@@ -419,9 +459,30 @@ Trang `/[lang]/crypto` đọc các nguồn dưới đây. Không nguồn nào c�
 - **Hạn kiểm tra:** `SBV_CHECKED` là ngày đối chiếu gần nhất với trang NHNN. Quá `SBV_RECHECK_DAYS` (180 ngày) thì nguồn FAIL với lời nhắc, panel hiện "Dữ liệu cũ" hoặc "Lỗi nguồn" thay vì im lặng hiện số có thể đã cũ. NHNN đổi lãi suất thì thêm một bước và cập nhật `SBV_CHECKED`.
 - **Lịch sử đã khai báo:** 5,0% từ 23/9/2022 (1606/QĐ-NHNN), 6,0% từ 25/10/2022 (1809/QĐ-NHNN), 5,5% từ 3/4/2023 (574/QĐ-NHNN), 4,5% từ 19/6/2023 (1123/QĐ-NHNN; trang NHNN ghi nhầm ngày áp dụng là 19/03/2023).
 
-### 7.5 Lợi suất trái phiếu chính phủ Việt Nam (chưa tích hợp)
+### 7.4b `sbvrate` — Tỷ giá trung tâm NHNN (`lib/sources/sbvrate.ts`)
+- `sbv.gov.vn` trả trang "Request Rejected" của F5 cho Node và 403 cho curl, `dttktt.sbv.gov.vn` timeout (thử 2026-11-10), nên đọc bản Techcombank đăng lại.
+- **URL:** `https://techcombank.com/content/techcombank/web/vn/vi/cong-cu-tien-ich/ty-gia/_jcr_content.exchange-rates.integration.json` (hôm nay) hoặc `…exchange-rates.YYYY-MM-DD.integration.json` (theo ngày). Trường `otherRate.data[0].{central, floor, ceiling}`, chuỗi VND/USD; ngày không công bố (Chủ nhật, lễ) thì `data: []`.
+- Chỉ lưu `central`; biên độ ±5% (`VN_BAND`) tự tính vì `floor`/`ceiling` ở file cũ đôi khi sai (2021-06-01 trần bằng sàn).
+- **Lưu:** `sbv:CENTRAL` (`VN_CENTRAL_RATE`), mỗi ngày một điểm. Mỗi lần chạy đọc hôm nay, hôm qua, hôm kia, rồi lùi tiếp tối đa 120 ngày từ con trỏ `kv` `sbvrate:backfilled-to`, đến khi đủ 400 ngày.
+- **Đối chiếu:** 25.600 (10/11) và 25.610 (9/11) khớp với VietinBank (`/ca-nhan/ty-gia-khcn`, chỉ có hôm nay) và bản tin của Thời báo Ngân hàng.
+
+### 7.4c `petrolimex` — Giá xăng dầu (`lib/sources/petrolimex.ts`)
+- Trang `petrolimex.com.vn` nạp bảng giá bằng script. API phía sau: `GET https://portals.petrolimex.com.vn/~apis/portals/cms.item/search?x-request=<base64url(JSON)>`, JSON lọc lấy từ `portals.petrolimex.com.vn/_themes/sunrise/js/all.js` (`__vieapps.prices.fetch`). Không cần session hay token.
+- Trả `Objects[]` 6 mặt hàng (2026-11-10: E10 RON 95-V, E10 RON 95-III, E5 RON 92-II, DO 0,001S-V, DO 0,05S-II, dầu hỏa 2-K) với `Title, EnglishTitle, Zone1Price, Zone2Price` (₫/lít), `DIsplayOrder` (viết hoa chữ I), `LastModified` (ISO UTC). Không có ngày kỳ điều hành; dùng `LastModified` lớn nhất. Dưới 3 mặt hàng hoặc giá ngoài 5.000–100.000 thì lỗi.
+- **Lưu:** kind `fuel_vn` (`data = { id, name {en, vi}, zone1, zone2, change, modified }`), series `petrolimex:<ID>:z1` mỗi ngày một điểm. API không có lịch sử nên `change` (so với giá khác gần nhất đã lưu, `lastChange`) chỉ có sau kỳ điều hành đầu tiên ghi nhận được.
+
+### 7.4d `ibrate` — Lãi suất liên ngân hàng (`lib/sources/ibrate.ts`)
+- NHNN công bố hằng ngày nhưng `sbv.gov.vn` chặn Node. Thời báo Ngân hàng (báo của NHNN) đăng lại trong bản tin "Điểm lại thông tin kinh tế ngày D/M", mỗi bài có một câu cố định: "Thị trường tiền tệ liên ngân hàng ngày 09/11, lãi suất bình quân liên ngân hàng VND … giao dịch tại: qua đêm 4,60%; 1 tuần 4,95%; 2 tuần 5,10% và 1 tháng 5,50%."
+- **Danh sách bài:** `https://thoibaonganhang.vn/tag/diem-lai-thong-tin-kinh-te-5241.tag` (khoảng 12 bài gần nhất, không phân trang). Mỗi lần chạy chỉ đọc bài chưa xử lý (`kv` `ibrate:done`, giữ 60 URL).
+- **Tách số:** regex `RATE` lấy ngày/tháng và 4 kỳ hạn; năm là năm khiến ngày nằm trong quá khứ. Bài tuần không có câu này thì bỏ qua; có bài mới mà không bài nào khớp thì lỗi (đổi cách viết). Lãi suất ngoài 0–30% thì lỗi.
+- **Giới hạn:** bài ra khoảng 8 giờ sáng hôm sau, có ngày không có bài (6/11, 4/11, 30/10, 23/10), là văn xuôi nên dễ vỡ khi toà soạn đổi câu. Lịch sử chỉ bắt đầu từ các bài còn trên trang tag (15/10/2026).
+- **Lợi suất TPCP:** cùng bài có câu "Lợi suất TPCP (hoặc trái phiếu chính phủ) trên thị trường thứ cấp … chốt phiên (ở mức): 3 năm …; 10 năm 4,47%; …" (regex `BOND`), lấy kỳ hạn 10 năm, lưu `vn:GB10Y` (`VN_GB10Y`). Đây là `y10` của Việt Nam trên bảng sức khoẻ trang Vĩ mô (§7.5). Thiếu câu này thì bài vẫn được dùng cho lãi suất liên ngân hàng.
+- **Lưu:** `sbv:IB_ON`, `sbv:IB_1W`, `sbv:IB_2W`, `sbv:IB_1M` (`VN_INTERBANK`), `vn:GB10Y`. Tile `vnIbOn` ở panel Kinh tế Việt Nam.
+- Đã thử, không dùng được: Techcombank `tenorRate` luôn rỗng; vira.org.vn là ảnh và PDF; Vietstock cần token phiên; CafeF và 24hmoney 404; Simplize `ECONOMICS:VNINBR` chỉ có kỳ hạn 3 tháng, không rõ nguồn.
+
+### 7.5 Lợi suất trái phiếu chính phủ Việt Nam (HNX chưa tích hợp; đang dùng `ibrate`, §7.4d)
 - HNX công bố đường cong lợi suất mỗi ngày giao dịch: `POST https://hnx.vn/ModuleReportBonds/Bond_YieldCurve/SearchAndNextPageYieldCurveData` với `pDate=dd/mm/yyyy` trả bảng HTML (kỳ hạn, spot rate liên tục, par yield, spot rate theo năm); ngày không giao dịch chỉ có dòng tiêu đề. Ngày 6/11/2026: par yield 10 năm 4,51%.
-- `hnx.vn` không gửi chứng chỉ trung gian (GlobalSign GCC R3 EV TLS CA 2025), nên `fetch` của Node báo `UNABLE_TO_VERIFY_LEAF_SIGNATURE` dù `curl` trên macOS chạy được. Cần bổ sung chứng chỉ trung gian mới tích hợp được; đến lúc đó ô lợi suất 10 năm của Việt Nam để "—".
+- `hnx.vn` không gửi chứng chỉ trung gian (GlobalSign GCC R3 EV TLS CA 2025), nên `fetch` của Node báo `UNABLE_TO_VERIFY_LEAF_SIGNATURE` dù `curl` trên macOS chạy được. Cần bổ sung chứng chỉ trung gian mới tích hợp được. Từ 2026-11-10 ô lợi suất 10 năm của Việt Nam lấy từ bản tin của Thời báo Ngân hàng (`vn:GB10Y`, chốt phiên thứ cấp: 4,47% ngày 9/11, so với par yield 4,51% của HNX ngày 6/11), chỉ có từ 15/10/2026.
 
 ## 8b. Công nghệ
 
@@ -458,6 +519,17 @@ Trang `/[lang]/tech` (BR-23) đọc các nguồn dưới đây cùng `yahoo` (§
 - **RSS:** The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress Khoa học công nghệ (`tech: true` trong `config/feeds.ts`). Giống báo crypto, các bài này **không** vào tin thế giới và đầu vào Brief (`DESK_OUTLETS`); trang Công nghệ đọc chúng cùng bài có `topic = tech` từ báo khác, trừ báo crypto (`getTechNews`).
 - Báo được nhận ra theo `name`, nên feed VnExpress mục KHCN mang tên riêng `VnExpress KHCN` để không kéo các mục VnExpress khác ra khỏi tin thế giới.
 
+### 8b.x Doanh thu tháng Đài Loan, tuyển dụng, hết hỗ trợ (2026-11-10)
+- **`twse`** (`lib/sources/twse.ts`, `TW_REVENUE` trong `config/tech.ts`): `https://openapi.twse.com.tw/v1/opendata/t187ap05_L`, mảng mọi công ty niêm yết với khoá tiếng Trung: `資料年月` (năm Dân Quốc + tháng, "11509" = 9/2026), `公司代號`, `營業收入-當月營收` (nghìn Đài tệ), `營業收入-上月比較增減(%)`, `營業收入-去年同月增減(%)`, `累計營業收入-前期比較增減(%)`. Chỉ có tháng mới nhất của mỗi công ty. Lấy 7 mã: 2330 TSMC, 2317 Hồng Hải, 2382 Quanta, 3231 Wistron, 2454 MediaTek, 3711 ASE, 2308 Delta. Lưu `twse:REV:<mã>` (tỷ Đài tệ, mỗi tháng một điểm) và `items` `tw_revenue`.
+- **`hnhiring`** (`lib/sources/hnhiring.ts`): `hn.algolia.com/api/v1/search_by_date?tags=story,author_whoishiring&hitsPerPage=100` tìm chủ đề "Ask HN: Who is hiring? (Tháng Năm)"; số tin tuyển = độ dài `kids` (bình luận cấp 1) của `hacker-news.firebaseio.com/v0/item/<id>.json`. Chỉ lưu tháng đã kết thúc (chủ đề còn nhận tin vài tuần), đọc lại tháng trước mỗi lần chạy. Lưu `hn:WHOISHIRING`.
+- **`eol`** (`lib/sources/eol.ts`, `EOL_PRODUCTS`): `endoflife.date/api/<slug>.json` cho Node.js, Next.js, React, Python, PostgreSQL, Kubernetes (TypeScript không có trang, trả 404); TypeScript lấy `registry.npmjs.org/typescript/latest` và ngày phát hành từ `time` của tài liệu đầy đủ. Mỗi sản phẩm: dòng mới nhất, bản mới nhất, và dòng còn hỗ trợ sắp hết hạn sớm nhất (`eolRow`). Lưu `items` `eol`.
+- **`arena`** (`lib/sources/arena.ts`, `ARENA_ORGS` trong `config/tech.ts`): `lmarena.ai` trả 403 Cloudflare, nhưng LMArena đăng bảng xếp hạng thành dataset `lmarena-ai/leaderboard-dataset` trên Hugging Face (không gated, cập nhật hằng ngày, các file parquet theo hạng mục). Đọc qua datasets-server `https://datasets-server.huggingface.co/first-rows?dataset=lmarena-ai%2Fleaderboard-dataset&config=text&split=latest` (JSON, 100 dòng đầu = top 100 hạng chung `overall`: `model_name, organization, rating, rank, vote_count, leaderboard_publish_date`); endpoint `/rows` thường trả 502/503 nên không dùng. Nối với `openrouter.ai/api/v1/models` theo tổ chức (bảng đổi tên `ARENA_ORGS`: alibaba → qwen, zai → z-ai, xai → x-ai…) và tên đã chuẩn hoá (`modelKey`: bỏ "(High)", "Preview", ngày). Mỗi model OpenRouter giữ biến thể có điểm cao nhất; bỏ model miễn phí. Ngày 2026-11-10 nối được 69/100. Lưu `items` `ai_value` (`AiValue`: điểm, hạng, giá vào/ra, giá gộp 3:1, mở trọng số).
+- **`lobsters`** (`lib/sources/lobsters.ts`): `https://lobste.rs/hottest.json`, 20 tin đầu (`title, url, score, comment_count, tags, comments_url`); bài chữ không có `url` thì dùng trang thảo luận. Lưu `items` `lobsters`.
+- **`spaceweather`** (`lib/sources/spaceweather.ts`): `services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json` (mảng object `time_tag, kp, observed` = observed/estimated/predicted: 7 ngày qua và 3 ngày tới, mỗi 3 giờ; định dạng mảng-trong-mảng cũ đã đổi sang object) và `noaa-scales.json` (thang G/S/R hôm nay, xác suất mất sóng radio ngày mai). Lưu một dòng `items` `spaceweather`.
+- **`pkgtrends`** (`lib/sources/pkgtrends.ts`, `PACKAGES` trong `config/tech.ts`): npm `api.npmjs.org/downloads/range/last-year/<gói>` (365 ngày; gói có scope viết `@scope%2Fname`, bản gọi gộp nhiều gói không nhận gói có scope) và `pypistats.org/api/packages/<gói>/overall?mirrors=false` (khoảng 180 ngày, lấy dòng `without_mirrors`; dịch vụ nhỏ, có lúc trả 502, nên gọi cách nhau 1,5 giây). Cộng ngày thành tuần thứ Hai–Chủ nhật UTC, chỉ giữ tuần trọn (`weeklyTotals`). 14 gói: react, next, vue, svelte, @angular/core, openai, @anthropic-ai/sdk, ai, langchain (npm); torch, transformers, openai, anthropic, langchain (PyPI). Lưu `pkg:<registry>:<gói>`.
+- **`epoch`** (`lib/sources/epoch.ts`): `https://epoch.ai/data/notable_ai_models.csv` (khoảng 2,2 MB, không cần key; trường có xuống dòng trong ngoặc kép, `parseCsv` xử lý được). Cột dùng: `Model, Organization, Publication date, Domain, Training compute (FLOP)`; tổ chức và lĩnh vực lấy phần đầu trước dấu phẩy. Ngày 2026-11-10 có 543 model có ước tính. Model "tiên phong" = nằm trong top 10 về tính toán trong số mọi model ra mắt đến ngày đó (`frontier`); tốc độ tăng = hồi quy log10(FLOP) theo thời gian của các model tiên phong từ 2018 (`growthPerYear`, ra 4,8×/năm). Lưu một dòng `items` `ai_compute` (12 lần huấn luyện lớn nhất và tốc độ tăng).
+- **FRED** thêm `IHLIDXUSTPSOFTDEVE` (tin tuyển phát triển phần mềm, Indeed, 1/2/2020 = 100), `IHLIDXUS` (mọi ngành, để so) và `IPG3344S` (sản xuất bán dẫn và linh kiện điện tử, tile hiện so cùng kỳ).
+
 ## 9. Nguồn đã loại
 
 | Nguồn | Lý do | Thay bằng |
@@ -471,7 +543,7 @@ Trang `/[lang]/tech` (BR-23) đọc các nguồn dưới đây cùng `yahoo` (§
 | TCBS | Cloudflare challenge 403 | SSI |
 | AP RSS | 403 | Các feed khác (Google News chỉ dùng cá nhân, chưa tích hợp) |
 | FRED JSON API | Cần key | FRED CSV công khai |
-| Lịch FRED, BLS ICS | FRED cần key; BLS trả 403 | ForexFactory + `config/fomc.ts` |
+| API lịch FRED, BLS ICS | API của FRED cần key; BLS trả 403 | ForexFactory + trang HTML lịch của FRED (`releases`) + `config/fomc.ts` |
 | Genk (RSS) | Chủ yếu tin máy móc và giải trí, feed không có ảnh (thử 2026-11-09) | VnExpress Khoa học công nghệ |
 
 ## 10. Nhật ký kiểm chứng (2026-10-31)

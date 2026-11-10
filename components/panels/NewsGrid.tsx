@@ -2,6 +2,7 @@ import { getDict, type Locale } from "@/lib/i18n";
 import { fmtRelative } from "@/lib/format";
 import type { NewsItem } from "@/lib/queries";
 import { Thumb } from "@/components/ui/Thumb";
+import { Related } from "./NewsList";
 
 /** Headlines with thumbnails in two columns from md up; the news list of the desk pages (crypto, tech). */
 export function NewsGrid({ items, now, lang }: { items: NewsItem[]; now: number; lang: Locale }) {
@@ -18,6 +19,7 @@ export function NewsGrid({ items, now, lang }: { items: NewsItem[]; now: number;
               {n.source} · {fmtRelative(n.publishedAt, now, lang)}
               {n.alsoIn.length > 0 && ` · ${d.news.alsoIn} ${n.alsoIn.join(", ")}`}
             </span>
+            <Related n={n} label={d.news.related} />
           </div>
           <Thumb src={n.image} className="h-12 w-[72px]" />
         </li>
