@@ -440,7 +440,7 @@
       "warn": "Cao hơn đáy 12 tháng 0,5 điểm %",
       "crit": "Cao hơn đáy 12 tháng từ 1 điểm %"
     },
-    "uneNote": "Chấm màu = đang tăng từ đáy 12 tháng (logic quy tắc Sahm).",
+    "uneNote": "Chấm màu = đang tăng từ đáy 12 tháng (logic quy tắc Sahm). Số hài hoà của OECD; Brazil là bình quân trượt 3 tháng của IBGE, chưa điều chỉnh mùa vụ nên chấm màu so với cùng kỳ năm trước.",
     "debtNow": "Nợ công {year}",
     "debtHint": "Nợ gộp của chính phủ, % GDP, ước tính của IMF. Vàng khi trên 90%, đỏ khi trên 120%.",
     "debtSince2019": "So với 2019",

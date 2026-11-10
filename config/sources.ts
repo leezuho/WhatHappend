@@ -14,6 +14,7 @@ export const SOURCE_META = {
   imfcpi: { intervalMs: 24 * HOUR },
   worldbank: { intervalMs: 24 * HOUR },
   cnbc: { intervalMs: 6 * HOUR },
+  ibge: { intervalMs: 24 * HOUR },
   gpr: { intervalMs: 24 * HOUR },
   gscpi: { intervalMs: 24 * HOUR },
   // News & AI

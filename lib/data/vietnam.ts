@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { SERIES } from "@/config/series";
-import { GSO_RELEASE_DAY, VN30F_WEEKDAY, VN_BAND, VN_CENTRAL_RATE, VN_CITIES, VN_FOREIGN, VN_HAZARD_BOX, VN_STORM_BOX, type Box } from "@/config/vietnam";
+import { GSO_RELEASE_DAY, VN30F_WEEKDAY, VN_BAND, VN_MARKET_HOLIDAYS, VN_CENTRAL_RATE, VN_CITIES, VN_FOREIGN, VN_HAZARD_BOX, VN_STORM_BOX, type Box } from "@/config/vietnam";
 import { pick, type Locale } from "@/lib/i18n";
 import { getPoints } from "./series";
 
@@ -229,6 +229,17 @@ export function nthWeekday(year: number, month: number, weekday: number, n: numb
   return Date.UTC(year, month, 1 + ((weekday - first + 7) % 7) + (n - 1) * 7);
 }
 
+const VN_HOLIDAYS = new Set(VN_MARKET_HOLIDAYS);
+
+/** The day itself (midnight UTC) if HOSE trades on it, otherwise the last trading day before it. */
+export function vnTradingDayOnOrBefore(ts: number): number {
+  for (let t = ts; ; t -= DAY) {
+    const d = new Date(t);
+    const wd = d.getUTCDay();
+    if (wd !== 0 && wd !== 6 && !VN_HOLIDAYS.has(d.toISOString().slice(0, 10))) return t;
+  }
+}
+
 /** VN30 futures expiries and statistics releases whose day falls in [from, until]. */
 export function vnMarketDates(from: number, until: number): VnDate[] {
   const out: VnDate[] = [];
@@ -238,7 +249,7 @@ export function vnMarketDates(from: number, until: number): VnDate[] {
     const m = start.getUTCMonth() + i;
     const month = new Date(Date.UTC(y, m, 1));
     if (month.getTime() > until) break;
-    const expiry = nthWeekday(month.getUTCFullYear(), month.getUTCMonth(), VN30F_WEEKDAY, 3);
+    const expiry = vnTradingDayOnOrBefore(nthWeekday(month.getUTCFullYear(), month.getUTCMonth(), VN30F_WEEKDAY, 3));
     out.push({ kind: "vn30f", ts: expiry, month: month.getUTCMonth(), year: month.getUTCFullYear() });
     // Released this month: the previous month's numbers.
     const covered = new Date(Date.UTC(y, m - 1, 1));

@@ -43,7 +43,7 @@
 **Trạng thái:** Done. Đạt đủ tiêu chí.
 
 **Mô tả:** Toàn bộ dashboard nằm trên một trang với grid responsive gồm 6 hàng (xem [LLDD Frontend](../TechDesign/LLDD/04-frontend.md)). Top bar chứa:
-- đồng hồ của các thị trường NY, London, Melbourne (ASX), Tokyo, Thượng Hải, TP.HCM, kèm trạng thái mở/đóng cửa, và giờ bờ Tây Mỹ (Los Angeles);
+- đồng hồ của các thị trường NY, London, Melbourne (ASX), Tokyo, Seoul (KRX), Thượng Hải, TP.HCM, kèm trạng thái mở/đóng cửa, và giờ bờ Tây Mỹ (Los Angeles);
 - ticker giá chạy ngang;
 - badge Risk Regime;
 - nút chuyển ngôn ngữ VI/EN và nút chuyển giao diện sáng/tối.

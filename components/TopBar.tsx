@@ -19,7 +19,7 @@ export function TopBar({ lang, section, regime, ticker }: { lang: Locale; sectio
   ];
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-page/80 backdrop-blur-md backdrop-saturate-150">
-      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5">
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
         <div className="flex items-center gap-2.5">
           <Link href={`/${lang}`} className="flex items-center gap-2 text-ink">
             <span aria-hidden className="grid size-7 place-items-center rounded-lg bg-accent text-on-accent shadow-card">
@@ -50,8 +50,8 @@ export function TopBar({ lang, section, regime, ticker }: { lang: Locale; sectio
             </Link>
           ))}
         </nav>
-        {/* Below 1400px the clocks take their own row, so the controls stay beside the tabs. */}
-        <div className="order-last w-full min-[1400px]:order-none min-[1400px]:w-auto">
+        {/* Below 1440px the clocks take their own row, so the controls stay beside the tabs. */}
+        <div className="order-last w-full min-[1440px]:order-none min-[1440px]:w-auto">
           <MarketClocks labels={{ open: t.open, closed: t.closed, break: t.break }} />
         </div>
         <div className="ml-auto flex items-center gap-2">

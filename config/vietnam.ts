@@ -49,6 +49,31 @@ export const VN_CITIES: { name: Bi; lat: number; lng: number }[] = [
 
 /** VN30 index futures expire on the third Thursday of each month (HNX; moved to the trading day before when that is a holiday). */
 export const VN30F_WEEKDAY = 4;
+
+/**
+ * Weekdays HOSE and HNX do not trade, as YYYY-MM-DD. The government sets the holidays
+ * each year (bridge and make-up days included), so they are declared rather than computed.
+ * Add the next year once HOSE publishes it, usually in December; a year missing here
+ * means expiries are not moved for its holidays.
+ * - 2026: HOSE notice 2294/TB-SGDHCM (9 Dec 2025) and its Independence Day notice.
+ * - 2027: Ministry of Home Affairs notice 11483/TB-BNV (9 Oct 2026) for Tết and 2 September,
+ *   the Labour Code for the rest (1 May falls on a Saturday, so Monday 3 May is off).
+ *   HOSE's own 2027 notice was not out on 2026-11-10.
+ */
+export const VN_MARKET_HOLIDAYS: string[] = [
+  // 2026
+  "2026-01-01",
+  "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20",
+  "2026-04-27",
+  "2026-04-30", "2026-05-01",
+  "2026-08-31", "2026-09-01", "2026-09-02",
+  // 2027
+  "2027-01-01",
+  "2027-02-04", "2027-02-05", "2027-02-08", "2027-02-09", "2027-02-10",
+  "2027-04-16",
+  "2027-04-30", "2027-05-03",
+  "2027-09-02", "2027-09-03",
+];
 /** The Statistics Office publishes the month's economic data on the 6th of the next month (Decree 62/2024). */
 export const GSO_RELEASE_DAY = 6;
 

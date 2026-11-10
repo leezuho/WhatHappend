@@ -196,6 +196,18 @@ export function unemploymentRise(points: Point[]): number | null {
   return last.value - Math.min(...year.map((p) => p.value));
 }
 
+/**
+ * For a rate with no seasonal adjustment (Brazil's PNAD jumps every first quarter): the latest month against the same
+ * month a year earlier, in pp, on the same thresholds. Null when that month is missing.
+ */
+export function unemploymentRiseYoy(points: Point[]): number | null {
+  const last = points[points.length - 1];
+  if (!last) return null;
+  const d = new Date(last.ts);
+  const base = points.find((p) => p.ts === Date.UTC(d.getUTCFullYear() - 1, d.getUTCMonth(), 1));
+  return base ? last.value - base.value : null;
+}
+
 export function unemploymentStatus(rise: number | null): Status {
   if (rise === null) return null;
   if (rise >= 1) return "crit";

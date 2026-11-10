@@ -20,6 +20,9 @@ const EXCHANGES: Exchange[] = [
   { code: "LDN", city: "London · LSE", tz: "Europe/London", sessions: [["08:00", "16:30"]] },
   { code: "HCM", city: "Ho Chi Minh City · HOSE", tz: "Asia/Ho_Chi_Minh", sessions: [["09:00", "11:30"], ["13:00", "14:45"]] },
   { code: "SHA", city: "Shanghai · SSE", tz: "Asia/Shanghai", sessions: [["09:30", "11:30"], ["13:00", "15:00"]] },
+  // Seoul and Tokyo share UTC+9 and neither observes DST; Seoul goes first as the western one.
+  // KRX has no lunch break.
+  { code: "SEL", city: "Seoul · KRX", tz: "Asia/Seoul", sessions: [["09:00", "15:30"]] },
   { code: "TYO", city: "Tokyo · TSE", tz: "Asia/Tokyo", sessions: [["09:00", "11:30"], ["12:30", "15:30"]] },
   // Melbourne shares Sydney's time zone, so the ASX session applies as-is.
   { code: "MEL", city: "Melbourne · ASX", tz: "Australia/Melbourne", sessions: [["10:00", "16:00"]] },
@@ -63,12 +66,12 @@ export function MarketClocks({ labels }: { labels: { open: string; closed: strin
   const now = tick === null ? null : new Date(tick);
 
   return (
-    <ul className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-xs">
+    <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
       {EXCHANGES.map((ex) => {
         const s = now ? stateOf(ex, now) : null;
         const state = s?.state ? labels[s.state] : null;
         return (
-          <li key={ex.code} className="flex items-center gap-1.5" title={state ? `${ex.city}: ${state}` : ex.city}>
+          <li key={ex.code} className="flex items-center gap-1" title={state ? `${ex.city}: ${state}` : ex.city}>
             {ex.sessions.length > 0 && (
               <span
                 aria-hidden

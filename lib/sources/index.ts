@@ -25,6 +25,7 @@ import { gpr } from "./gpr";
 import { gscpi } from "./gscpi";
 import { hackernews } from "./hackernews";
 import { huggingface } from "./huggingface";
+import { ibge } from "./ibge";
 import { imf } from "./imf";
 import { imfcpi } from "./imfcpi";
 import { kalshi } from "./kalshi";
@@ -70,6 +71,7 @@ export const sources: Source[] = [
   imfcpi,
   worldbank,
   cnbc,
+  ibge,
   gpr,
   gscpi,
   // news & AI

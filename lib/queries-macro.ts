@@ -5,6 +5,8 @@ import { bisId, imfId, oecdId, WORLD_MAP, type OecdCode } from "@/config/macro";
 import { freshest, getPoints } from "@/lib/data/series";
 import {
   cpiIds,
+  uneIds,
+  uneRise,
   cycleRows,
   EMPTY,
   growthInflation,
@@ -30,7 +32,6 @@ import {
   deviationFromAverage,
   difference,
   monthlyLast,
-  unemploymentRise,
   unemploymentStatus,
   type Status,
 } from "@/lib/signals/macro";
@@ -78,8 +79,8 @@ export interface CountryLine {
 }
 
 /**
- * One monthly series per country for the small multiples, from `months` ago: OECD's, except CPI, which is OECD's or
- * the IMF's, whichever runs later. Countries with no data are left out.
+ * One monthly series per country for the small multiples, from `months` ago: OECD's, except CPI (OECD's or the IMF's)
+ * and unemployment (OECD's or the statistics office's, `Country.une`), whichever runs later. Countries with no data are left out.
  */
 export async function getOecdLines(code: OecdCode, lang: Locale, months = 24): Promise<CountryLine[]> {
   await connection();
@@ -87,7 +88,7 @@ export async function getOecdLines(code: OecdCode, lang: Locale, months = 24): P
   const now = Date.now();
   const since = Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth() - months, 1);
   return MACRO_COUNTRIES.flatMap((c) => {
-    const id = code === "CPI" ? freshest(db, cpiIds(c), now)?.id : c.oecd && oecdId(code, c.oecd);
+    const id = code === "CPI" ? freshest(db, cpiIds(c), now)?.id : code === "UNE" ? freshest(db, uneIds(c), now)?.id : c.oecd && oecdId(code, c.oecd);
     if (!id) return [];
     // node:sqlite rows have a null prototype, which React will not hand to a client component.
     const points = getPoints(db, id, since).flatMap((p) => (p.ts <= now ? [{ ts: p.ts, value: p.value }] : []));
@@ -110,7 +111,7 @@ export async function getOecdLines(code: OecdCode, lang: Locale, months = 24): P
       return [
         {
           ...line,
-          status: unemploymentStatus(unemploymentRise(getPoints(db, id, now - 450 * DAY))),
+          status: unemploymentStatus(uneRise(c, id, getPoints(db, id, now - 450 * DAY).filter((p) => p.ts <= now))),
         },
       ];
     return [line];

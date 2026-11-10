@@ -54,8 +54,8 @@ export const SCORE_COLS: ScoreColDef[] = [
     key: "unemp",
     name: { en: "Unemployment", vi: "Thất nghiệp" },
     hint: {
-      en: "Unemployment rate, latest month (OECD; IMF yearly where missing). Amber/red = 0.5/1 pp above its 12-month low, the Sahm-rule logic applied to every country.",
-      vi: "Tỷ lệ thất nghiệp tháng gần nhất (OECD; thiếu thì dùng số năm của IMF). Vàng/đỏ = cao hơn mức thấp nhất 12 tháng 0,5/1 điểm %, tức logic quy tắc Sahm áp cho mọi nước.",
+      en: "Unemployment rate, latest month (OECD; Brazil from IBGE, a 3-month average ending that month, aged 14+; IMF yearly where missing). Amber/red = 0.5/1 pp above its 12-month low, the Sahm-rule logic applied to every country; Brazil's rate is not seasonally adjusted, so it is compared with the same month a year earlier.",
+      vi: "Tỷ lệ thất nghiệp tháng gần nhất (OECD; Brazil lấy từ IBGE, bình quân 3 tháng kết thúc ở tháng đó, từ 14 tuổi; thiếu thì dùng số năm của IMF). Vàng/đỏ = cao hơn mức thấp nhất 12 tháng 0,5/1 điểm %, tức logic quy tắc Sahm áp cho mọi nước; số của Brazil chưa điều chỉnh mùa vụ nên so với cùng tháng năm trước.",
     },
     digits: 1,
   },

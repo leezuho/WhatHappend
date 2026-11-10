@@ -440,7 +440,7 @@
       "warn": "Up 0.5 pp from its 12-month low",
       "crit": "Up 1 pp or more from its 12-month low"
     },
-    "uneNote": "Dot = rising from its 12-month low (the Sahm-rule logic).",
+    "uneNote": "Dot = rising from its 12-month low (the Sahm-rule logic). OECD harmonised rates; Brazil is IBGE's 3-month moving average, not seasonally adjusted, so its dot compares with a year earlier.",
     "debtNow": "Gov. debt {year}",
     "debtHint": "General government gross debt, % of GDP, IMF estimate. Amber above 90%, red above 120%.",
     "debtSince2019": "Since 2019",

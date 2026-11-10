@@ -24,7 +24,7 @@ import { hiringMonth } from "@/lib/sources/hnhiring";
 import { eolRow } from "@/lib/sources/eol";
 import { techInput } from "@/lib/ai/technote";
 import { replaceItems } from "@/lib/sources/store";
-import { centralBand, dollarHistory, foreignFlows, goldPremiumHistory, hanoiDay, nthWeekday, OZ_PER_LUONG, vnHazards, vnMarketDates, vnRatesHistory } from "@/lib/data/vietnam";
+import { centralBand, dollarHistory, foreignFlows, goldPremiumHistory, hanoiDay, nthWeekday, OZ_PER_LUONG, vnHazards, vnMarketDates, vnRatesHistory, vnTradingDayOnOrBefore } from "@/lib/data/vietnam";
 import { splitStatus } from "@/lib/data/tech";
 import { growthInflation, usCpiParts } from "@/lib/data/macro";
 import { US_CPI_PARTS } from "@/config/macro";
@@ -132,6 +132,18 @@ test("vnMarketDates: VN30 futures on the third Thursday, statistics on the 6th, 
   );
   // The day itself still counts in the afternoon.
   assert.equal(vnMarketDates(Date.UTC(2026, 10, 19, 9), Date.UTC(2026, 10, 20))[0].kind, "vn30f");
+});
+
+test("vnMarketDates: an expiry on a holiday moves to the trading day before", () => {
+  // Thursday 19 Feb 2026 fell in the Tết closure (16–20 Feb), so the February contract expired Friday the 13th.
+  assert.equal(vnTradingDayOnOrBefore(Date.UTC(2026, 1, 19)), Date.UTC(2026, 1, 13));
+  const feb = vnMarketDates(Date.UTC(2026, 1, 1), Date.UTC(2026, 1, 28)).find((d) => d.kind === "vn30f");
+  assert.deepEqual([new Date(feb!.ts).toISOString().slice(0, 10), feb!.month + 1], ["2026-02-13", 2]);
+  // Ordinary trading days and weekends.
+  assert.equal(vnTradingDayOnOrBefore(Date.UTC(2026, 10, 19)), Date.UTC(2026, 10, 19));
+  assert.equal(vnTradingDayOnOrBefore(Date.UTC(2026, 10, 15)), Date.UTC(2026, 10, 13));
+  // 1 May 2027 is a Saturday, so Monday 3 May is the day off; 30 April a Friday.
+  assert.equal(vnTradingDayOnOrBefore(Date.UTC(2027, 4, 3)), Date.UTC(2027, 3, 29));
 });
 
 test("vnRatesHistory: monthly CPI beside the refinancing rate in force at each month's end", () => {

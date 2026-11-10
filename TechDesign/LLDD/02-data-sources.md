@@ -18,6 +18,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `imfcpi` | CPI tháng | IMF SDMX REST `IMF.STA,CPI` (CSV) | 24 giờ | `observations` `imf:CPI_M:<mã DataMapper>` |
 | `worldbank` | GDP quý (Việt Nam) | World Bank API v2, Global Economic Monitor | 24 giờ | `observations` `wb:GDP:<iso3>` |
 | `cnbc` | Lợi suất 10 năm (Indonesia) | CNBC `ts-api` chart 1Y | 6 giờ | `observations` `cnbc:<symbol>` |
+| `ibge` | Thất nghiệp tháng (Brazil) | IBGE SIDRA API, bảng 6381 | 24 giờ | `observations` `ibge:UNE:BRA` |
 | `gpr` | Rủi ro địa chính trị | `data_gpr_daily_recent.xls` | 24 giờ | `observations` `gpr:GPRD`, `gpr:GPRD_MA7` |
 | `gscpi` | Chuỗi cung ứng | NY Fed GSCPI CSV | 24 giờ | `observations` `nyfed:GSCPI` |
 | `rss` | Tin tức | 23 feed (`config/feeds.ts`): 5 báo crypto, 5 báo công nghệ | 10 phút | `articles` |
@@ -155,7 +156,7 @@ Ba truy vấn mỗi lần chạy, mọi nước gộp bằng `+`:
 |---|---|---|---|
 | `CLI` | `OECD.SDD.STES,DSD_STES@DF_CLI,` | `<areas>.M.LI.IX._Z.AA.IX._Z.H` | Chỉ báo sớm, điều chỉnh biên độ (100 = xu hướng). Không có khu vực euro (`skip`); OECD chỉ có nhóm `G4E` (Đức, Pháp, Ý, Anh) |
 | `CPI` | `OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,` | `<areas>.M.N.CPI.PA._T.N.GY` | CPI toàn bộ, định nghĩa quốc gia, % so cùng kỳ. Ngày 2026-11-09: không có Nhật; Pháp, Ý, khu vực euro dừng ở 11–12/2025; Mexico dừng ở 7/2024. Trang đọc series nào mới hơn giữa OECD và `imfcpi` (§2.8) |
-| `UNE` | `OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,` | `<areas>.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M` | Thất nghiệp 15+, điều chỉnh mùa vụ. Euro = `EA`; không có CN, IN, ID, BR |
+| `UNE` | `OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,` | `<areas>.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M` | Thất nghiệp 15+, điều chỉnh mùa vụ. Euro = `EA`; không có CN, IN, ID, BR (Brazil lấy từ `ibge`, §2.11) |
 | `GDP` | `OECD.SDD.NAD,DSD_NAMAIN1@DF_QNA_EXPENDITURE_GROWTH_OECD,` | `Q.Y.<areas>.S1.S1.B1GQ._Z...PC.L.GY.T0102` | GDP thực, % so cùng quý năm trước. Euro = `EA`; `PRICE_BASE` là `L` (không phải `LR`) |
 | `IRLT` | `OECD.SDD.STES,DSD_STES@DF_FINMARK,` | `<areas>.M.IRLT.PA._Z._Z._Z._Z.N` | Lợi suất trái phiếu chính phủ dài hạn (10 năm), bình quân tháng. Indonesia dừng ở 12/2024, nên trang dùng số ngày của `cnbc` (§2.10) khi mới hơn; Mỹ dùng FRED `DGS10` |
 | `BCI` | `OECD.SDD.STES,DSD_STES@DF_CLI,` | `<areas>.M.BCICP.IX._Z.AA.IX._Z.H` | Niềm tin doanh nghiệp, điều chỉnh biên độ (100 = trung bình dài hạn) |
@@ -190,6 +191,17 @@ Ba truy vấn mỗi lần chạy, mọi nước gộp bằng `+`:
 - **Mã:** lấy từ `y10: "cnbc:<symbol>"` trong `config/countries.ts`; hiện chỉ `ID10Y-ID` (Indonesia). CNBC không có Việt Nam (`VN10Y-VN` trả `code: 1`).
 - **Lưu:** `cnbc:<symbol>`, mỗi ngày giao dịch một điểm tại 00:00 UTC.
 - **Đọc ra:** cột lợi suất 10 năm lấy series mới hơn giữa `y10` (số ngày) và OECD `IRLT` (bình quân tháng). Số ngày cũ hơn 7 ngày thì hiện kèm ngày.
+
+### 2.11 `ibge` — Thất nghiệp tháng của Brazil (`lib/sources/ibge.ts`)
+- **URL:** `https://apisidra.ibge.gov.br/values/t/6381/n1/all/v/4099/p/last%2036` (API SIDRA chính thức, không cần key): bảng 6381 của PNAD Contínua, biến 4099 = tỷ lệ thất nghiệp của người từ 14 tuổi, toàn Brazil. Trả mảng JSON; phần tử đầu là dòng tiêu đề, các dòng sau có `V` (giá trị, `...` hoặc `-` khi trống) và `D3C` (`202609`).
+- **Định nghĩa:** bình quân trượt 3 tháng ("jul-ago-set 2026"), gán vào tháng cuối (`202609` → 1/9/2026). IBGE công bố khoảng 4 tuần sau tháng đó. **Không điều chỉnh mùa vụ:** quý I năm nào cũng tăng 0,5–1 điểm % (3/2026: 6,1% sau đáy 5,1% của 12/2025, dù thấp hơn 7,0% của 3/2025). Vì vậy `uneNsa: true` trong `config/countries.ts`, và màu (`uneRise` trong `lib/data/macro.ts`) so với cùng tháng năm trước thay cho quy tắc Sahm.
+- **Lưu:** `ibge:UNE:BRA`; nước khai `une: "ibge:UNE:BRA"` trong `config/countries.ts`.
+- **Đọc ra:** cột thất nghiệp của bảng sức khoẻ và small multiples thất nghiệp lấy series mới hơn giữa `oecd:UNE:<area>` và `une` (`uneIds`, `freshest`).
+- **Các nguồn khác đã thử (2026-11-10):**
+  - **Ấn Độ:** PLFS hằng tháng của MoSPI (`api.mospi.gov.in/api/plfs/getData?indicator_code=3&frequency_code=3&gender_code=3&sector_code=3&age_code=1&year=<năm>&Format=JSON`, không cần key, có từ 4/2025, ngày thử có đến 9/2026: 5,0%). `curl` chạy được, Node thì lỗi `ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED` vì server không hỗ trợ secure renegotiation (RFC 5746). Muốn dùng phải bật `SSL_OP_LEGACY_SERVER_CONNECT` riêng cho host này, tức là nới TLS, nên chờ người dùng quyết. eSankhyiki cũng gọi về đúng host này.
+  - **Trung Quốc:** `data.stats.gov.cn` trả 403 WAF (`UrlACL`); DBnomics `NBS` chỉ cập nhật đến 6/2026.
+  - **ILOSTAT** (`sdmx.ilo.org`, `DF_UNE_DEAP_SEX_AGE_RT`): từ 2025 không có Trung Quốc, Indonesia, Việt Nam; Ấn Độ dừng ở Q4/2025.
+  - **Indonesia** (BPS) chỉ công bố hai lần một năm (tháng 2 và 8), **Việt Nam** theo quý; không có số tháng để lấy.
 
 ## 3. Tin tức và AI
 

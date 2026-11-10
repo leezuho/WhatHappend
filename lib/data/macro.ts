@@ -17,6 +17,7 @@ import {
   debtStatus,
   gdpStatus,
   unemploymentRise,
+  unemploymentRiseYoy,
   unemploymentStatus,
   type ClockPoint,
   type CyclePhase,
@@ -53,6 +54,14 @@ export const EMPTY: ScoreCell = { value: null, ts: null, freq: null, status: nul
 
 /** Monthly CPI inflation candidates: OECD's and the IMF CPI dataset's; readers take whichever runs later. */
 export const cpiIds = (c: Country) => [c.oecd && oecdId("CPI", c.oecd), imfCpiId(c.imf)];
+
+/** Monthly unemployment candidates: OECD's and the country's own statistics office's; readers take whichever runs later. */
+export const uneIds = (c: Country) => [c.oecd && oecdId("UNE", c.oecd), c.une];
+
+/** The rise behind the unemployment colour: from the 12-month low (Sahm), or year on year for a series with no seasonal adjustment. */
+export function uneRise(c: Country, id: string, points: Point[]): number | null {
+  return c.uneNsa && id === c.une ? unemploymentRiseYoy(points) : unemploymentRise(points);
+}
 
 export function lastPoint(db: DatabaseSync, id: string, now: number): Point | null {
   return (db.prepare("SELECT ts, value FROM observations WHERE series_id = ? AND ts <= ? ORDER BY ts DESC LIMIT 1").get(id, now) as Point | undefined) ?? null;
@@ -94,16 +103,18 @@ function scoreRow(db: DatabaseSync, c: Country, lang: Locale, now: number): Scor
       }
     : imfCell(db, "PCPIPCH", c, year, (v) => cpiStatus(v, c.cpiTarget));
 
-  const unePts = c.oecd ? getPoints(db, oecdId("UNE", c.oecd), now - 450 * DAY) : [];
+  const uneId = freshest(db, uneIds(c), now)?.id;
+  const unePts = uneId ? getPoints(db, uneId, now - 450 * DAY).filter((p) => p.ts <= now) : [];
   const uneLast = unePts[unePts.length - 1];
-  const unemp: ScoreCell = uneLast
-    ? {
-        value: uneLast.value,
-        ts: uneLast.ts,
-        freq: "m",
-        status: unemploymentStatus(unemploymentRise(unePts)),
-      }
-    : imfCell(db, "LUR", c, year, () => null);
+  const unemp: ScoreCell =
+    uneId && uneLast
+      ? {
+          value: uneLast.value,
+          ts: uneLast.ts,
+          freq: "m",
+          status: unemploymentStatus(uneRise(c, uneId, unePts)),
+        }
+      : imfCell(db, "LUR", c, year, () => null);
 
   const rateId = policyRateId(c);
   const rate = rateId ? lastPoint(db, rateId, now) : null;

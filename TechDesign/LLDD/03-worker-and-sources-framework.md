@@ -128,7 +128,7 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 | Nhóm | Nguồn → chu kỳ |
 |---|---|
 | Thị trường | `yahoo` 3 phút |
-| Vĩ mô | `fred`, `cnbc` 6 giờ · `bis` 12 giờ · `imf`, `imfcpi`, `oecd`, `worldbank`, `gpr`, `gscpi` 24 giờ |
+| Vĩ mô | `fred`, `cnbc` 6 giờ · `bis` 12 giờ · `imf`, `imfcpi`, `ibge`, `oecd`, `worldbank`, `gpr`, `gscpi` 24 giờ |
 | Tin tức và AI | `rss` 10 phút · `gdelt` 15 phút · `translate` 5 phút* · `insights` 30 phút* · `brief` 24 giờ* (lúc 06:00) · `macronote` 1 tuần* (thứ Hai) |
 | Bản đồ | `usgs` 10 phút · `gdacs` 30 phút · `eonet` 1 giờ |
 | Trending / lịch / dự đoán | `hackernews` 20 phút · `polymarket`, `kalshi` 15 phút · `wikipedia`, `calendar`, `launches` 3 giờ |

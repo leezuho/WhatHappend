@@ -18,6 +18,10 @@ export interface Country {
   y10?: string;
   /** Quarterly real GDP growth where OECD has none (Vietnam: World Bank Global Economic Monitor). */
   gdp?: string;
+  /** Monthly unemployment rate where OECD has none (Brazil: IBGE's PNAD Contínua, lib/sources/ibge.ts). */
+  une?: string;
+  /** `une` is not seasonally adjusted, so its colour compares with the same month a year earlier instead of the 12-month low. */
+  uneNsa?: true;
   /** Yahoo FX pair; `perUsd` = quoted as local currency per dollar (JPY=X) rather than dollars per unit (EURUSD=X). */
   fx: { symbol: string; perUsd: boolean } | null;
   /** Central-bank inflation target (midpoint of a band), for judging CPI. */
@@ -50,7 +54,7 @@ export const COUNTRIES: Country[] = [
   { imf: "CHN", bis: "CN", bisArea: "CN", oecd: "CHN", fx: { symbol: "CNY=X", perUsd: true }, cpiTarget: 2, group: "em", short: "CN", name: { en: "China", vi: "Trung Quốc" }, overview: true, macro: true },
   { imf: "IND", bis: "IN", bisArea: "IN", oecd: "IND", fx: { symbol: "INR=X", perUsd: true }, cpiTarget: 4, group: "em", short: "IN", name: { en: "India", vi: "Ấn Độ" }, overview: true, macro: true },
   { imf: "IDN", bis: "ID", bisArea: "ID", oecd: "IDN", y10: "cnbc:ID10Y-ID", fx: { symbol: "IDR=X", perUsd: true }, cpiTarget: 2.5, group: "em", short: "ID", name: { en: "Indonesia", vi: "Indonesia" }, macro: true },
-  { imf: "BRA", bis: "BR", bisArea: "BR", oecd: "BRA", fx: { symbol: "BRL=X", perUsd: true }, cpiTarget: 3, group: "em", short: "BR", name: { en: "Brazil", vi: "Brazil" }, overview: true, macro: true },
+  { imf: "BRA", bis: "BR", bisArea: "BR", oecd: "BRA", une: "ibge:UNE:BRA", uneNsa: true, fx: { symbol: "BRL=X", perUsd: true }, cpiTarget: 3, group: "em", short: "BR", name: { en: "Brazil", vi: "Brazil" }, overview: true, macro: true },
   { imf: "MEX", bis: "MX", bisArea: "MX", oecd: "MEX", fx: { symbol: "MXN=X", perUsd: true }, cpiTarget: 3, group: "em", short: "MX", name: { en: "Mexico", vi: "Mexico" }, macro: true },
   { imf: "VNM", bis: null, bisArea: null, oecd: null, rate: SBV_REFI, gdp: "wb:GDP:VNM", y10: "vn:GB10Y", fx: { symbol: "USDVND=X", perUsd: true }, cpiTarget: 4.5, group: "em", short: "VN", name: { en: "Vietnam", vi: "Việt Nam" }, overview: true, macro: true },
 ];
