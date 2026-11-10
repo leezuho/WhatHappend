@@ -10,6 +10,10 @@ export const SOURCE_META = {
   fred: { intervalMs: 6 * HOUR },
   imf: { intervalMs: 24 * HOUR },
   bis: { intervalMs: 12 * HOUR },
+  oecd: { intervalMs: 24 * HOUR },
+  imfcpi: { intervalMs: 24 * HOUR },
+  worldbank: { intervalMs: 24 * HOUR },
+  cnbc: { intervalMs: 6 * HOUR },
   gpr: { intervalMs: 24 * HOUR },
   gscpi: { intervalMs: 24 * HOUR },
   // News & AI
@@ -18,6 +22,7 @@ export const SOURCE_META = {
   translate: { intervalMs: 5 * MIN, needsAi: true },
   brief: { intervalMs: 24 * HOUR, needsAi: true },
   insights: { intervalMs: 30 * MIN, needsAi: true },
+  macronote: { intervalMs: 24 * HOUR, needsAi: true },
   // Map
   usgs: { intervalMs: 10 * MIN },
   gdacs: { intervalMs: 30 * MIN },
@@ -38,6 +43,7 @@ export const SOURCE_META = {
   vnindex: { intervalMs: 3 * MIN },
   sjc: { intervalMs: 30 * MIN },
   vcb: { intervalMs: HOUR },
+  sbv: { intervalMs: 12 * HOUR },
   // Crypto
   coingecko: { intervalMs: 5 * MIN },
   fng: { intervalMs: HOUR },
@@ -45,6 +51,11 @@ export const SOURCE_META = {
   defillama: { intervalMs: 6 * HOUR },
   mempool: { intervalMs: 10 * MIN },
   binance: { intervalMs: 15 * MIN },
+  // Technology
+  cloudstatus: { intervalMs: 10 * MIN },
+  openrouter: { intervalMs: 6 * HOUR },
+  huggingface: { intervalMs: 3 * HOUR },
+  kev: { intervalMs: 6 * HOUR },
 } satisfies Record<string, SourceMeta>;
 
 export type SourceId = keyof typeof SOURCE_META;

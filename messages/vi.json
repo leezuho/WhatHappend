@@ -3,7 +3,13 @@
     "title": "WhatHappend — toàn cảnh thế giới",
     "description": "Dashboard cá nhân về những gì đang diễn ra trên thế giới: thị trường, vĩ mô, tin tức, sự kiện.",
     "cryptoTitle": "Crypto — WhatHappend",
-    "cryptoDescription": "Thị trường crypto, tâm lý, phái sinh, mạng Bitcoin và tin tức."
+    "cryptoDescription": "Thị trường crypto, tâm lý, phái sinh, mạng Bitcoin và tin tức.",
+    "techTitle": "Công nghệ — WhatHappend",
+    "techDescription": "Công nghệ trong một trang: cổ phiếu công nghệ và bán dẫn, sự cố ở các đám mây và dịch vụ AI lớn, model AI và nghiên cứu mới, lỗ hổng đang bị khai thác và tin công nghệ.",
+    "vietnamTitle": "Việt Nam — WhatHappend",
+    "vietnamDescription": "Việt Nam trong một trang: VN-Index, đô la và vàng, tăng trưởng, lạm phát, lãi suất NHNN, dự báo của IMF và tin tức.",
+    "macroTitle": "Vĩ mô thế giới — WhatHappend",
+    "macroDescription": "Khám sức khoẻ kinh tế thế giới: tăng trưởng, lạm phát, việc làm, lãi suất, thanh khoản và chu kỳ kinh tế của 15 nền kinh tế lớn và Việt Nam."
   },
   "common": {
     "updated": "Cập nhật",
@@ -28,11 +34,14 @@
     "break": "Nghỉ trưa",
     "themeAnthropic": "Giao diện Anthropic (vàng kem)",
     "themeGroup": "Giao diện",
-    "language": "Ngôn ngữ",
+    "switchLang": "Chuyển sang tiếng Anh",
     "ticker": "Bảng giá chạy",
     "nav": "Chuyên mục",
     "navOverview": "Tổng quan",
-    "navCrypto": "Crypto"
+    "navCrypto": "Crypto",
+    "navTech": "Công nghệ",
+    "navMacro": "Vĩ mô",
+    "navVietnam": "Việt Nam"
   },
   "regime": {
     "title": "Trạng thái rủi ro",
@@ -107,6 +116,26 @@
       "title": "Góc Việt Nam",
       "subtitle": "VN-Index, USD/VND, vàng SJC, VnExpress"
     },
+    "vnMarkets": {
+      "title": "Thị trường Việt Nam",
+      "subtitle": "Cổ phiếu, đô la ở thị trường, ngân hàng và crypto, vàng"
+    },
+    "vnEconomy": {
+      "title": "Kinh tế Việt Nam",
+      "subtitle": "Tăng trưởng, lạm phát, lãi suất NHNN và dự báo của IMF"
+    },
+    "vnGold": {
+      "title": "Giá vàng",
+      "subtitle": "Các thương hiệu trong nước so với giá thế giới"
+    },
+    "vnBank": {
+      "title": "Tỷ giá Vietcombank",
+      "subtitle": "Chuyển khoản và bán ra, đồng trên một đơn vị"
+    },
+    "vnNews": {
+      "title": "Tin Việt Nam",
+      "subtitle": "VnExpress"
+    },
     "cryptoVitals": {
       "title": "Chỉ số sống còn của crypto",
       "subtitle": "Đồng lớn, quy mô thị trường, biến động và thanh khoản"
@@ -134,6 +163,82 @@
     "cryptoNews": {
       "title": "Tin crypto",
       "subtitle": "CoinDesk, Cointelegraph, The Block, Decrypt, Coin68"
+    },
+    "worldPulse": {
+      "title": "Nhịp kinh tế thế giới",
+      "subtitle": "Tăng trưởng, giá cả, đồng USD, thanh khoản và rủi ro suy thoái"
+    },
+    "worldMap": {
+      "title": "Bản đồ thế giới",
+      "subtitle": "Ước tính tăng trưởng và lạm phát năm nay của IMF, mọi nền kinh tế"
+    },
+    "macroNote": {
+      "title": "Kinh tế thế giới tuần này",
+      "subtitle": "AI đọc số liệu của trang, mỗi tuần một lần"
+    },
+    "cycleClock": {
+      "title": "Đồng hồ chu kỳ kinh tế",
+      "subtitle": "Mỗi nền kinh tế đang ở pha nào, theo chỉ báo sớm của OECD"
+    },
+    "scorecard": {
+      "title": "Sức khoẻ các nền kinh tế",
+      "subtitle": "Số mới nhất của từng nước, đánh giá theo mục tiêu và chuẩn riêng của nước đó"
+    },
+    "growth": {
+      "title": "Tăng trưởng",
+      "subtitle": "Kinh tế đang tăng tốc hay chậm lại?"
+    },
+    "inflation": {
+      "title": "Lạm phát",
+      "subtitle": "Lạm phát đã về gần mục tiêu chưa?"
+    },
+    "money": {
+      "title": "Tiền tệ & thanh khoản",
+      "subtitle": "Tiền đang rẻ đi hay đắt lên?"
+    },
+    "jobs": {
+      "title": "Việc làm & tiêu dùng",
+      "subtitle": "Người lao động và người tiêu dùng có ổn không?"
+    },
+    "debt": {
+      "title": "Nợ & ngân sách",
+      "subtitle": "Nợ có đang thành gánh nặng không?"
+    },
+    "recession": {
+      "title": "Tín hiệu suy thoái",
+      "subtitle": "Các chỉ báo từng đi trước các cuộc suy thoái đang nói gì"
+    },
+    "macroCalendar": {
+      "title": "Lịch vĩ mô",
+      "subtitle": "Số liệu sắp công bố và lịch họp các NHTW"
+    },
+    "techMarkets": {
+      "title": "Cổ phiếu công nghệ",
+      "subtitle": "Nasdaq, bán dẫn, Big Tech, châu Á và Việt Nam"
+    },
+    "techStatus": {
+      "title": "Dịch vụ nào đang trục trặc?",
+      "subtitle": "Đám mây, dịch vụ cho lập trình viên và AI"
+    },
+    "techModels": {
+      "title": "Model AI mới",
+      "subtitle": "Lên OpenRouter trong 30 ngày qua, kèm giá"
+    },
+    "techResearch": {
+      "title": "Nghiên cứu AI",
+      "subtitle": "Hugging Face: bài nghiên cứu nổi bật và model đang hot"
+    },
+    "techSecurity": {
+      "title": "Lỗ hổng đang bị khai thác",
+      "subtitle": "Danh mục KEV của CISA, 30 ngày qua"
+    },
+    "techHn": {
+      "title": "Dân lập trình đang đọc gì",
+      "subtitle": "Trang nhất Hacker News"
+    },
+    "techNews": {
+      "title": "Tin công nghệ",
+      "subtitle": "The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress"
     }
   },
   "charts": {
@@ -143,16 +248,115 @@
     "inflation": "Lạm phát {year} (IMF ước tính)",
     "policyRate": "Lãi suất điều hành",
     "realRate": "Lãi suất thực",
-    "noRateVn": "BIS không công bố lãi suất điều hành của Việt Nam",
+    "rateVn": "VN: lãi suất tái cấp vốn của NHNN (BIS không công bố).",
     "spread2s10s": "Chênh lệch 2s10s",
     "inverted": "Đảo ngược",
     "normal": "Bình thường",
     "lastYear": "12 tháng qua",
     "warnLine": "ngưỡng cảnh báo",
-    "last30d": "30 ngày qua",
+    "spark": {
+      "d": "30 ngày qua",
+      "w": "26 tuần qua",
+      "m": "24 tháng qua",
+      "q": "12 quý qua",
+      "y": "10 năm qua"
+    },
     "range1y": "Biên độ 1 năm: thấp → cao",
     "range1yShort": "1N",
-    "realRateHint": "lãi suất − lạm phát"
+    "realRateHint": "lãi suất − lạm phát",
+    "period": "Kỳ của số liệu"
+  },
+  "macro": {
+    "phases": {
+      "expansion": "Mở rộng",
+      "slowdown": "Chậm lại",
+      "downturn": "Suy yếu",
+      "recovery": "Phục hồi"
+    },
+    "phaseHints": {
+      "expansion": "Trên xu hướng và đang tăng",
+      "slowdown": "Trên xu hướng nhưng đang yếu đi",
+      "downturn": "Dưới xu hướng và còn đang giảm",
+      "recovery": "Dưới xu hướng nhưng đã quay đầu đi lên"
+    },
+    "axisGap": "Chỉ báo sớm − 100 (trên 0 = trên xu hướng)",
+    "axisMomentum": "Thay đổi trong 3 tháng (sang phải = đang mạnh lên)",
+    "trail": "Đường = hành trình 6 tháng qua",
+    "country": "Nền kinh tế",
+    "phase": "Pha",
+    "cliLevel": "CLI",
+    "momentum": "Thay đổi 3 tháng",
+    "month": "Tháng",
+    "noClock": "Chưa có chỉ báo sớm. Số liệu đến từ nguồn OECD (npm run fetch -- oecd).",
+    "groups": {
+      "dm": "Kinh tế phát triển",
+      "em": "Kinh tế mới nổi"
+    },
+    "status": {
+      "good": "Đúng mục tiêu",
+      "warn": "Cần theo dõi",
+      "crit": "Báo động"
+    },
+    "imfEst": "Ước tính IMF",
+    "dxy": "Chỉ số USD (DXY)",
+    "rising": "tăng",
+    "falling": "giảm",
+    "footnote": "Chữ xám dưới mỗi số = kỳ của số liệu. Rê chuột lên tên cột để xem cột đo gì và tô màu ra sao.",
+    "vnNote": "Việt Nam không có trong dữ liệu OECD và BIS: CPI lấy từ IMF, GDP từ World Bank, lãi suất điều hành từ NHNN, thất nghiệp là ước tính năm của IMF. Việt Nam không có chỉ báo sớm, khảo sát niềm tin, tỷ giá thực hiệu dụng và khoảng trống tín dụng.",
+    "us": "Mỹ",
+    "world": "Các nền kinh tế lớn",
+    "period": "Kỳ",
+    "scale": "Cùng thang đo cho mọi ô",
+    "cliTitle": "Chỉ báo sớm OECD, 24 tháng qua; dòng dưới: tăng trưởng GDP so cùng kỳ mới nhất",
+    "cliRef": "100 = tăng trưởng đúng xu hướng",
+    "cpiTitle": "Lạm phát CPI so cùng kỳ, 24 tháng qua",
+    "cpiRef": "Mục tiêu của NHTW",
+    "policyRate": "Lãi suất điều hành",
+    "realRate": "Lãi suất thực (điều hành − CPI)",
+    "euroNote": "Đức, Pháp, Ý dùng chung lãi suất ECB (ô Khu vực euro). Lãi suất thực trên 0 = tiền đang đắt.",
+    "reerTitle": "Tỷ giá thực hiệu dụng so với trung bình 10 năm (BIS)",
+    "reerHint": "Dương = đồng tiền đắt hơn thường lệ với người nước ngoài, hàng xuất khẩu kém cạnh tranh hơn; âm = rẻ hơn thường lệ.",
+    "confTitle": "Niềm tin (OECD, 100 = trung bình dài hạn)",
+    "consumer": "Người tiêu dùng",
+    "business": "Doanh nghiệp",
+    "change3m": "thay đổi 3 tháng",
+    "confHint": "Mũi tên = hướng đi trong 3 tháng. Dưới 100 (chữ xám): bi quan hơn thường lệ.",
+    "uneTitle": "Tỷ lệ thất nghiệp, 24 tháng qua",
+    "unemployment": "Thất nghiệp",
+    "uneStatus": {
+      "good": "Ổn định",
+      "warn": "Cao hơn đáy 12 tháng 0,5 điểm %",
+      "crit": "Cao hơn đáy 12 tháng từ 1 điểm %"
+    },
+    "uneNote": "Chấm màu = đang tăng từ đáy 12 tháng (logic quy tắc Sahm).",
+    "debtNow": "Nợ công {year}",
+    "debtHint": "Nợ gộp của chính phủ, % GDP, ước tính của IMF. Vàng khi trên 90%, đỏ khi trên 120%.",
+    "debtSince2019": "So với 2019",
+    "debtSince2019Hint": "Nợ công đã tăng (giảm) bao nhiêu điểm % GDP so với 2019, trước đại dịch.",
+    "balance": "Ngân sách {year}",
+    "balanceHint": "Cân đối ngân sách chính phủ, % GDP, ước tính của IMF: dương = thặng dư, âm = thâm hụt. Thâm hụt quá 3% tô vàng, quá 6% tô đỏ.",
+    "creditGap": "Khoảng trống tín dụng",
+    "creditGapHint": "BIS: tỷ lệ tín dụng tư nhân/GDP trừ xu hướng dài hạn của nó, điểm %. Trên 2 tô vàng, trên 10 tô đỏ: vùng mà các đợt bùng nổ tín dụng trước đây đã thành khủng hoảng ngân hàng.",
+    "debtFootnote": "Chữ xám dưới mỗi số = kỳ của số liệu. Rê chuột lên tên cột để xem cột đo gì và tô màu ra sao.",
+    "signal": "Tín hiệu",
+    "latest": "Mới nhất",
+    "rule": "Theo dõi · báo động",
+    "state": "Trạng thái",
+    "calm": "Bình thường",
+    "signalsOn": "{n}/{total} tín hiệu đang bật",
+    "signalsHint": "một tín hiệu riêng lẻ thường là báo động giả; nhiều tín hiệu cùng bật mới là điều đã xảy ra trước các cuộc suy thoái.",
+    "cliDown": "Số nền kinh tế có chỉ báo sớm ở pha Suy yếu",
+    "cliDownHint": "Chỉ báo sớm OECD dưới 100 và vẫn đang giảm. Một phần ba số nền kinh tế lớn cùng lúc là dấu hiệu cần theo dõi cho tăng trưởng thế giới; một nửa là báo động.",
+    "signalsFootnote": "Các tín hiệu của Mỹ, trừ dòng cuối. Rê chuột lên tên tín hiệu để xem nó đo gì.",
+    "ownScale": "Mỗi ô một thang đo: xem hướng đi của đường, so mức bằng con số",
+    "missing": "Không có số tháng của: {list}.",
+    "mapNoData": "Không có số",
+    "mapHint": "Ước tính cả năm của IMF (Triển vọng kinh tế thế giới); Việt Nam có viền đậm. Rê chuột lên một nước để xem số, hoặc chuyển sang bảng.",
+    "noteEmpty": "Nhận định được viết mỗi tuần một lần, vào thứ Hai (giờ Việt Nam), từ số liệu trên trang này.",
+    "noteNeedsKey": "Thêm AI_API_KEY (key Gemini hoặc Claude) vào .env.local rồi khởi động lại worker để có nhận định tuần.",
+    "noteMeta": "Tuần {week} · {date} · {model}",
+    "noteCaveat": "AI viết chỉ từ số liệu trên trang này; hãy đối chiếu với các bảng trước khi dựa vào.",
+    "cpiNote": "Chấm màu = khoảng cách tới mục tiêu: xanh trong 1 điểm %, vàng cao hơn 1–3 điểm % (hoặc giảm phát), đỏ cao hơn trên 3 điểm %."
   },
   "map": {
     "quake": "Động đất",
@@ -245,6 +449,17 @@
     "unchanged": "đứng",
     "news": "VnExpress",
     "goldUnit": "Triệu đồng/lượng",
+    "more": "Trang Việt Nam →",
+    "compare": "So với 15 nền kinh tế lớn →",
+    "realRate": "Lãi suất thực (tái cấp vốn − CPI)",
+    "realRateHint": "Lãi suất tái cấp vốn của NHNN trừ lạm phát CPI gần nhất. Dương = tiền đang đắt (thắt chặt); âm = vẫn còn nới lỏng.",
+    "tight": "thắt chặt",
+    "loose": "nới lỏng",
+    "outlookTitle": "Triển vọng kinh tế thế giới của IMF",
+    "estimate": "ước tính",
+    "forecast": "dự báo",
+    "emAvg": "TB mới nổi {year}",
+    "outlookNote": "Số năm của IMF: năm nay là ước tính, các năm sau là dự báo (chữ nghiêng). Cột cuối: nhóm nền kinh tế mới nổi và đang phát triển.",
     "goldProducts": {
       "SJL1L10": "Vàng miếng SJC",
       "SJ9999": "Nhẫn SJC 99,99",
@@ -306,6 +521,59 @@
     "noOdds": "Hiện không có kèo crypto dài hạn, hoặc mạng này không truy cập được Polymarket.",
     "ends": "kết thúc"
   },
+  "tech": {
+    "groups": {
+      "us": "Big Tech Mỹ",
+      "chips": "Chuỗi bán dẫn",
+      "asia": "Châu Á",
+      "vietnam": "Việt Nam"
+    },
+    "company": "Công ty",
+    "price": "Giá",
+    "d1": "Hôm nay",
+    "m1": "30 ngày",
+    "ytd": "Từ đầu năm",
+    "mcap": "Vốn hoá",
+    "year": "1 năm",
+    "bigTech": "{n} Big Tech Mỹ: tổng vốn hoá {cap} · {up}/{n} mã tăng hôm nay",
+    "capNote": "Vốn hoá tính bằng USD, cổ phiếu châu Á quy đổi theo tỷ giá hôm nay. Giá theo đồng tiền của từng sàn.",
+    "levels": {
+      "none": "Bình thường",
+      "maintenance": "Bảo trì",
+      "unknown": "Có sự cố",
+      "minor": "Gián đoạn nhẹ",
+      "major": "Gián đoạn lớn",
+      "critical": "Sự cố nghiêm trọng"
+    },
+    "unreadable": "Không đọc được trang trạng thái",
+    "since": "từ {date}",
+    "moreIncidents": "+{n} sự cố khác",
+    "statusSummary": "{bad}/{n} dịch vụ đang báo sự cố",
+    "statusAllOk": "Cả {n} dịch vụ đều bình thường",
+    "statusNote": "Theo trang trạng thái công khai của từng nhà cung cấp. Sự cố chỉ ở một vùng cũng được tính, nên xem nó ở đâu.",
+    "model": "Model",
+    "listed": "Ngày lên",
+    "priceIn": "Vào",
+    "priceOut": "Ra",
+    "context": "Ngữ cảnh",
+    "openWeights": "mở",
+    "openWeightsTitle": "Trọng số công khai trên Hugging Face",
+    "free": "Miễn phí",
+    "modelsSummary": "{n} model mới trong 30 ngày · {open} mở trọng số",
+    "modelsNote": "Giá tính bằng USD cho mỗi triệu token. Ngày là ngày OpenRouter đưa model lên; không tính các biến thể :free, :batch.",
+    "papers": "Bài nghiên cứu",
+    "trendingModels": "Model đang hot",
+    "upvotes": "lượt bình chọn",
+    "likes": "lượt thích",
+    "downloads": "lượt tải",
+    "papersNote": "Daily Papers của Hugging Face trong 3 ngày qua, nhiều bình chọn nhất lên đầu.",
+    "modelsTrendNote": "Đã bỏ các bản lượng tử hoá và bản đóng gói lại của model khác.",
+    "kevSummary": "{n} lỗ hổng đang bị khai thác được thêm trong 30 ngày · {r} dùng trong ransomware",
+    "due": "hạn vá {date}",
+    "ransomware": "Ransomware",
+    "kevNote": "Mọi lỗ hổng ở đây đều đang bị khai thác thật. Hạn vá là hạn CISA đặt cho cơ quan liên bang Mỹ; nơi khác nên vá sớm hơn.",
+    "noKev": "Không có lỗ hổng mới trong 30 ngày qua."
+  },
   "calendar": {
     "econ": "Kinh tế",
     "fomc": "Fed",
@@ -318,7 +586,10 @@
     "forecast": "Dự báo",
     "previous": "Kỳ trước",
     "fomcTitle": "Fed họp chính sách (FOMC) {days}",
-    "fomcSep": "Kèm dự báo kinh tế (SEP, dot plot)"
+    "fomcSep": "Kèm dự báo kinh tế (SEP, dot plot)",
+    "cb": "NHTW",
+    "cbTitle": "{bank} công bố lãi suất",
+    "lpr": "Trung Quốc công bố lãi suất cho vay cơ bản (LPR)"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",

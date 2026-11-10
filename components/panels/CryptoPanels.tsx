@@ -1,13 +1,13 @@
 import clsx from "clsx";
 import { CRYPTO_SIGNS, SERIES } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtCompact, fmtDate, fmtNumber, fmtPct, fmtRelative, fmtSigned } from "@/lib/format";
+import { fmtCompact, fmtDate, fmtNumber, fmtPct, fmtSigned } from "@/lib/format";
 import { getCrypto, getCryptoNews, getInsightNotes, getItems, getTiles, getWatchlist, requestNow, type FearGreed, type PolyEvent } from "@/lib/queries";
 import { TileDetail } from "@/components/charts/TileDetail";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { EmptyState } from "@/components/ui/Panel";
-import { Thumb } from "@/components/ui/Thumb";
 import { DetailTile } from "./MarketPanels";
+import { NewsGrid } from "./NewsGrid";
 import { Meter, PolyEvents } from "./WorldPanels";
 
 // ---------------------------------------------------------------- helpers
@@ -21,7 +21,7 @@ function fmtPrice(v: number, lang: Locale): string {
 const usd = (v: number | null, lang: Locale) => (v === null ? "—" : `$${fmtCompact(v, lang)}`);
 
 /** Signed percent in the market's up/down colors. */
-function Pct({ v, lang, digits = 1 }: { v: number | null; lang: Locale; digits?: number }) {
+export function Pct({ v, lang, digits = 1 }: { v: number | null; lang: Locale; digits?: number }) {
   if (v === null) return <span className="text-muted">—</span>;
   return <span className={clsx(v > 0 ? "text-up" : v < 0 ? "text-down" : "text-ink-2")}>{fmtPct(v, lang, digits)}</span>;
 }
@@ -348,25 +348,7 @@ export async function CryptoOddsBody({ lang }: { lang: Locale }) {
 // ---------------------------------------------------------------- news
 
 export async function CryptoNewsBody({ lang }: { lang: Locale }) {
-  const d = getDict(lang);
   const [items, now] = await Promise.all([getCryptoNews(lang, 30), requestNow()]);
   if (!items.length) return <EmptyState lang={lang} />;
-  return (
-    <ul className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-      {items.map((n) => (
-        <li key={n.id} className="flex items-start gap-3 border-t border-line py-2">
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <a href={n.url} target="_blank" rel="noreferrer" className="text-sm leading-snug text-ink hover:underline">
-              {n.title}
-            </a>
-            <span className="text-[11px] text-muted">
-              {n.source} · {fmtRelative(n.publishedAt, now, lang)}
-              {n.alsoIn.length > 0 && ` · ${d.news.alsoIn} ${n.alsoIn.join(", ")}`}
-            </span>
-          </div>
-          <Thumb src={n.image} className="h-12 w-[72px]" />
-        </li>
-      ))}
-    </ul>
-  );
+  return <NewsGrid items={items} now={now} lang={lang} />;
 }

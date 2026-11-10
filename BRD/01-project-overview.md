@@ -57,6 +57,7 @@ Cách làm này có các vấn đề sau:
 10. **Môi trường và sức khỏe:** CO₂, nhiệt độ toàn cầu, chất lượng không khí, cảnh báo dịch bệnh của WHO.
 11. **Góc Việt Nam:** VN-Index, USD/VND, giá vàng SJC, tin VnExpress.
 12. **Tiện ích:** song ngữ VI/EN, dark mode, watchlist, hộp thoại chi tiết, cảnh báo dữ liệu cũ (stale).
+13. **Trang Công nghệ (BR-23):** cổ phiếu công nghệ và bán dẫn, trạng thái các đám mây và dịch vụ AI, model AI mới, nghiên cứu AI, lỗ hổng đang bị khai thác, tin công nghệ.
 
 Trạng thái chi tiết từng yêu cầu: xem cột **Trạng thái** trong [02](02-business-requirements.md#tóm-tắt).
 

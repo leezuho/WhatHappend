@@ -5,7 +5,7 @@
 
 **Cách đọc:**
 - Ưu tiên theo MoSCoW: **M** = Must, **S** = Should, **C** = Could.
-- **MS** là milestone: M1 Nền tảng · M2 Thị trường + Vĩ mô · M3 Tin tức + AI · M4 Bản đồ · M5 Trending + Lịch + Prediction · M6 Môi trường/Sức khỏe + Góc VN · M7 Hoàn thiện.
+- **MS** là milestone: M1 Nền tảng · M2 Thị trường + Vĩ mô · M3 Tin tức + AI · M4 Bản đồ · M5 Trending + Lịch + Prediction · M6 Môi trường/Sức khỏe + Góc VN · M7 Hoàn thiện · M8 Trang Vĩ mô thế giới · M9 Trang Việt Nam · M10 Trang Công nghệ.
 - **Trạng thái** (đối chiếu code ngày 2026-10-31): **Done** = đạt mọi tiêu chí nghiệm thu · **Partial** = chạy được nhưng còn thiếu tiêu chí (ghi rõ ở từng BR) · **Not done** = chưa làm.
 
 ## Tóm tắt
@@ -32,6 +32,9 @@
 | BR-18 | Drawer chi tiết | S | M7 | Partial |
 | BR-19 | Cảnh báo dữ liệu cũ (staleness) | M | M1–M7 | Done |
 | BR-20 | Cấu hình nhà cung cấp AI và API key | M | M3 | Done |
+| BR-21 | Trang Vĩ mô thế giới | S | M8 | Partial (Phase 1–3 xong, còn chỗ thiếu dữ liệu) |
+| BR-22 | Trang Việt Nam | S | M9 | Partial (chưa có lợi suất 10 năm) |
+| BR-23 | Trang Công nghệ | S | M10 | Partial (Phase 1 xong, Phase 2–3 trong `TODO.md`) |
 
 ---
 
@@ -308,3 +311,73 @@
 - `AI_MODEL_BRIEF` và `AI_MODEL_FAST` đổi model. Mặc định chạy được với gói miễn phí của Gemini (Flash / Flash-Lite).
 - Cấu hình sai hoặc thiếu thì worker ghi rõ lý do, hai tính năng AI tắt, và dashboard hiện "Cần API key". Phần còn lại vẫn chạy.
 - Key chỉ nằm trong `.env.local` (gitignore), không bao giờ gửi xuống trình duyệt ([NFR-05](03-non-functional-requirements.md)).
+
+## BR-21 — Trang Vĩ mô thế giới · S · M8
+
+**Trạng thái:** Partial. Phase 1 xong (2026-11-09): trang `/[lang]/macro` có Nhịp kinh tế thế giới, Bảng sức khoẻ 15 nền kinh tế và Đồng hồ chu kỳ. Phase 2 xong (2026-11-09): sáu panel theo chủ đề và Lịch vĩ mô. Phase 3 xong (2026-11-09): nhận định vĩ mô tuần do AI viết và bản đồ thế giới tô màu theo tăng trưởng, lạm phát. Các chỗ còn thiếu dữ liệu nằm trong [`TODO.md`](../TODO.md).
+
+**Mô tả:** Một trang riêng để khám sức khoẻ kinh tế thế giới, trả lời 6 câu hỏi: kinh tế đang ở pha nào của chu kỳ, lạm phát đã hạ nhiệt chưa, tiền tệ và thanh khoản đang nới hay thắt, người lao động và người tiêu dùng có ổn không, nợ công có thành vấn đề không, rủi ro suy thoái ở mức nào. Phủ 15 nền kinh tế lớn: Mỹ, khu vực euro, Đức, Pháp, Ý, Anh, Nhật, Canada, Úc, Hàn Quốc, Trung Quốc, Ấn Độ, Indonesia, Brazil, Mexico, cộng Việt Nam ở hàng cuối để so sánh (thêm ngày 2026-11-09). Việt Nam không có trong dữ liệu OECD và BIS, nên lấy CPI tháng từ IMF, GDP quý từ World Bank, lãi suất tái cấp vốn của NHNN (khai báo tay, kiểm tra lại ít nhất 6 tháng một lần), thất nghiệp là ước tính năm của IMF. Chưa có lợi suất 10 năm (HNX, xem `TODO.md`); không có chỉ báo sớm, niềm tin, tỷ giá thực hiệu dụng và khoảng trống tín dụng.
+
+**User story:** Là người theo dõi kinh tế vĩ mô, tôi muốn thấy trên một màn hình nền kinh tế nào đang mạnh lên, nước nào đang yếu đi và chỉ số nào đang vượt ngưỡng, để nắm bức tranh toàn cầu mà không phải mở nhiều trang thống kê.
+
+**Tiêu chí nghiệm thu:**
+- Mục "Vĩ mô" trên thanh điều hướng mở `/vi/macro` hoặc `/en/macro`.
+- Hàng đầu có 8 ô: tăng trưởng và lạm phát thế giới (IMF), chỉ số giá hàng hoá IMF, áp lực chuỗi cung ứng, USD rổ rộng, thanh khoản NHTW toàn cầu (Fed + ECB + BOJ quy USD), xác suất suy thoái Mỹ 12 tháng (mô hình NY Fed), bất định chính sách toàn cầu. Ô nào cũng mở được drawer lịch sử.
+- Bảng sức khoẻ: mỗi nước một hàng, 10 cột (GDP, CPI, thất nghiệp, lãi suất điều hành, lãi suất thực, lợi suất 10 năm, tỷ giá so USD từ đầu năm, chỉ báo sớm, nợ công, vãng lai). Ô nào cũng ghi kỳ dữ liệu. Thiếu số tháng hoặc quý thì dùng ước tính năm của IMF và ghi rõ "IMF 2026". Màu chỉ để nhấn, luôn kèm chú giải và nhãn chữ (tooltip, sr-only).
+- Đồng hồ chu kỳ: mỗi nước một chấm theo CLI của OECD (trên hay dưới 100, tăng hay giảm trong 3 tháng), có vệt 6 tháng, danh sách nước theo pha và chế độ xem bảng.
+- Mỗi số liệu tháng, quý hoặc năm hiện kỳ của nó, kể cả trên ô KPI.
+- Nguồn hỏng (OECD hay giới hạn tần suất) thì panel hiện "Dữ liệu cũ" hoặc "Lỗi nguồn", các ô khác vẫn chạy.
+- Phase 2: sáu panel theo chủ đề, mỗi panel trả lời một câu hỏi và đặt chi tiết của Mỹ (ô KPI có drawer lịch sử) cạnh các nền kinh tế lớn:
+  - Tăng trưởng: chỉ báo sớm CLI 24 tháng từng nước (đường 100) kèm GDP quý mới nhất; Mỹ: GDPNow, WEI, CFNAI, sản xuất công nghiệp, bán lẻ.
+  - Lạm phát: CPI 24 tháng từng nước so với mục tiêu NHTW của nước đó; Mỹ: CPI, CPI lõi, PCE lõi, 5y5y, giá lương thực IMF.
+  - Tiền tệ & thanh khoản: lãi suất điều hành và lãi suất thực 36 tháng từng NHTW; tỷ giá thực hiệu dụng so với trung bình 10 năm; Mỹ: lãi suất Fed, thanh khoản ròng (Fed − RRP − TGA), NFCI, lợi suất thực 10 năm.
+  - Việc làm & tiêu dùng: thất nghiệp 24 tháng từng nước, niềm tin người tiêu dùng và doanh nghiệp OECD; Mỹ: việc làm phi nông nghiệp, thất nghiệp, claims, niềm tin tiêu dùng UMich.
+  - Nợ & ngân sách: nợ công năm nay và so với 2019, cân đối ngân sách, khoảng trống tín dụng BIS; Mỹ: nợ liên bang/GDP, chi trả lãi, chênh lệch tín dụng IG, HY, EM.
+  - Tín hiệu suy thoái: bảng các chỉ báo từng đi trước suy thoái, mỗi dòng có ngưỡng và trạng thái bằng chữ, cộng số nước có CLI ở pha Suy yếu; câu đầu đếm số tín hiệu đang bật.
+  - Lịch vĩ mô: số liệu công bố 4 tuần tới, lịch họp Fed và 10 NHTW lớn khác, ngày LPR của Trung Quốc.
+- Phase 3:
+  - Nhận định tuần: mỗi thứ Hai AI viết một tiêu đề, 4–6 ý (có một ý về Việt Nam so với các nước) và 2–4 mục cần theo dõi, chỉ từ số liệu trên trang, song ngữ. Dùng gói Gemini miễn phí được: một lần gọi mỗi tuần, không gọi khi không có số mới, không lấy lượt của bản tin.
+  - Bản đồ thế giới: chọn tăng trưởng GDP hoặc lạm phát năm nay (IMF) cho mọi nước có số, màu theo lớp kèm chú giải, rê chuột xem số, có chế độ bảng; Việt Nam được viền đậm.
+- Small multiples chung trục thời gian; rê chuột lên một ô thì mọi ô cùng hiện số của tháng đó; có chế độ xem bảng. Nước nào nguồn không có số tháng thì ghi rõ tên dưới biểu đồ.
+
+**Ngoài phạm vi:** PMI (S&P Global, ISM là dữ liệu trả phí) và dự báo đồng thuận ("vượt hay hụt kỳ vọng"): không có nguồn miễn phí. Thay bằng chỉ báo sớm CLI của OECD.
+
+---
+
+## BR-22 — Trang Việt Nam · S · M9
+
+**Trạng thái:** Partial (2026-11-09). Trang `/[lang]/vietnam` đã có đủ năm panel; còn thiếu lợi suất trái phiếu chính phủ 10 năm (HNX, xem [`TODO.md`](../TODO.md)).
+
+**Mô tả:** Một trang riêng cho Việt Nam, sâu hơn "Góc Việt Nam" (BR-14) trên trang tổng quan: thị trường trong nước, kinh tế hiện tại và triển vọng của IMF. Việc so sánh với các nước khác nằm ở trang Vĩ mô thế giới (BR-21), nơi Việt Nam là hàng cuối.
+
+**User story:** Là người dùng ở Việt Nam, tôi muốn xem trên một trang thị trường, tỷ giá, vàng, tăng trưởng, lạm phát và lãi suất của Việt Nam cùng dự báo vài năm tới, để hiểu kinh tế trong nước đang ở đâu.
+
+**Tiêu chí nghiệm thu:**
+- Mục "Việt Nam" trên thanh điều hướng mở `/vi/vietnam` hoặc `/en/vietnam`; panel Góc Việt Nam ở trang tổng quan có liên kết sang.
+- Thị trường: ô VN-Index, USD/VND (thị trường), USD bán ra Vietcombank, USDT/VND P2P, vàng miếng SJC, mỗi ô mở được drawer lịch sử; dòng độ rộng thị trường.
+- Kinh tế: ô tăng trưởng GDP quý (World Bank), lạm phát CPI tháng (IMF), lãi suất tái cấp vốn NHNN, kèm kỳ dữ liệu; lãi suất thực (tái cấp vốn − CPI); bảng số năm của IMF từ 5 năm trước đến 2 năm sau (năm nay là ước tính, các năm sau là dự báo) cho tăng trưởng, lạm phát, thất nghiệp, nợ công, cân đối ngân sách, vãng lai, kèm cột trung bình nhóm mới nổi; liên kết sang trang Vĩ mô để so sánh.
+- Vàng (các thương hiệu, giá thế giới quy đổi, chênh lệch SJC), tỷ giá Vietcombank và 15 tin VnExpress.
+- Lãi suất NHNN khai báo tay; quá 180 ngày chưa kiểm tra lại thì panel báo lỗi nguồn thay vì hiện số có thể đã cũ.
+
+**Ngoài phạm vi:** PMI Việt Nam (S&P Global, trả phí); số tháng của Tổng cục Thống kê (không có API, phải scrape thông cáo nên dễ hỏng); World Bank WDI (IMF đã đủ, có cả dự báo).
+
+---
+
+## BR-23 — Trang Công nghệ · S · M10
+
+**Trạng thái:** Partial. Phase 1 xong (2026-11-09): trang `/[lang]/tech` có bảy panel bên dưới. Phase 2 (capex AI của các hyperscaler, doanh thu tháng TSMC, chỉ số tuyển dụng, theo dõi phiên bản và ngày hết hỗ trợ, nhận định công nghệ tuần do AI viết) và Phase 3 nằm trong [`TODO.md`](../TODO.md).
+
+**Mô tả:** Một trang riêng cho công nghệ, trả lời bốn câu hỏi: thị trường đang định giá công nghệ và chu kỳ chip ra sao, các dịch vụ mà Internet dựa vào có đang trục trặc không, AI vừa ra gì (model, giá, nghiên cứu), và lỗ hổng nào đang bị khai thác thật. Mọi nguồn đều không cần key.
+
+**User story:** Là người làm và theo dõi công nghệ, tôi muốn thấy trên một trang cổ phiếu công nghệ, sự cố của các đám mây lớn, model AI mới kèm giá, nghiên cứu đang được chú ý, lỗ hổng cần vá và tin công nghệ, để không phải mở nhiều trang trạng thái và trang tin.
+
+**Tiêu chí nghiệm thu:**
+- Mục "Công nghệ" trên thanh điều hướng mở `/vi/tech` hoặc `/en/tech`. Tab đang chọn phải nổi bật rõ ở cả ba giao diện.
+- Cổ phiếu: ô Nasdaq Composite và chỉ số bán dẫn SOX (mở được drawer lịch sử); bảng 20 mã theo 4 nhóm (Big Tech Mỹ, chuỗi bán dẫn, châu Á, Việt Nam) với giá theo đồng tiền của sàn, % hôm nay, 30 ngày, từ đầu năm, vốn hoá quy USD và sparkline 1 năm; dòng tổng vốn hoá của Big Tech Mỹ.
+- Trạng thái dịch vụ: AWS, Google Cloud, Azure, Cloudflare, GitHub, Vercel, OpenAI, Claude, mỗi dịch vụ có mức (kèm nhãn chữ) và link trang trạng thái; liệt kê sự cố đang mở với vùng và thời điểm bắt đầu. Trang nào không đọc được thì ghi rõ, không hiện là "bình thường".
+- Model AI mới trong 30 ngày (OpenRouter): hãng, ngày lên, giá vào/ra cho mỗi triệu token, độ dài ngữ cảnh, đánh dấu model mở trọng số.
+- Nghiên cứu AI (Hugging Face): bài nổi bật 3 ngày qua theo lượt bình chọn (tiêu đề được dịch khi có AI) và model đang hot, đã bỏ các bản đóng gói lại.
+- Lỗ hổng đang bị khai thác (CISA KEV) trong 30 ngày: hãng, sản phẩm, CVE, hạn vá, đánh dấu ransomware.
+- Hacker News và tin công nghệ (The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress Khoa học công nghệ). Tin của các báo công nghệ không vào danh sách tin thế giới và Brief, giống báo crypto.
+
+**Ngoài phạm vi:** dữ liệu cần key (Cloudflare Radar, Product Hunt, Artificial Analysis); bảng xếp hạng chất lượng model (chưa tìm được nguồn không cần key); giá DRAM và GPU cho thuê (chỉ có nguồn trả phí).

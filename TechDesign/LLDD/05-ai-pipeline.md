@@ -19,6 +19,8 @@ File này không import SDK nào, nên cả worker và web server đều dùng �
 | `GEMINI_API_KEY` / `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` | Key riêng từng provider, dùng khi không có `AI_API_KEY`. Không có `AI_PROVIDER` và `AI_API_KEY` thì ưu tiên Gemini rồi đến Anthropic |
 | `AI_MODEL_BRIEF` | Model viết Daily Brief (tier `brief`) |
 | `AI_MODEL_FAST` | Model dịch và phân loại hàng loạt (tier `fast`) |
+| `AI_DAILY_LIMIT_BRIEF` | Số lần gọi model `brief` mỗi ngày (§4.1). Mặc định 20 với Gemini (gói miễn phí), không giới hạn với Claude; `0` = không giới hạn |
+| `AI_DAILY_LIMIT_FAST` | Như trên cho model `fast`. Mặc định không giới hạn |
 
 **Model mặc định:**
 
@@ -35,13 +37,14 @@ API: `aiStatus()` trả về `{ ok: true, config }` hoặc `{ ok: false, reason 
 ### 0.2 Hợp đồng chung (`lib/ai/provider.ts`)
 
 ```ts
-generateJson({ tier: "brief" | "fast", system, user, schema, maxTokens? })
+generateJson({ tier: "brief" | "fast", system, user, schema, maxTokens?, db? })
   → { data: T | null, model, stopReason, usage: { input, output } | null }
 ```
 - `tier` quyết định model (`config.models[tier]`) và mức suy nghĩ: `brief` là medium, `fast` là low.
 - `data = null` khi model từ chối, bị cắt ngang, hoặc trả JSON sai schema. Nơi gọi tự xử lý (§2, §3).
 - Mỗi adapter đều kiểm tra đầu ra bằng **cùng một zod schema**. Zod là hợp đồng duy nhất giữa prompt và code.
 - Chưa cấu hình AI mà vẫn gọi thì ném lỗi `AI not configured: <reason>`. Thực tế runner đã chặn trước (§0.4).
+- Truyền `db` thì lần gọi được tính vào ngân sách ngày của model (§4.1): hết ngân sách thì ném lỗi ngay, không gọi API; gặp 429 hết quota ngày thì khoá model đến lúc reset. Mọi nguồn AI đều truyền `db`.
 
 ### 0.3 Adapter
 
@@ -78,7 +81,7 @@ Cả ba nguồn khai báo `needsAi: true` (§0.4). Chưa cấu hình AI thì run
 
 **Chọn bản ghi:**
 - `articles` có `title_vi IS NULL` hoặc `title_en IS NULL` hoặc `region IS NULL`, mới nhất trước. Lô 40 bài, tối đa 4 lô (160 bài) mỗi lần chạy. Mỗi phần tử gồm `{ id, lang, source, title }`.
-- Văn bản ngắn tiếng Anh cần dịch sang tiếng Việt, gộp chung 1 lần gọi: tối đa 40 `events` có `title_vi IS NULL`, và tối đa 40 `items` có `title_vi IS NULL` thuộc `kind` `polymarket`, `who` (`TRANSLATED_ITEM_KINDS`). Các `kind` khác (tên bài Wikipedia, launch, lịch…) giữ nguyên. Sự kiện GDELT tự ghi sẵn `title_vi` nên không cần dịch.
+- Văn bản ngắn tiếng Anh cần dịch sang tiếng Việt, gộp chung 1 lần gọi: tối đa 40 `events` có `title_vi IS NULL`, và tối đa 40 `items` có `title_vi IS NULL` thuộc `kind` `polymarket`, `polymarket_crypto`, `who`, `hf_papers` (`TRANSLATED_ITEM_KINDS`). Các `kind` khác (tên bài Wikipedia, launch, lịch…) giữ nguyên. Sự kiện GDELT tự ghi sẵn `title_vi` nên không cần dịch.
 
 **Prompt (tóm tắt):**
 - Dịch sang ngôn ngữ còn lại (`en` ↔ `vi`), giữ nguyên tên riêng, ký hiệu tiền tệ và mã chứng khoán.
@@ -96,7 +99,7 @@ z.object({ items: z.array(z.object({
 - Ghi `UPDATE … WHERE id = ?` trong một transaction.
 - Phần tử không được trả về thì ghi tiêu đề gốc vào cột tương ứng và `region = global`, `topic = other`, để không bị gửi lại mãi.
 
-**Cache:** mỗi bản ghi chỉ dịch **một lần**, vì đã có bản dịch thì không được chọn lại. `replaceEvents` giữ `title_vi` qua các lần thay snapshot (xem [01](01-database-schema.md#5-cách-ghi-store-helpers)).
+**Cache:** mỗi bản ghi chỉ dịch **một lần**, vì đã có bản dịch thì không được chọn lại. `replaceEvents` và `replaceItems` giữ `title_vi` qua các lần thay snapshot khi tiêu đề không đổi (xem [01](01-database-schema.md#5-cách-ghi-store-helpers)). Trước 2026-11-09, `replaceItems` xoá luôn bản dịch nên kèo Polymarket bị dịch lại sau mỗi lần nguồn chạy (15 phút).
 
 **Lỗi:** lô trả `data = null` (bị từ chối, bị cắt ngang hoặc sai schema) thì ghi tiêu đề gốc (chống vòng lặp thử lại vô hạn) và ghi log. Lỗi HTTP/SDK còn lại sau khi đã thử lại (ví dụ 429 hết hạn mức) làm lần chạy lỗi, `source_status.ok = 0`; worker thử lại sau `max(1 phút, interval/4)`.
 
@@ -139,7 +142,7 @@ z.object({ items: z.array(z.object({
 Nút "Viết lại" (`BriefRefresh`) gọi `POST /api/brief`. Route này chỉ ghi cờ `kv['brief:force']` (không xóa sau khi chạy; so sánh theo thời gian với `briefs.created_at`). Web server không gọi API AI nào (giữ nguyên tắc của ADR-04). Kiểu `StoredBrief` và `FORCE_KEY` nằm ở `lib/ai/brief-shared.ts` để web không import SDK.
 
 **Đầu vào** (gom từ DB, không gọi API ngoài):
-1. Tối đa 90 tiêu đề trong 24 giờ qua (tiếng Anh nếu có), gộp theo `title_key`, bỏ `topic = sports` và bỏ các báo chỉ viết về crypto (`CRYPTO_OUTLETS`). Mỗi tiêu đề được đánh số `n` kèm `source`, `region`, `topic`.
+1. Tối đa 90 tiêu đề trong 24 giờ qua (tiếng Anh nếu có), gộp theo `title_key`, bỏ `topic = sports` và bỏ các báo chuyên mục crypto và công nghệ (`DESK_OUTLETS` = `CRYPTO_OUTLETS` + `TECH_OUTLETS`). Mỗi tiêu đề được đánh số `n` kèm `source`, `region`, `topic`.
 2. Snapshot 12 Vital Signs: tên, giá trị, % thay đổi.
 3. Thiên tai đáng chú ý trong 48 giờ: sự kiện mức orange/red và động đất M ≥ 6 (tối đa 15).
 
@@ -181,13 +184,27 @@ Người không chuyên nhìn con số không hiểu nó nói gì, nên chỉ s�
 
 **Khi nào viết lại** (`needsNote`): chỉ số chưa có ghi chú, có lý do mới chưa nằm trong `basis` đã lưu, hoặc ghi chú cũ hơn 12 giờ. Lý do chỉ mất đi (dao động mạnh nhạt dần trong phiên, `crit` lùi về `warn`) không kích hoạt viết lại, vì z-score lơ lửng quanh ngưỡng sẽ làm `basis` đổi qua lại và tốn một lần gọi model mỗi lượt. Mọi chỉ số cần viết gộp vào **một** lần gọi model.
 
-**Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief); nếu có chỉ số crypto trong danh sách thì thêm 25 tiêu đề từ báo crypto (`recentHeadlines(…, "crypto")`).
+**Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief); nếu có chỉ số crypto trong danh sách thì thêm 25 tiêu đề từ báo crypto (`recentHeadlines(…, "crypto")`), có Nasdaq hoặc SOX (`TECH_SIGNS`) thì thêm 25 tiêu đề từ báo công nghệ (`recentHeadlines(…, "tech")`).
 
 **Prompt** yêu cầu: (1) giải nghĩa mức hiện tại bằng lời thường, (2) nêu nguyên nhân **chỉ khi** tiêu đề nói rõ và ghi số tiêu đề vào `refs`, (3) có thể nêu tác động thường gặp tới người dân (giá xăng, lãi vay, Việt Nam), không dự báo, không khuyến nghị đầu tư. Số liệu tuần/tháng có `asOf` cũ hơn tin nên không được gán cho tin 24 giờ. Mỗi ghi chú dưới 60 từ, viết song ngữ.
 
 **Hiển thị:** panel "Điểm đáng chú ý" dưới bản đồ, cùng ghi chú trong hộp thoại chi tiết của tile. Chip nguồn lấy từ `refs`, tối đa 2, mỗi báo một chip. Chưa có ghi chú (chưa cấu hình AI hoặc worker chưa chạy) thì hiện mô tả tĩnh `explain`.
 
 **Chạy thật (2026-10-31, `gemini-3.8-flash`):** 8 chỉ số, khoảng 2,7K token vào và 4K token ra, 77 giây (một lần khác mất 5,5 phút vì Gemini quá tải phải thử lại).
+
+## 3b. Nhận định vĩ mô tuần (`macronote`, `lib/ai/macronote.ts`)
+
+Phase 3 của trang Vĩ mô thế giới: mỗi tuần một đoạn nhận định bằng lời thường, đọc từ chính các con số của trang.
+
+**Khi nào chạy** (`isDue`): tuần ISO theo giờ Việt Nam (`isoWeek`) khác tuần đã kiểm tra gần nhất, model `brief` còn ít nhất 2 lượt trong ngày (một cho nhận định, một chừa cho bản tin), và lần lỗi trước đã qua 6 giờ. Tức là chạy ở lượt đầu tiên của thứ Hai (giờ Việt Nam).
+
+**Đầu vào** (`macroInput`, khoảng 6.000 ký tự ≈ 1,8K token): 8 ô Nhịp kinh tế thế giới, bảng sức khoẻ 16 nền kinh tế dạng chữ gọn (`cellText`: "3.7 Sep '26 [warn]"), pha chu kỳ, 7 tín hiệu suy thoái Mỹ, danh sách thay đổi so với nhận định tuần trước (`changesSince`: số tháng/quý/năm khác đi, lợi suất lệch ≥ 0,25 điểm %, tỷ giá ≥ 2 điểm %) và các quyết định lãi suất, số liệu tác động cao trong 8 ngày tới. Bảng sức khoẻ đọc qua `lib/data/macro.ts` (`scorecardRows`, `cycleRows`), dùng chung với web.
+
+**Tiết kiệm lượt gọi:** một lần gọi mỗi tuần cho cả hai ngôn ngữ; gửi phần thay đổi thay vì cả bảng tuần trước; băm (`hash`) các số tháng/quý/năm và pha chu kỳ, trùng với nhận định trước thì không gọi model, chỉ ghi nhận đã kiểm tra tuần này; chưa đủ 8 nền kinh tế có CPI tháng thì báo lỗi thay vì viết từ dữ liệu thiếu.
+
+**Đầu ra** (zod): `{ en, vi }`, mỗi bản có `headline`, 4–6 `bullets` (`title`, `body`), một ý dành cho Việt Nam so với các nước, và 2–4 mục `watch` lấy từ danh sách sắp tới. Prompt cấm bịa số, yêu cầu nói rõ khi số liệu đã cũ.
+
+**Lưu:** `kv` khoá `macro:note` (`StoredMacroNote` trong `macronote-shared.ts`: tuần viết, tuần đã kiểm tra, model, `hash`, bảng rút gọn để so tuần sau, hai bản văn). Web đọc qua `getMacroNote()` và hiện ở panel thứ hai của trang Vĩ mô.
 
 ## 4. Chi phí và hạn mức
 
@@ -207,7 +224,17 @@ Người không chuyên nhìn con số không hiểu nó nói gì, nên chỉ s�
 - Chi phí bằng tổng token nhân đơn giá hiện hành của model. Tra đơn giá lúc dùng, không ghi cứng trong tài liệu.
 - Mục tiêu vẫn là **vài cent mỗi ngày**, tối đa 0,10 USD ([NFR-07](../../BRD/03-non-functional-requirements.md)).
 
-**Biện pháp giữ chi phí:** gửi theo lô, mỗi tiêu đề chỉ dịch một lần, giới hạn số bản ghi mỗi lần chạy, brief 1 lần/ngày, `insights` chỉ gọi model khi có ghi chú mới cần viết (thường vài lần mỗi ngày). Mỗi lần gọi đều ghi số token vào log qua `ctx.log`.
+### 4.1 Ngân sách lượt gọi mỗi ngày (`lib/ai/budget.ts`)
+
+Ngày 2026-11-09, `gemini-flash-latest` trỏ tới `gemini-3.8-flash` với hạn mức gói miễn phí **20 lần gọi mỗi ngày**. Bản tin hôm đó không viết được (429 `generate_content_free_tier_requests, limit: 20`) vì `insights` (cùng model, có thể chạy mỗi 30 phút) đã dùng hết lượt.
+
+- Mỗi lần gọi qua `generateJson({ …, db })` cộng một vào `kv` khoá `ai:calls:<ngày>:<model>`. Ngày tính theo giờ Thái Bình Dương (`quotaDay`), vì Google reset hạn mức lúc nửa đêm giờ đó. Bộ đếm cũ quá 7 ngày bị xoá.
+- Gặp 429 có "per day" (`isDailyQuotaError`) thì ghi `ai:exhausted:<model>` = ngày đó: model bị khoá đến khi sang ngày mới, các nguồn không gọi thử vô ích nữa.
+- `callsLeft(db, config, tier)` = hạn mức (`dailyLimit`) − số lần đã gọi, bằng 0 khi bị khoá.
+- Chia 20 lượt của model `brief`: bản tin chạy khi còn lượt (`isDue` bỏ qua khi `callsLeft = 0`); nhận định tuần cần còn ≥ 2 lượt; `insights` chỉ dùng model `brief` khi còn hơn `BRIEF_RESERVE` = 4 lượt (bản tin, một lần bấm "Viết lại", nhận định tuần và một lần thử lại), còn lại dùng model `fast`.
+- Bộ đếm chỉ thấy các lần gọi của worker này. Key dùng chung ở nơi khác (AI Studio, máy khác) vẫn tiêu hạn mức thật; khi đó 429 sẽ khoá model như trên.
+
+**Biện pháp giữ chi phí:** gửi theo lô, mỗi tiêu đề chỉ dịch một lần, giới hạn số bản ghi mỗi lần chạy, brief 1 lần/ngày, nhận định vĩ mô 1 lần/tuần, `insights` chỉ gọi model khi có ghi chú mới cần viết (thường vài lần mỗi ngày) và nhường model `brief` khi sắp hết lượt (§4.1). Mỗi lần gọi đều ghi số token vào log qua `ctx.log`.
 
 ## 5. Chưa cấu hình AI
 

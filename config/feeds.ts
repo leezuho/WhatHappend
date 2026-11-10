@@ -1,7 +1,9 @@
 // News feeds read by the `rss` source. `region` is preset only when the feed is
 // single-region; everything else is tagged by the AI enrichment pass.
-// Crypto feeds (`crypto: true`) feed the crypto page only: they would otherwise
-// flood the world news list and the daily brief.
+// Crypto feeds (`crypto: true`) feed the crypto page only, tech feeds (`tech: true`)
+// the technology page only: they would otherwise flood the world news list and
+// the daily brief. Outlets are told apart by `name`, so a desk feed needs a name
+// of its own (hence "VnExpress KHCN", not "VnExpress").
 
 export interface Feed {
   name: string;
@@ -10,6 +12,8 @@ export interface Feed {
   region?: string;
   /** Crypto-only outlet: shown on the crypto page, kept out of world news and the brief. */
   crypto?: boolean;
+  /** Technology outlet: shown on the tech page, kept out of world news and the brief. */
+  tech?: boolean;
   /** Host rejects non-browser user agents. */
   browserUA?: boolean;
   /** Where relative image paths resolve when it is not the feed's own host. */
@@ -36,7 +40,19 @@ export const FEEDS: Feed[] = [
   { name: "The Block", url: "https://www.theblock.co/rss.xml", lang: "en", crypto: true },
   { name: "Decrypt", url: "https://decrypt.co/feed", lang: "en", crypto: true },
   { name: "Coin68", url: "https://coin68.com/rss/tin-moi-nhat.rss", lang: "vi", crypto: true, imageBase: "https://cdn.coin68.com/" },
+  // Technology
+  { name: "The Verge", url: "https://www.theverge.com/rss/index.xml", lang: "en", tech: true },
+  { name: "Ars Technica", url: "https://feeds.arstechnica.com/arstechnica/index", lang: "en", tech: true },
+  { name: "TechCrunch", url: "https://techcrunch.com/feed/", lang: "en", tech: true },
+  { name: "MIT Technology Review", url: "https://www.technologyreview.com/feed/", lang: "en", tech: true },
+  { name: "VnExpress KHCN", url: "https://vnexpress.net/rss/khoa-hoc-cong-nghe.rss", lang: "vi", tech: true },
 ];
 
 /** Outlet names of the crypto-only feeds (`articles.source`). */
 export const CRYPTO_OUTLETS = [...new Set(FEEDS.filter((f) => f.crypto).map((f) => f.name))];
+
+/** Outlet names of the technology feeds (`articles.source`). */
+export const TECH_OUTLETS = [...new Set(FEEDS.filter((f) => f.tech).map((f) => f.name))];
+
+/** Every desk outlet (crypto, tech): left out of the world news list and the daily brief. */
+export const DESK_OUTLETS = [...CRYPTO_OUTLETS, ...TECH_OUTLETS];

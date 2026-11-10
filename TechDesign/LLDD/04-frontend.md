@@ -1,8 +1,8 @@
 # LLDD 04 — Frontend
 
-> Phiên bản 0.4 · Ngày 2026-11-03 · Trạng thái: Đã triển khai (M1–M7)
+> Phiên bản 0.5 · Ngày 2026-11-09 · Trạng thái: Đã triển khai (M1–M7), M8 Phase 1
 > Liên quan: [HLDD](../HLDD/HLDD.md) · [01 Database schema](01-database-schema.md) · [06 Risk Regime](06-risk-regime.md) · [BRD 02](../../BRD/02-business-requirements.md)
-> Mã nguồn: `proxy.ts`, `app/[lang]/{layout,page}.tsx`, `app/api/{brief,series/[key],watchlist}/route.ts`, `app/globals.css`, `components/{TopBar.tsx,ui,panels,charts}`, `lib/{queries,i18n,format,use-theme}.ts`, `lib/data/series.ts`, `messages/{vi,en}.json`, `scripts/copy-maplibre-worker.mjs`
+> Mã nguồn: `proxy.ts`, `app/[lang]/{layout,page}.tsx`, `app/[lang]/{crypto,macro,vietnam,tech}/page.tsx`, `app/api/{brief,series/[key],watchlist}/route.ts`, `app/globals.css`, `components/{TopBar.tsx,ui,panels,charts}`, `lib/{queries,queries-macro,queries-vietnam,queries-tech,i18n,format,use-theme}.ts`, `lib/data/{series,macro,tech}.ts`, `messages/{vi,en}.json`, `scripts/copy-maplibre-worker.mjs`
 
 ## 1. Routing
 
@@ -11,6 +11,9 @@
 | `/` hoặc bất kỳ path nào chưa có locale | `proxy.ts` chọn locale theo thứ tự: cookie `lang` → `Accept-Language` bắt đầu bằng `en` → mặc định `vi`. Sau đó redirect sang `/<locale><path>` |
 | `/vi`, `/en` | `app/[lang]/layout.tsx` (root layout) + `app/[lang]/page.tsx` (dashboard) |
 | `/vi/crypto`, `/en/crypto` | `app/[lang]/crypto/page.tsx` (trang crypto, xem §3a) |
+| `/vi/macro`, `/en/macro` | `app/[lang]/macro/page.tsx` (trang Vĩ mô thế giới, xem §3b) |
+| `/vi/vietnam`, `/en/vietnam` | `app/[lang]/vietnam/page.tsx` (trang Việt Nam, xem §3c) |
+| `/vi/tech`, `/en/tech` | `app/[lang]/tech/page.tsx` (trang Công nghệ, xem §3d) |
 | Locale lạ | `hasLocale()` sai → `notFound()` |
 
 - `proxy.ts` matcher bỏ qua `_next`, `api` và các file có phần mở rộng.
@@ -67,7 +70,7 @@ Ghi chú hành vi từng panel:
 - **Trending:** tab mặc định là Wikipedia EN, vì top của vi.wikipedia thường bị bot đẩy lượt xem.
 - **Prediction:** thang lãi suất Fed của Kalshi (chỉ hiện các mức có xác suất 2–98%, nếu không có thì 6 mức đầu) và các sự kiện Polymarket, mỗi outcome có thanh meter (track là bước nhạt của cùng hue).
 - **Hành tinh & sức khỏe:** CO₂ Mauna Loa (so 1 năm trước), dị thường nhiệt độ GISTEMP (kèm trung bình 12 tháng), AQI của 10 thành phố (chấm màu trạng thái + nhãn chữ, không chỉ dựa vào màu) và tin WHO DON.
-- **TopBar:** có thanh điều hướng Tổng quan / Crypto (`section`); `LangSwitch` giữ nguyên trang khi đổi ngôn ngữ (`/vi/crypto` → `/en/crypto`).
+- **TopBar:** có thanh điều hướng Tổng quan / Vĩ mô / Việt Nam / Crypto / Công nghệ (`section`). Tab đang chọn tô `bg-accent text-on-accent` (đen ở theme sáng, trắng ở theme tối, đất nung ở theme Anthropic), giống mọi nút đang chọn khác (§8); trước 2026-11-09 nó dùng `surface-2` và gần như không phân biệt được. Nhãn tab không bao giờ xuống dòng (`whitespace-nowrap`); năm tab vừa một dòng ở 390px, và nếu nhãn dài ra thì hàng tab cuộn ngang thay vì gãy chữ. `LangSwitch` giữ nguyên trang khi đổi ngôn ngữ (`/vi/crypto` → `/en/crypto`). Ngôn ngữ và theme là hai nút toggle đơn (không phải nhóm nút) và tagline chỉ hiện từ `2xl`. Đo ngày 2026-11-09: thanh nằm trên một dòng ở 1440px với cả `vi` và `en`; ở 1280px, bảy đồng hồ thị trường đẩy cụm Trạng thái rủi ro, ngôn ngữ, theme xuống dòng hai.
 - **Việt Nam:** VN-Index (kèm độ rộng thị trường), USD/VND, bảng giá vàng VN, chênh SJC so với vàng thế giới quy đổi (1 lượng = 37,5 g), tỷ giá Vietcombank, tin VnExpress.
 
 ## 3a. Trang crypto (`app/[lang]/crypto/page.tsx`, `components/panels/CryptoPanels.tsx`)
@@ -92,6 +95,103 @@ Hàng 4  Tin crypto [xl:12] (2 cột từ md)
 | Tin crypto | `CryptoNewsBody` (`getCryptoNews`) | `rss`, `translate` |
 
 Đơn vị `$B` (tỷ USD) hiển thị dạng rút gọn theo ngôn ngữ: `$2.59T` / `$2,59 NT`, khớp với `fmtCompact` trong các bảng.
+
+## 3b. Trang Vĩ mô thế giới (`app/[lang]/macro/page.tsx`, `components/panels/MacroPanels.tsx`)
+
+Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Đọc qua `lib/queries-macro.ts` (`getScorecard`, `getCycleClock`, `getOecdLines`, `getPolicyLines`, `getReer`, `getConfidence`, `getDebtTable`, `getMacroNote`, `getWorldMap`) và `getTiles`, `getCalendar` có sẵn. Bảng sức khoẻ và đồng hồ chu kỳ tính trong `lib/data/macro.ts` (`scorecardRows`, `cycleRows`, không phụ thuộc Next), để worker viết nhận định tuần từ đúng các con số đó. 16 nước lấy từ `MACRO_COUNTRIES` (cờ `macro` trong `config/countries.ts`); trang tổng quan vẫn dùng 9 nước có cờ `overview`. Việt Nam là hàng cuối, để so sánh. Nó không có `oecd`, `bis`, `bisArea`, nên lấy số từ nơi khác: CPI tháng từ `imfcpi`, GDP quý từ `worldbank` (`gdp`), lãi suất điều hành từ `sbv` (`rate`), thất nghiệp là số năm IMF; lợi suất 10 năm, chỉ báo sớm, niềm tin, REER và khoảng trống tín dụng để "—" hoặc bỏ qua, và dòng `missing` dưới small multiples liệt kê nó. Chú thích `macro.vnNote` dưới bảng ghi nguồn của hàng này.
+
+Chọn nguồn cho từng ô: lãi suất điều hành đọc qua `policyRateId(c)` (`bis:<bis>` hoặc `c.rate`). CPI, GDP quý và lợi suất 10 năm có nhiều ứng viên, lấy series có điểm mới nhất bằng `freshest()` (`lib/data/series.ts`): CPI giữa `oecd:CPI` và `imf:CPI_M`, GDP giữa `oecd:GDP` và `c.gdp`, lợi suất giữa `c.y10` (số ngày: FRED cho Mỹ, CNBC cho Indonesia) và `oecd:IRLT`. Số ngày cũ hơn 7 ngày thì ô hiện kèm ngày (`freq: "w"`).
+
+```
+Hàng 1  Nhịp kinh tế thế giới [xl:12]: 8 tile WORLD_PULSE
+Hàng 2  Kinh tế thế giới tuần này [xl:12]: nhận định AI (tiêu đề, 4–6 ý 2 cột từ lg, mục cần theo dõi)
+Hàng 3  Sức khoẻ các nền kinh tế [xl:12]: bảng 16 nước × 10 cột
+Hàng 4  Đồng hồ chu kỳ [xl:12]: biểu đồ (3fr) │ danh sách nước theo pha (2fr)
+Hàng 5  Bản đồ thế giới [xl:12]: tab Tăng trưởng GDP │ Lạm phát, bản đồ hoặc bảng, chú giải theo lớp
+Hàng 6–10 Tăng trưởng · Lạm phát · Tiền tệ & thanh khoản · Việc làm & tiêu dùng · Nợ & ngân sách [xl:12 mỗi panel]:
+          Mỹ: tile MACRO_US (2fr) │ Các nền kinh tế lớn: small multiples hoặc bảng (3fr)
+Hàng 11 Tín hiệu suy thoái [xl:7] │ Lịch vĩ mô [xl:5]
+```
+
+- **Kinh tế thế giới tuần này** (`MacroNoteBody`, `sources: ["macronote"]`): đọc `kv` `macro:note` (LLDD 05 §3b). Chân panel ghi tuần, giờ viết, model và lời nhắc "AI viết chỉ từ số liệu trên trang". Chưa có nhận định thì hiện `macro.noteEmpty`, chưa có key thì `macro.noteNeedsKey`.
+- **Bản đồ thế giới** (`WorldMapPanel` → `WorldChoropleth`, client, `sources: ["imf"]`): giá trị năm nay của `WORLD_MAP` cho mọi nền kinh tế (`getWorldMap`), hình nước từ `public/geo/countries-110m.json` (Natural Earth 1:110m, dựng bằng `scripts/build-countries-geojson.mjs`, 176 KB, 55 KB gzip, tải phía client). Màu theo lớp (`mapBin`): tăng trưởng là thang phân kỳ xanh/đỏ quanh lớp xám "≈ 0" (ngưỡng −5, −2,5, −0,5, 0,5, 2,5, 5); lạm phát là thang tuần tự cam (2, 3, 5, 10, 20). Ramp đỏ và cam dựng cùng bậc độ sáng OKLCH với ramp xanh; ở theme tối các lớp gần 0 lùi về phía nền tối. Lớp tô nằm dưới nhãn nền (`firstSymbolLayer`), viền nước màu nền, Việt Nam viền đậm. Rê chuột hiện tên nước và số; có chế độ bảng (sắp giảm dần) cho người đọc màn hình; cuộn chuột không zoom (dùng nút +/−) để không giữ cuộn trang.
+
+| Panel | Component | `sources` |
+|---|---|---|
+| Nhịp kinh tế thế giới | `WorldPulse` → `DetailTile` (dùng lại của `MarketPanels`): tăng trưởng và lạm phát thế giới (IMF), giá hàng hoá IMF, GSCPI, USD rổ rộng, thanh khoản NHTW toàn cầu, xác suất suy thoái Mỹ, bất định chính sách toàn cầu | `imf`, `fred`, `gscpi` |
+| Sức khoẻ các nền kinh tế | `ScorecardPanel` (`sources`: `oecd`, `imfcpi`, `imf`, `bis`, `sbv`, `worldbank`, `cnbc`, `yahoo`, `fred`): bảng HTML do server render, nhóm "Kinh tế phát triển" / "Kinh tế mới nổi", cột tên nước ghim khi cuộn ngang. Mỗi ô: số, kỳ dữ liệu (chữ nhỏ), chấm trạng thái + nền nhạt (`warning`/`critical` /10), nhãn trạng thái ẩn cho trình đọc màn hình, tooltip. Tiêu đề cột có tooltip giải thích cách tô màu (`SCORE_COLS` trong `config/macro.ts`) | `oecd`, `imf`, `bis`, `yahoo`, `fred` |
+| Đồng hồ chu kỳ | `CycleClockPanel` → `CycleClock` (client, SVG tự vẽ) | `oecd` |
+| Tăng trưởng | `GrowthPanel`: tile GDPNow, WEI, CFNAI, sản xuất công nghiệp, bán lẻ │ small multiples CLI 24 tháng (đường 100), dòng dưới mỗi ô là GDP quý mới nhất (lấy từ `getScorecard`) | `oecd`, `fred` |
+| Lạm phát | `InflationPanel`: tile CPI, CPI lõi, PCE lõi, 5y5y, giá lương thực IMF │ small multiples CPI 24 tháng (OECD hoặc IMF, nguồn nào mới hơn), đường đứt = mục tiêu của từng NHTW, chấm = `cpiStatus` | `oecd`, `imfcpi`, `fred` |
+| Tiền tệ & thanh khoản | `MoneyPanel`: tile lãi suất Fed, thanh khoản ròng, NFCI, lợi suất thực 10 năm │ small multiples lãi suất điều hành (`--s1`) và lãi suất thực (`--s2`) 36 tháng, mỗi NHTW một ô (Đức, Pháp, Ý gộp vào ECB; Việt Nam là NHNN), thang riêng; dưới là `ZeroBars` tỷ giá thực hiệu dụng so với trung bình 10 năm | `bis`, `sbv`, `oecd`, `imfcpi`, `fred` |
+| Việc làm & tiêu dùng | `JobsPanel`: tile việc làm phi nông nghiệp, thất nghiệp, claims, UMich │ small multiples thất nghiệp 24 tháng (thang riêng, chấm = `unemploymentStatus`); dưới là bảng niềm tin người tiêu dùng / doanh nghiệp OECD tách đôi | `oecd`, `fred` |
+| Nợ & ngân sách | `DebtPanel`: tile nợ liên bang/GDP, chi trả lãi, chênh lệch IG, HY, EM │ bảng 16 nước: nợ công năm nay, so với 2019, cân đối ngân sách, khoảng trống tín dụng BIS (tô màu theo `debtStatus`, `budgetStatus`, `creditGapStatus`) | `imf`, `bis`, `fred` |
+| Tín hiệu suy thoái | `RecessionPanel`: bảng `RECESSION_SIGNALS` (tên, số mới nhất + kỳ, sparkline, ngưỡng theo dõi · báo động, trạng thái chấm + chữ) cộng một dòng "số nền kinh tế có CLI ở pha Suy yếu" (⅓ = theo dõi, ½ = báo động); câu đầu đếm số tín hiệu đang bật | `fred`, `oecd` |
+| Lịch vĩ mô | `CalendarBody` với `days=28`, `kinds=["econ","fomc","cb"]`: số liệu ForexFactory, FOMC, lịch họp các NHTW khác và ngày LPR của PBoC | `calendar` |
+
+**Bảng sức khoẻ, cách chọn số:** OECD tháng hoặc quý nếu có; không có thì ước tính năm hiện tại của IMF, ghi kỳ là "IMF 2026" (`est`). Lãi suất thực = lãi suất điều hành − CPI của chính ô CPI. Lợi suất 10 năm của Mỹ lấy `fred:DGS10` (ngày). Tỷ giá từ đầu năm so với giá đóng cửa cuối năm trước (`currencyChange`, có xét chiều yết giá `perUsd`), ưu tiên quote trực tiếp; hàng Mỹ hiện DXY. Quy tắc tô màu ở `lib/signals/macro.ts` và BRD 04.
+
+**`CycleClock`** (`components/charts/CycleClock.tsx`):
+- Trục dọc CLI − 100, trục ngang thay đổi CLI 3 tháng; miền đối xứng quanh 0 nên hai đường 0 (màu `--axis`, 1,5px) chia mặt phẳng thành 4 pha, tên pha in ở 4 góc.
+- Một màu `--s1` cho mọi chấm (vị trí mang ý nghĩa, nhãn mã nước mang danh tính); vệt 6 tháng `--axis` 1,25px. Chấm r=5 có viền `--surface` 2px, vùng hover r=12.
+- Nhãn đặt tham lam: phải → trái → trên → dưới chấm, chọn chỗ đầu tiên không đè nhãn hay chấm khác.
+- Hover/focus một nước: vệt chuyển `--s1` 2px kèm điểm từng tháng, các nước khác mờ đi, tooltip ghi tên, tháng, pha, CLI, thay đổi 3 tháng. Mỗi chấm `tabIndex=0` với `aria-label` đủ ý.
+- Kích thước đo bằng `ResizeObserver`, chiều cao `clamp(280, 0.62 × rộng, 440)`. Tiêu đề trục nằm ở chú thích dưới biểu đồ.
+- Bên phải: `PhaseList` nhóm nước theo pha (chip mã nước + CLI + mũi tên); hover chip làm sáng nước đó trong biểu đồ. Nút "Bảng" chuyển sang bảng số.
+
+**`SmallMultiples`** (`components/charts/SmallMultiples.tsx`, client): mỗi nước một biểu đồ đường nhỏ, chung trục thời gian.
+- Thang giá trị mặc định dùng chung cho mọi ô (chú thích ghi khoảng). `ownScale={n}` cho mỗi ô thang riêng rộng tối thiểu `n` đơn vị, dùng khi mức chênh nhau quá xa (lãi suất 0,75% đến 15%) và câu chuyện là hướng đi; chú thích khi đó ghi "Mỗi ô một thang đo".
+- Đường tham chiếu đứt (`refValue` chung, hoặc `MultipleRow.refValue` riêng từng nước như mục tiêu lạm phát), tối đa 2 series (`points2`), chấm cuối màu series, chấm trạng thái trong tiêu đề ô kèm nhãn ẩn cho trình đọc màn hình.
+- Rê chuột lên một ô thì một đường dọc chạy qua mọi ô và tiêu đề các ô đổi sang số của tháng đó. Nút "Bảng" chuyển sang bảng số cuối cùng của từng nước.
+- Prop không được đặt tên `ref` (React 19 coi `ref` là ref thật). Điểm đưa xuống phải là object thường: dòng của `node:sqlite` có prototype null và React từ chối truyền sang client component, nên `getOecdLines` chép lại `{ ts, value }`.
+- Nước không có số tháng trên OECD được liệt kê dưới biểu đồ (`missingNote`), không ẩn đi lặng lẽ.
+
+**Series hiển thị dạng thay đổi:** `SeriesDef.transform` (`yoy` / `diff`) và `scale` khiến `getTile` và `getDetailPoints` đi qua `displayPoints()`: CPI, CPI lõi, PCE lõi, sản xuất công nghiệp, bán lẻ hiển thị so cùng kỳ; việc làm phi nông nghiệp hiển thị số việc làm tăng thêm (PAYEMS nghìn người × 1000, đơn vị `K`). Trường hợp riêng `CPI_YOY` / `defOf` cũ đã bỏ.
+
+**Tile tần suất thấp:** `SeriesDef.freq` (`w`/`m`/`q`/`y`) làm `getTile` lấy N quan sát gần nhất thay vì 30 ngày (26 tuần, 24 tháng, 12 quý, 10 năm), bỏ qua điểm có `ts > now` (dự báo IMF), bỏ thanh biên độ 1 năm với chuỗi năm; `KpiTile` in kỳ dữ liệu cạnh delta (`fmtPeriod`: "T9/2026" / "Sep 2026", "Q2/2026", "2026"). Các tile tháng/tuần cũ ở trang tổng quan (CPI, Fed funds, Sahm, claims, STLFSI, bảng cân đối Fed, GSCPI) cũng hưởng cách hiển thị này.
+
+## 3c. Trang Việt Nam (`app/[lang]/vietnam/page.tsx`, `components/panels/VietnamPanels.tsx`)
+
+Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Bảng vàng, bảng Vietcombank, độ rộng thị trường và danh sách tin là các khối `GoldTable`, `VcbTable`, `VnBreadth`, `VnNewsList` trong `ContentPanels.tsx`, dùng chung với `VietnamBody` (Góc Việt Nam ở trang tổng quan, có liên kết `vn.more` sang trang này). Đọc qua `getVietnam(lang, newsLimit)`, `getTiles` và `getVietnamOutlook` (`lib/queries-vietnam.ts`).
+
+```
+Hàng 1  Thị trường Việt Nam [xl:12]: 5 tile VIETNAM_MARKETS + dòng độ rộng
+Hàng 2  Kinh tế Việt Nam [xl:12]: 3 tile VIETNAM_ECONOMY + lãi suất thực (2fr) │ bảng IMF (3fr)
+Hàng 3  Giá vàng [xl:4] │ Tỷ giá Vietcombank [xl:4] │ Tin Việt Nam [xl:4]
+```
+
+| Panel | Component | `sources` |
+|---|---|---|
+| Thị trường Việt Nam | `VnMarkets`: tile VN-Index, USD/VND, USD Vietcombank (`vcbUsd`), USDT/VND, vàng SJC (`sjcGold`, lưu VND/lượng, hiện triệu qua `scale`), đều mở `TileDetail`; dòng `VnBreadth` | `vnindex`, `yahoo`, `vcb`, `binance`, `sjc` |
+| Kinh tế Việt Nam | `VnEconomy`: tile GDP quý (`vnGdp`, `wb:GDP:VNM`), CPI tháng (`vnCpi`, `imf:CPI_M:VNM`), tái cấp vốn (`vnRefi`, `sbv:REFI`); lãi suất thực = tái cấp vốn − CPI; bảng `VN_OUTLOOK` (`config/vietnam.ts`) theo năm, năm nay nền `surface-2`, năm sau nghiêng và nhạt, cột cuối là nhóm `OEMDC` năm nay. Nút `vn.compare` sang `/macro` | `worldbank`, `imfcpi`, `sbv`, `imf` |
+| Giá vàng | `VnGold` → `GoldTable` | `sjc`, `yahoo` |
+| Tỷ giá Vietcombank | `VnBank` → `VcbTable` | `vcb` |
+| Tin Việt Nam | `VnNews` → `VnNewsList`, 15 tin VnExpress vùng `vietnam` | `rss`, `translate` |
+
+Các series Việt Nam mới nằm trong `SERIES` nên cũng vào bộ dò "chỉ số nổi bật" (`lib/signals/notable.ts`) của trang tổng quan, ví dụ CPI vượt 4,5%.
+
+## 3d. Trang Công nghệ (`app/[lang]/tech/page.tsx`, `components/panels/TechPanels.tsx`)
+
+Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Bảng cổ phiếu đọc qua `getTechStocks()` (`lib/queries-tech.ts`, bọc `cache()`), phần tính toán ở `techStockRows` (`lib/data/tech.ts`, không phụ thuộc Next nên test được trên `:memory:`). Các panel còn lại đọc `getItems` theo `kind` và `getTechNews`. Danh sách HN (`HnList`, `WorldPanels.tsx`) và lưới tin có ảnh (`NewsGrid.tsx`) dùng chung với panel Trending và trang crypto.
+
+```
+Hàng 1  Cổ phiếu công nghệ [xl:8]        │ cột [xl:4]: Dịch vụ nào đang trục trặc? + Dân lập trình đang đọc gì
+Hàng 2  Model AI mới [xl:7]              │ Nghiên cứu AI [xl:5]
+Hàng 3  Lỗ hổng đang bị khai thác [xl:12] (2 cột từ md)
+Hàng 4  Tin công nghệ [xl:12] (2 cột từ md)
+```
+
+| Panel | Component | `sources` |
+|---|---|---|
+| Cổ phiếu công nghệ | `TechMarkets`: tile Nasdaq và SOX (`TECH_SIGNS`, mở `TileDetail`); dòng tổng vốn hoá và số mã tăng của 8 Big Tech Mỹ; bảng 20 mã theo 4 nhóm (`TECH_GROUPS`: Big Tech Mỹ, chuỗi bán dẫn, châu Á, Việt Nam): giá theo đồng tiền của sàn, % hôm nay, 30 ngày, từ đầu năm, vốn hoá quy USD, sparkline 1 năm. Dưới `sm` chỉ còn tên, giá, hôm nay | `yahoo` |
+| Dịch vụ nào đang trục trặc? | `StatusBoard`: 8 ô (chấm màu trạng thái kèm nhãn chữ, mở trang trạng thái), dòng tổng "N/8 dịch vụ đang báo sự cố", tối đa 6 sự cố đang mở xếp theo mức độ (vùng, giai đoạn, "từ ngày"). Dịch vụ không đọc được hiện chấm xám và "Không đọc được trang trạng thái" | `cloudstatus` |
+| Dân lập trình đang đọc gì | `TechHn` → `HnList`, 15 tin. Danh sách đặt `absolute inset-0` trong một khung `flex-1`, nên không góp chiều cao: nó lấp phần bảng cổ phiếu bên cạnh để lại và tự cuộn (tối thiểu 320px khi xếp một cột) | `hackernews` |
+| Model AI mới | `NewModels`: dòng tổng (số model 30 ngày, số mở trọng số), bảng tên + hãng + nhãn "mở", ngày lên, giá vào/ra (USD/1 triệu token, "Miễn phí" khi cả hai bằng 0), ngữ cảnh (128K, 1M); cao tối đa 420px, cuộn | `openrouter` |
+| Nghiên cứu AI | `AiResearch`: `Tabs` Bài nghiên cứu (tiêu đề đã dịch, tooltip là tiêu đề gốc, lượt bình chọn, tổ chức hoặc tác giả, GitHub) / Model đang hot (task, lượt thích, lượt tải) | `huggingface`, `translate` |
+| Lỗ hổng đang bị khai thác | `ExploitedVulns`: dòng tổng (số lỗ hổng 30 ngày, số dùng trong ransomware); mỗi dòng: ngày thêm, hãng + sản phẩm, nhãn Ransomware, tên lỗi (bỏ phần hãng/sản phẩm lặp lại), CVE (link NVD), hạn vá | `kev` |
+| Tin công nghệ | `TechNewsBody` → `NewsGrid` (`getTechNews`, 30 tin) | `rss`, `translate` |
+
+Màu trạng thái dịch vụ: bình thường `good`, bảo trì `s1`, gián đoạn nhẹ hoặc chưa rõ mức `warning`, gián đoạn lớn `serious`, sự cố nghiêm trọng `critical`; chữ nhãn luôn đi kèm nên không chỉ dựa vào màu.
 
 ## 4. Mẫu Panel (`components/ui/Panel.tsx`)
 
@@ -119,7 +219,7 @@ Hàng 4  Tin crypto [xl:12] (2 cột từ md)
 | `getPanelStatus(ids)` | `{ lastOk, stale, failing[], missingKey[] }` |
 | `getTiles(keys)` | KPI tile: giá trị, thay đổi, sparkline 30 ngày, biên độ 1 năm (`range`, có thể vắng). **CPI** được đổi sang lạm phát so cùng kỳ (YoY) |
 | `getYieldCurve()` | 11 kỳ hạn × (mới nhất, 1 tháng trước, 1 năm trước) |
-| `getCountryMacro(lang)` | Lạm phát/tăng trưởng IMF năm hiện tại + lãi suất BIS mới nhất |
+| `getCountryMacro(lang)` | Lạm phát/tăng trưởng IMF năm hiện tại + lãi suất BIS mới nhất, cho 9 nước có cờ `overview` |
 | `getHistory(ids, days)` | Lịch sử cho small multiples |
 | `getRegime()` | Kết quả Risk Regime ([LLDD 06](06-risk-regime.md)) |
 | `getTicker()` | Mọi quote cho dải ticker |
@@ -152,8 +252,8 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | Component | Hành vi |
 |---|---|
 | `MarketClocks` | Giờ địa phương của LA (America/Los_Angeles, chỉ hiện giờ vì bờ Tây Mỹ không có sàn lớn) và trạng thái `open` / `break` / `closed` của NY (America/New_York 09:30–16:00), LDN (Europe/London 08:00–16:30), HCM (Asia/Ho_Chi_Minh 09:00–11:30, 13:00–14:45), SHA (Asia/Shanghai 09:30–11:30, 13:00–15:00), TYO (Asia/Tokyo 09:00–11:30, 12:30–15:30), MEL (Australia/Melbourne, chung múi giờ với Sydney nên dùng giờ ASX 10:00–16:00). Xếp từ trái sang phải theo UTC offset tăng dần; thứ tự này giữ nguyên quanh năm dù có giờ mùa hè. Chỉ Thứ 2–Thứ 6, chưa tính ngày lễ. Rê chuột vào mã hiện tên thành phố và sàn. Đồng hồ là một external store 30 giây đọc qua `useSyncExternalStore`; snapshot phía server là `null` nên khung tĩnh hiện `--:--`. Không có `setState` trong effect |
-| `ThemeToggle` | Đọc theme qua `useTheme()` (`lib/use-theme.ts`: `useSyncExternalStore` + `MutationObserver` trên `<html data-theme>`); click thì đổi `data-theme` và lưu `localStorage.theme` |
-| `LangSwitch` | Hai link `/vi` và `/en`; khi click ghi cookie `lang` (1 năm) để proxy nhớ lựa chọn; có `aria-current` |
+| `ThemeToggle` | Một nút icon hiện theme đang dùng; mỗi lần bấm chuyển vòng sáng → tối → Anthropic. Đọc theme qua `useThemeName()` (`lib/use-theme.ts`: `useSyncExternalStore` + `MutationObserver` trên `<html data-theme>`); click thì đổi `data-theme` và lưu `localStorage.theme`. `aria-label` ghi theme hiện tại, `title` ghi theme kế tiếp |
+| `LangSwitch` | Một link hiện mã ngôn ngữ đang dùng (`VI`/`EN`), trỏ sang ngôn ngữ còn lại và giữ nguyên trang; khi click ghi cookie `lang` (1 năm) để proxy nhớ lựa chọn; nhãn `topbar.switchLang` |
 | `AutoRefresh` | Gọi `router.refresh()` mỗi 60 giây khi tab đang hiện, và gọi ngay khi tab hiện lại |
 | `Ticker` (server) | Hai bản sao danh sách trượt ngang với CSS `@keyframes ticker` 90 giây; dừng khi rê chuột; tắt khi `prefers-reduced-motion` |
 | `RegimeBadge` (server) | `<details>` hiện nhãn regime; mở ra thấy điểm, z-score từng thành phần và ngưỡng |
@@ -200,16 +300,18 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `--up` / `--down` | `#006300` / `#c0302f` | `#0ca30c` / `#ef6b6b` | Chữ delta, màu xu hướng của chart giá |
 | `--s1`…`--s8` | `#2a78d6 #eb6834 #1baf7a #eda100 #e87ba4 #008300 #4a3aa7 #e34948` | `#3987e5 #d95926 #199e70 #c98500 #d55181 #008300 #9085e9 #e66767` | Màu series theo **thứ tự cố định** |
 | `--good` / `--warning` / `--serious` / `--critical` | `#0ca30c` / `#fab219` / `#ec835a` / `#d03b3b` | giống bên sáng | Trạng thái, luôn kèm biểu tượng và nhãn |
-| `--accent` / `--on-accent` | `var(--ink)` / `var(--surface)` | như bên sáng (theo `--ink` tối) | Nút đang chọn: ngôn ngữ, theme, tab, bộ lọc tin, khoảng thời gian |
+| `--accent` / `--on-accent` | `var(--ink)` / `var(--surface)` | như bên sáng (theo `--ink` tối) | Nút đang chọn: tab điều hướng, ngôn ngữ, theme, tab, bộ lọc tin, khoảng thời gian |
 | `--display` | font sans như thân bài | như bên sáng | Logo, tiêu đề panel, tiêu đề Brief (`font-display`) |
 
-**Theme thứ ba `anthropic`** (`[data-theme="anthropic"]`): nền giấy ngà ấm (`--page #f0eee6`, `--surface #faf9f5`, `--surface-2 #e8e6dc`), chữ `#141413` / `#3d3d3a` / `#73726c`, accent đất nung `#b4532f` (chữ trắng đạt 4,98:1), tiêu đề serif (`ui-serif, Georgia…`). Màu series và màu trạng thái giữ nguyên bảng sáng đã kiểm định. Đây là theme sáng: `useTheme()` trả `light` (bản đồ dùng `positron`), còn `useThemeName()` trả tên đầy đủ. `ThemeToggle` là nút ba lựa chọn, lưu vào `localStorage.theme`.
+**Theme thứ ba `anthropic`** (`[data-theme="anthropic"]`): nền giấy ngà ấm (`--page #f0eee6`, `--surface #faf9f5`, `--surface-2 #e8e6dc`), chữ `#141413` / `#3d3d3a` / `#73726c`, accent đất nung `#b4532f` (chữ trắng đạt 4,98:1), tiêu đề serif (`ui-serif, Georgia…`). Màu series và màu trạng thái giữ nguyên bảng sáng đã kiểm định. Đây là theme sáng: `useTheme()` trả `light` (bản đồ dùng `positron`), còn `useThemeName()` trả tên đầy đủ. `ThemeToggle` là một nút chuyển vòng qua ba theme, lưu vào `localStorage.theme`.
 
 - Token được map sang Tailwind qua `@theme inline` (`bg-surface`, `text-ink-2`, `bg-s1`…).
 - Biến thể `dark:` dùng `[data-theme="dark"]`. Media query `prefers-color-scheme` là phương án dự phòng khi không có JS, và bỏ qua cả `light` lẫn `anthropic`.
 - Font: `system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`. Lớp `.tabular` dùng cho cột số và trục.
 
 ## 9. Bản đồ (`components/panels/MapView.tsx`)
+
+Style nền, khung thế giới và `tuneLabels` nằm trong `components/panels/map-style.ts`, dùng chung với bản đồ tô màu của trang Vĩ mô (§3b).
 
 - MapLibre GL qua `react-map-gl/maplibre`, tile vector OpenFreeMap (không cần key): style `positron` khi sáng, `dark` khi tối, theo `useTheme()`. `styleDiffing={false}` để đổi theme là tải lại style đầy đủ (phát `style.load`).
 - **Hai phép chiếu**, nút "Quả cầu | Phẳng" (lưu `localStorage["map-projection"]`, đọc qua `useSyncExternalStore`, server luôn render quả cầu). Phép chiếu **không** truyền qua prop `projection` của react-map-gl: prop này gọi `setProjection` ngay khi đổi, và MapLibre ném "Style is not done loading" nếu style chưa tải xong (xảy ra ngay sau hydrate khi đã lưu "Phẳng", hoặc khi bấm nút lúc đang đổi theme). `trySetProjection` áp nó trong `onLoad`, sau mỗi `style.load` (đổi theme làm mất phép chiếu), và khi nút được bấm; nếu style chưa sẵn sàng thì đợi `style.load`.

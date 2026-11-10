@@ -103,7 +103,7 @@ Index: `events_ts (ts DESC)`.
 ### 3.6 `items` — danh sách snapshot
 | Cột | Kiểu | Ý nghĩa |
 |---|---|---|
-| `kind` | TEXT | PK (1). Loại danh sách: `wiki_en`, `wiki_vi`, `hn`, `polymarket`, `kalshi_fed`, `launch`, `calendar`, `airquality`, `who`, `gold_vn`, `vcb`, `vn_breadth` (dạng `data` xem [LLDD 02](02-data-sources.md)) |
+| `kind` | TEXT | PK (1). Loại danh sách: `wiki_en`, `wiki_vi`, `hn`, `polymarket`, `kalshi_fed`, `launch`, `calendar`, `airquality`, `who`, `gold_vn`, `vcb`, `vn_breadth`, và của trang Công nghệ: `status`, `ai_models`, `hf_papers`, `hf_models`, `kev`, `tech_caps` (dạng `data` xem [LLDD 02](02-data-sources.md)) |
 | `id` | TEXT | PK (2). Id trong nguồn |
 | `rank` | INTEGER NOT NULL | Thứ tự trong snapshot (0 là đầu tiên) |
 | `title`, `title_vi` | TEXT | Tiêu đề và bản dịch |
@@ -149,6 +149,8 @@ Index: `events_ts (ts DESC)`.
 
 Web server ghi cờ (ví dụ khi bấm nút "Làm mới" Brief). Worker đọc cờ trong `isDue` của nguồn liên quan.
 
+Các khoá đang dùng: `brief:force` (yêu cầu viết lại bản tin), `ai:calls:<ngày Thái Bình Dương>:<model>` (số lần gọi AI trong ngày) và `ai:exhausted:<model>` (ngày model hết quota), xem LLDD 05 §4.1; `macro:note` (nhận định vĩ mô tuần, JSON `StoredMacroNote`), LLDD 05 §3b.
+
 ### 3.11 `watchlist`
 | Cột | Kiểu | Ý nghĩa |
 |---|---|---|
@@ -173,7 +175,9 @@ Ghi bởi nguồn `insights` (worker). Đọc bởi `getHighlights()` / `getInsi
 |---|---|---|
 | Series từ Yahoo | `yahoo:<symbol>` | `yahoo:^GSPC`, `yahoo:DX-Y.NYB` |
 | Series từ FRED | `fred:<series id>` | `fred:DGS10`, `fred:T10Y2Y` |
-| Series từ nguồn khác | `<prefix>:<mã>` | `vn:VNINDEX`, `bis:US`, `imf:PCPIPCH:VNM`, `gpr:GPRD`, `nyfed:GSCPI`, `noaa:co2`, `giss:global`, `goldvn:SJL1L10:sell`, `vcb:USD:sell` |
+| Series từ nguồn khác | `<prefix>:<mã>` | `vn:VNINDEX`, `bis:US`, `imf:PCPIPCH:VNM`, `imf:CPI_M:JPN`, `sbv:REFI`, `wb:GDP:VNM`, `cnbc:ID10Y-ID`, `gpr:GPRD`, `nyfed:GSCPI`, `noaa:co2`, `giss:global`, `goldvn:SJL1L10:sell`, `vcb:USD:sell` |
+| Series theo chỉ số × quốc gia | `<nguồn>:<chỉ số>:<mã vùng>` | `oecd:CLI:USA`, `oecd:CPI:EA20`, `oecd:BCI:DEU`, `imf:LUR:JPN`, `imf:NGDP_RPCH:WEOWORLD` (nhóm IMF), `bis:REER:DE`, `bis:GAP:XM`. Tháng và quý lưu ở ngày đầu kỳ; năm ở 1/1 |
+| Series dẫn xuất | `calc:<tên>` | `calc:GLOBAL_LIQ`, `calc:NETLIQ_US`, `calc:RECPROB_US` (ghi bởi `fred`, xem LLDD 02 §2.2) |
 | Event | `<source>:<id gốc>` | `usgs:us7000abcd` |
 | Article | `hashId(url chuẩn hóa)` | `3f9a0c…` (16 hex) |
 
@@ -183,7 +187,7 @@ Ghi bởi nguồn `insights` (worker). Đọc bởi `getHighlights()` / `getInsi
 |---|---|---|
 | `upsertSeries(db, seriesId, source, points)` | `observations` + `series` | Upsert từng điểm trong 1 transaction, cập nhật `series.updated_at`. Trả về số điểm hợp lệ |
 | `upsertQuotes(db, quotes)` | `quotes` | Upsert theo `series_id` |
-| `replaceItems(db, kind, items)` | `items` | Xóa toàn bộ `kind` rồi chèn lại theo thứ tự (`rank` = vị trí). Đây là thay snapshot |
+| `replaceItems(db, kind, items)` | `items` | Xóa toàn bộ `kind` rồi chèn lại theo thứ tự (`rank` = vị trí). Đây là thay snapshot. Dòng không tự mang `titleVi` thì **giữ `title_vi` cũ** khi cùng `id` và tiêu đề không đổi, để kèo Polymarket hay bài Hugging Face không bị gửi đi dịch lại sau mỗi lần chạy |
 | `replaceEvents(db, source, events)` | `events` | Đọc trước các `title_vi` đã có, xóa toàn bộ events của `source`, chèn lại và **giữ lại `title_vi`** theo id để không phải dịch lại. Bỏ qua điểm có tọa độ không hợp lệ |
 | `upsertEvents(db, source, events)` | `events` | Upsert theo `id` (dùng cho GDELT: ô lưới 1° cập nhật dần, có `title_vi` ghi sẵn); nguồn tự xóa ô cũ hơn 24 giờ |
 | Articles (trong `rss.ts`) | `articles` | `INSERT OR IGNORE` theo `id` (hash URL chuẩn hóa); xóa bài cũ hơn 14 ngày. Trùng tin giữa các báo (cùng `title_key`) **không** bị bỏ khi ghi mà được gộp lúc đọc (`getNews`) |

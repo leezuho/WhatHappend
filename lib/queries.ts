@@ -9,9 +9,10 @@ import type { BtcNetwork } from "@/lib/sources/mempool";
 import type { P2pQuote, PerpRow } from "@/lib/sources/binance";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { SERIES, type SeriesDef, type SeriesKey } from "@/config/series";
-import { COUNTRIES } from "@/config/countries";
+import { COUNTRIES, policyRateId } from "@/config/countries";
 import { FOMC_MEETINGS } from "@/config/fomc";
-import { CRYPTO_OUTLETS } from "@/config/feeds";
+import { BANKS, CB_MEETINGS, LPR_DAY } from "@/config/central-banks";
+import { CRYPTO_OUTLETS, DESK_OUTLETS, TECH_OUTLETS } from "@/config/feeds";
 import { getPoints, getTile, getWatchlistKeys, tileOf, type TileData } from "@/lib/data/series";
 import type { Point } from "@/lib/sources/store";
 import { computeRegime, type RegimeResult } from "@/lib/signals/risk-regime";
@@ -145,18 +146,29 @@ function readNews(lang: Locale, where: string, params: (string | number)[], limi
   return collapseStories(rows, lang).slice(0, limit);
 }
 
-const outletMarks = CRYPTO_OUTLETS.map(() => "?").join(",");
+const marks = (names: string[]) => names.map(() => "?").join(",");
 
-/** World news: everything except the crypto-only outlets (they have their own panel). */
+/** World news: everything except the desk outlets (crypto, tech), which have their own pages. */
 export async function getNews(lang: Locale, limit = 120): Promise<NewsItem[]> {
   await connection();
-  return readNews(lang, `source NOT IN (${outletMarks})`, CRYPTO_OUTLETS, limit);
+  return readNews(lang, `source NOT IN (${marks(DESK_OUTLETS)})`, DESK_OUTLETS, limit);
 }
 
 /** Crypto outlets plus crypto stories the AI found in general outlets. */
 export async function getCryptoNews(lang: Locale, limit = 40): Promise<NewsItem[]> {
   await connection();
-  return readNews(lang, `source IN (${outletMarks}) OR topic = 'crypto'`, CRYPTO_OUTLETS, limit);
+  return readNews(lang, `source IN (${marks(CRYPTO_OUTLETS)}) OR topic = 'crypto'`, CRYPTO_OUTLETS, limit);
+}
+
+/** Tech outlets plus tech stories the AI found in general outlets (not the crypto desk's). */
+export async function getTechNews(lang: Locale, limit = 40): Promise<NewsItem[]> {
+  await connection();
+  return readNews(
+    lang,
+    `source IN (${marks(TECH_OUTLETS)}) OR (topic = 'tech' AND source NOT IN (${marks(CRYPTO_OUTLETS)}))`,
+    [...TECH_OUTLETS, ...CRYPTO_OUTLETS],
+    limit,
+  );
 }
 
 function collapseStories(rows: ArticleRow[], lang: Locale): NewsItem[] {
@@ -256,8 +268,9 @@ export async function getCountryMacro(lang: Locale): Promise<{ year: number; row
   const yearTs = Date.UTC(year, 0, 1);
   const val = db.prepare("SELECT value FROM observations WHERE series_id = ? AND ts = ?");
   const last = db.prepare("SELECT ts, value FROM observations WHERE series_id = ? ORDER BY ts DESC LIMIT 1");
-  const rows = COUNTRIES.map((c) => {
-    const rate = c.bis ? (last.get(`bis:${c.bis}`) as { ts: number; value: number } | undefined) : undefined;
+  const rows = COUNTRIES.filter((c) => c.overview).map((c) => {
+    const rateId = policyRateId(c);
+    const rate = rateId ? (last.get(rateId) as { ts: number; value: number } | undefined) : undefined;
     return {
       short: c.short,
       name: pick(c.name, lang),
@@ -408,7 +421,7 @@ export interface VietnamData {
 /** 1 lượng (tael) = 37.5 g; 1 troy ounce = 31.1034768 g. */
 const OZ_PER_LUONG = 37.5 / 31.1034768;
 
-export async function getVietnam(lang: Locale): Promise<VietnamData> {
+export async function getVietnam(lang: Locale, newsLimit = 6): Promise<VietnamData> {
   await connection();
   const db = getDb();
   const items = (kind: string) =>
@@ -417,7 +430,7 @@ export async function getVietnam(lang: Locale): Promise<VietnamData> {
   const usdvnd = getTile(db, SERIES.usdvnd);
   const xau = getTile(db, SERIES.gold);
   const breadth = items("vn_breadth")[0];
-  const news = readNews(lang, "source = 'VnExpress' AND region = 'vietnam'", [], 6);
+  const news = readNews(lang, "source = 'VnExpress' AND region = 'vietnam'", [], newsLimit);
   return {
     vnindex: getTile(db, SERIES.vnindex),
     usdvnd,
@@ -456,8 +469,16 @@ export async function getItems<D = Record<string, unknown>>(kind: string, lang: 
 
 // ---------------------------------------------------------------- calendar
 
+/** "16–17 Dec" / "16–17 thg 12" for a meeting's days. */
+function fmtDayRange(start: string, end: string, lang: Locale): string {
+  const f = (iso: string, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(lang === "vi" ? "vi-VN" : "en-GB", { timeZone: "UTC", ...opts }).format(Date.parse(`${iso}T00:00:00Z`));
+  return start.slice(0, 7) === end.slice(0, 7)
+    ? `${Number(start.slice(8))}–${f(end, { day: "numeric", month: "short" })}`
+    : `${f(start, { day: "numeric", month: "short" })} – ${f(end, { day: "numeric", month: "short" })}`;
+}
+
 export interface CalendarEntry {
-  kind: "econ" | "fomc" | "launch";
+  kind: "econ" | "fomc" | "cb" | "launch";
   ts: number;
   title: string;
   detail: string | null;
@@ -466,7 +487,22 @@ export interface CalendarEntry {
   url?: string | null;
 }
 
-export async function getCalendar(lang: Locale, days = 21): Promise<CalendarEntry[]> {
+/** The PBoC's loan-prime-rate fixings from this month on: the 20th at 9:15 Beijing, moved off weekends (holidays are not modelled). */
+function lprFixings(now: number, until: number): number[] {
+  const out: number[] = [];
+  const d0 = new Date(now);
+  for (let i = 0; ; i++) {
+    const day = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() + i, LPR_DAY, 1, 15));
+    if (day.getTime() > until) return out;
+    while (day.getUTCDay() === 0 || day.getUTCDay() === 6) day.setUTCDate(day.getUTCDate() + 1);
+    out.push(day.getTime());
+  }
+}
+
+const DEFAULT_KINDS: CalendarEntry["kind"][] = ["econ", "fomc", "launch"];
+
+/** Upcoming entries of the given kinds over `days`; the overview leaves out other central banks, the macro page leaves out launches. */
+export async function getCalendar(lang: Locale, days = 21, kinds: CalendarEntry["kind"][] = DEFAULT_KINDS): Promise<CalendarEntry[]> {
   await connection();
   const now = Date.now();
   const until = now + days * 24 * 3600_000;
@@ -492,6 +528,14 @@ export async function getCalendar(lang: Locale, days = 21): Promise<CalendarEntr
       detail: m.sep ? t.fomcSep : null,
       allDay: true,
     })),
+    ...CB_MEETINGS.map((m) => ({
+      kind: "cb" as const,
+      ts: Date.parse(`${m.end}T12:00:00Z`),
+      title: t.cbTitle.replace("{bank}", pick(BANKS[m.bank].name, lang)),
+      detail: m.start !== m.end ? `${fmtDayRange(m.start, m.end, lang)}` : null,
+      allDay: true,
+    })),
+    ...lprFixings(now, until).map((ts) => ({ kind: "cb" as const, ts, title: t.lpr, detail: null })),
     ...launches.flatMap((l) =>
       l.ts
         ? [{
@@ -505,7 +549,9 @@ export async function getCalendar(lang: Locale, days = 21): Promise<CalendarEntr
   ];
   // The next Fed meeting always shows, even beyond the window: it is the event markets plan around.
   const nextFomc = entries.find((e) => e.kind === "fomc" && e.ts >= now);
-  return entries.filter((e) => (e.ts >= now - 3 * 3600_000 && e.ts <= until) || e === nextFomc).sort((a, b) => a.ts - b.ts);
+  return entries
+    .filter((e) => kinds.includes(e.kind) && ((e.ts >= now - 3 * 3600_000 && e.ts <= until) || e === nextFomc))
+    .sort((a, b) => a.ts - b.ts);
 }
 
 // ---------------------------------------------------------------- planet & health

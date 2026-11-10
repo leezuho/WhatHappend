@@ -1,5 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
-import { SERIES, defOf, type SeriesDef, type SeriesKey } from "@/config/series";
+import { SERIES, type SeriesDef, type SeriesKey } from "@/config/series";
 import { getDetailPoints, tileOf, type TileData } from "@/lib/data/series";
 
 // Which indicators stand out right now, and why. Pure rules over stored data,
@@ -60,7 +60,7 @@ function score(reasons: Reason[]): number {
 export function findNotables(db: DatabaseSync, now = Date.now()): Notable[] {
   const out: Notable[] = [];
   for (const key of Object.keys(SERIES) as SeriesKey[]) {
-    const def = defOf(key);
+    const def = SERIES[key];
     const data = tileOf(db, key, now);
     if (!data) continue;
     const reasons: Reason[] = [];

@@ -95,3 +95,30 @@ export function parseCsv(text: string): string[][] {
   }
   return rows.filter((r) => r.some((f) => f.trim() !== ""));
 }
+
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+
+/** Plain text of an HTML fragment: tags dropped, entities decoded, whitespace collapsed, Unicode composed (NFC) so Vietnamese compares reliably. */
+export function htmlText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (all, e: string) => {
+      if (e[0] !== "#") return ENTITIES[e.toLowerCase()] ?? all;
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : Number(e.slice(1));
+      return Number.isFinite(code) ? String.fromCodePoint(code) : all;
+    })
+    .replace(/\s+/g, " ")
+    .trim()
+    .normalize("NFC");
+}
+
+/** Every <tr> of an HTML page as its cells' text (th and td alike). Enough for the simple server-rendered tables we scrape. */
+export function tableRows(html: string): string[][] {
+  return [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((r) => [...r[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) => htmlText(c[1])));
+}
+
+/** A number written the Vietnamese way ("4,500%", "1.234,5"): dot groups thousands, comma marks decimals. NaN when it is not one. */
+export function viNumber(s: string): number {
+  const t = s.replace(/[%\s]/g, "");
+  return /^-?[\d.]+(,\d+)?$/.test(t) ? Number(t.replace(/\./g, "").replace(",", ".")) : NaN;
+}

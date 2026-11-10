@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDict, hasLocale } from "@/lib/i18n";
 import { TopBar } from "@/components/TopBar";
@@ -11,7 +12,8 @@ import { CalendarBody, EnvBody, PredictionBody, TrendingBody } from "@/component
 export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const p = getDict(lang).panels;
+  const d = getDict(lang);
+  const p = d.panels;
 
   return (
     <>
@@ -52,7 +54,7 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         <Panel lang={lang} title={p.yieldCurve.title} subtitle={p.yieldCurve.subtitle} sources={["fred"]} className="xl:col-span-6">
           <YieldCurvePanel lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.inflationRates.title} subtitle={p.inflationRates.subtitle} sources={["imf", "bis"]} className="xl:col-span-6">
+        <Panel lang={lang} title={p.inflationRates.title} subtitle={p.inflationRates.subtitle} sources={["imf", "bis", "sbv"]} className="xl:col-span-6">
           <InflationRatesPanel lang={lang} />
         </Panel>
         <Panel lang={lang} title={p.stress.title} subtitle={p.stress.subtitle} sources={["yahoo", "fred", "gpr"]} className="xl:col-span-6">
@@ -82,7 +84,18 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         </Panel>
 
         {/* Row 7: Vietnam */}
-        <Panel lang={lang} title={p.vietnam.title} subtitle={p.vietnam.subtitle} sources={["vnindex", "sjc", "vcb"]} className="md:col-span-2 xl:col-span-12">
+        <Panel
+          lang={lang}
+          title={p.vietnam.title}
+          subtitle={p.vietnam.subtitle}
+          sources={["vnindex", "sjc", "vcb"]}
+          className="md:col-span-2 xl:col-span-12"
+          actions={
+            <Link href={`/${lang}/vietnam`} className="text-xs text-ink-2 hover:text-ink hover:underline">
+              {d.vn.more}
+            </Link>
+          }
+        >
           <VietnamBody lang={lang} />
         </Panel>
       </main>

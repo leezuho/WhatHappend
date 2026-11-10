@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { getDict, intlLocale, type Locale } from "@/lib/i18n";
 import { fmtCompact, fmtDate, fmtNumber, fmtSigned, fmtTime } from "@/lib/format";
-import { getCalendar, getEnv, getItems, requestNow, type Item, type PolyEvent } from "@/lib/queries";
+import { getCalendar, getEnv, getItems, requestNow, type CalendarEntry, type Item, type PolyEvent } from "@/lib/queries";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { EmptyState } from "@/components/ui/Panel";
 import { Tabs } from "@/components/ui/Tabs";
@@ -14,9 +14,9 @@ function dayKey(ts: number) {
 
 // ---------------------------------------------------------------- calendar
 
-export async function CalendarBody({ lang }: { lang: Locale }) {
+export async function CalendarBody({ lang, days, kinds }: { lang: Locale; days?: number; kinds?: CalendarEntry["kind"][] }) {
   const d = getDict(lang);
-  const entries = await getCalendar(lang);
+  const entries = await getCalendar(lang, days, kinds);
   const now = await requestNow();
   if (!entries.length) return <EmptyState lang={lang} message={d.calendar.empty} />;
   const today = dayKey(now);
@@ -26,7 +26,7 @@ export async function CalendarBody({ lang }: { lang: Locale }) {
     const k = dayKey(e.ts);
     groups.set(k, [...(groups.get(k) ?? []), e]);
   }
-  const kindLabel = { econ: d.calendar.econ, fomc: d.calendar.fomc, launch: d.calendar.launch };
+  const kindLabel = { econ: d.calendar.econ, fomc: d.calendar.fomc, cb: d.calendar.cb, launch: d.calendar.launch };
   return (
     <div className="scroll-thin flex max-h-[560px] flex-col gap-3 overflow-auto pr-1">
       {[...groups.entries()].map(([day, list]) => (
@@ -87,34 +87,38 @@ export async function TrendingBody({ lang }: { lang: Locale }) {
   );
   const tabs = [
     { key: "en", label: d.trending.wikiEn, content: wiki(wikiEn) },
-    {
-      key: "hn",
-      label: d.trending.hn,
-      content: (
-        <ol className="flex flex-col">
-          {hn.map((it, i) => (
-            <li key={it.id} className="flex gap-2 border-t border-line py-1.5 text-xs first:border-t-0">
-              <span className="tabular w-4 shrink-0 text-right text-muted">{i + 1}</span>
-              <div className="min-w-0 flex-1">
-                <a href={it.url ?? undefined} target="_blank" rel="noreferrer" className="text-ink hover:underline">
-                  {it.title}
-                </a>
-                <div className="text-[11px] text-muted">
-                  {it.data.points} {d.trending.points} ·{" "}
-                  <a href={it.data.hnUrl} target="_blank" rel="noreferrer" className="hover:underline">
-                    {it.data.comments} {d.trending.comments}
-                  </a>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ol>
-      ),
-    },
+    { key: "hn", label: d.trending.hn, content: <HnList items={hn} lang={lang} /> },
     { key: "vi", label: d.trending.wikiVi, content: wiki(wikiVi) },
   ];
   // vi.wikipedia's top list is often gamed by bots, so it is never the default tab.
   return <Tabs tabs={tabs} />;
+}
+
+export type HnItem = Item<{ points: number; comments: number; hnUrl: string }>;
+
+/** Hacker News front page, numbered; shared by Trending and the tech page. */
+export function HnList({ items, lang }: { items: HnItem[]; lang: Locale }) {
+  const d = getDict(lang);
+  return (
+    <ol className="flex flex-col">
+      {items.map((it, i) => (
+        <li key={it.id} className="flex gap-2 border-t border-line py-1.5 text-xs first:border-t-0">
+          <span className="tabular w-4 shrink-0 text-right text-muted">{i + 1}</span>
+          <div className="min-w-0 flex-1">
+            <a href={it.url ?? undefined} target="_blank" rel="noreferrer" className="text-ink hover:underline">
+              {it.title}
+            </a>
+            <div className="text-[11px] text-muted">
+              {it.data.points} {d.trending.points} ·{" "}
+              <a href={it.data.hnUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                {it.data.comments} {d.trending.comments}
+              </a>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 // ---------------------------------------------------------------- prediction markets

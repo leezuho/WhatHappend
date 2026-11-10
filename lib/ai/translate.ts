@@ -15,7 +15,7 @@ const BATCH = 40;
 const MAX_BATCHES_PER_RUN = 4;
 
 /** Item kinds whose titles are worth translating (others are names or already short codes). */
-const TRANSLATED_ITEM_KINDS = ["polymarket", "polymarket_crypto", "who"];
+const TRANSLATED_ITEM_KINDS = ["polymarket", "polymarket_crypto", "who", "hf_papers"];
 
 const ArticleOut = z.object({
   items: z.array(
@@ -62,6 +62,7 @@ async function enrichArticles(db: DatabaseSync, log: (m: string) => void): Promi
     if (!rows.length) break;
     const res = await generateJson({
       tier: "fast",
+      db,
       system: ARTICLE_SYSTEM,
       user: JSON.stringify(rows.map((r) => ({ id: r.id, lang: r.lang, source: r.source, title: r.title }))),
       schema: ArticleOut,
@@ -103,6 +104,7 @@ async function translateTexts(db: DatabaseSync, log: (m: string) => void): Promi
 
   const res = await generateJson({
     tier: "fast",
+    db,
     system: TEXT_SYSTEM,
     user: JSON.stringify(pending.map((p) => ({ id: p.id, text: p.title }))),
     schema: TextOut,

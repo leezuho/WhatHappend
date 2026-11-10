@@ -1,4 +1,6 @@
+import type { DatabaseSync } from "node:sqlite";
 import type { z } from "zod";
+import { callsLeft, isDailyQuotaError, markExhausted, recordCall } from "./budget";
 import { aiStatus, type AiConfig } from "./config";
 import { anthropicJson } from "./providers/anthropic";
 import { geminiJson } from "./providers/gemini";
@@ -13,6 +15,8 @@ export interface JsonRequest<S extends z.ZodType> {
   user: string;
   schema: S;
   maxTokens?: number;
+  /** Count the call against the model's daily budget (lib/ai/budget.ts) and refuse it once the budget is spent. */
+  db?: DatabaseSync;
 }
 
 export interface JsonResult<T> {
@@ -29,5 +33,15 @@ export async function generateJson<S extends z.ZodType>(req: JsonRequest<S>): Pr
   const status = aiStatus();
   if (!status.ok) throw new Error(`AI not configured: ${status.reason}`);
   const adapter: JsonAdapter = status.config.provider === "gemini" ? geminiJson : anthropicJson;
-  return adapter(status.config, req);
+  const model = status.config.models[req.tier];
+  if (req.db) {
+    if (callsLeft(req.db, status.config, req.tier) <= 0) throw new Error(`daily AI budget for ${model} is spent; it resets at midnight Pacific time`);
+    recordCall(req.db, model);
+  }
+  try {
+    return await adapter(status.config, req);
+  } catch (err) {
+    if (req.db && isDailyQuotaError(err)) markExhausted(req.db, model);
+    throw err;
+  }
 }

@@ -81,6 +81,89 @@ Danh mục giải thích **ý nghĩa, cách đọc và ngưỡng cảnh báo** c
 | **Giá vàng SJC** | T2 | Giá mua/bán vàng miếng SJC | Chênh lệch với giá vàng thế giới (quy đổi) phản ánh cung cầu trong nước | ⚠️ chênh lệch với giá thế giới > 15% | Scrape SJC · 30 phút |
 | **USD/VND (Vietcombank)** | T2 | Tỷ giá mua/bán niêm yết | So sánh với tỷ giá thị trường quốc tế | — | Vietcombank · 1 giờ |
 
+## Trang Vĩ mô thế giới (BR-21)
+
+Tên, câu giải thích và ngưỡng nằm trong `config/series.ts` (8 ô hàng đầu) và `config/macro.ts` (cột của bảng sức khoẻ); quy tắc tô màu nằm trong `lib/signals/macro.ts`.
+
+**Hàng đầu: Nhịp kinh tế thế giới**
+
+| Chỉ số | Là gì | Tăng là… | Ngưỡng | Nguồn · tần suất |
+|---|---|---|---|---|
+| **Tăng trưởng GDP thế giới** | Ước tính năm nay của IMF, gia quyền theo PPP | Tốt | ⚠️ < 2,5% (thường coi là suy thoái toàn cầu); 🛑 < 2% | IMF WEO `NGDP_RPCH` nhóm `WEOWORLD` · năm |
+| **Lạm phát thế giới** | Ước tính năm nay của IMF | Xấu | ⚠️ > 5%; 🛑 > 7% | IMF WEO `PCPIPCH` `WEOWORLD` · năm |
+| **Chỉ số giá hàng hoá IMF** | Năng lượng, kim loại, lương thực (2016 = 100) | Trung tính | — | FRED `PALLFNFINDEXM` · tháng |
+| **GSCPI** | Áp lực chuỗi cung ứng | Xấu | ⚠️ > 1; 🛑 > 2 | NY Fed · tháng |
+| **USD rổ rộng** | USD so với 26 đối tác thương mại | Xấu với phần còn lại của thế giới | — | FRED `DTWEXBGS` · ngày |
+| **Thanh khoản NHTW toàn cầu** | Bảng cân đối Fed + ECB + BOJ, quy USD | Tốt (bơm tiền) | — | Tự tính từ FRED `WALCL`, `ECBASSETSW`, `JPNASSETS`, `DEXUSEU`, `DEXJPUS` · tuần |
+| **Xác suất suy thoái Mỹ 12 tháng** | Mô hình probit của NY Fed: Φ(−0,5333 − 0,6330 × chênh lệch 10Y–3M bình quân tháng) | Xấu | ⚠️ > 30%; 🛑 > 50% | Tự tính từ FRED `T10Y3M` · tháng |
+| **Bất định chính sách toàn cầu** | Chỉ số GEPU, 21 nước, gia quyền GDP | Xấu | — | FRED `GEPUCURRENT` · tháng |
+
+**Bảng sức khoẻ các nền kinh tế** (15 nước cộng Việt Nam; hàng Việt Nam chưa có lợi suất 10 năm và không có chỉ báo sớm)
+
+| Cột | Là gì | Tô màu | Nguồn · tần suất |
+|---|---|---|---|
+| GDP so cùng kỳ | Tăng trưởng GDP thực quý gần nhất | 🛑 < 0; ⚠️ thấp hơn trung bình 2015–19 của nước đó 1,5 điểm % | OECD QNA · quý; Việt Nam: World Bank GEM · quý (thiếu thì IMF năm) |
+| CPI so cùng kỳ | Lạm phát tháng gần nhất | ✅ cách mục tiêu NHTW ≤ 1 điểm %; ⚠️ cao hơn 1–3 điểm % hoặc giảm phát; 🛑 cao hơn > 3 điểm % | OECD hoặc IMF CPI · tháng, lấy nguồn mới hơn (thiếu thì IMF năm) |
+| Thất nghiệp | Tỷ lệ thất nghiệp | ⚠️/🛑 cao hơn mức thấp nhất 12 tháng 0,5/1 điểm % (logic quy tắc Sahm) | OECD · tháng (thiếu thì IMF năm, không tô) |
+| Lãi suất điều hành | Euro dùng chung lãi suất ECB; Việt Nam là lãi suất tái cấp vốn | — | BIS · ngày; Việt Nam: NHNN, khai báo trong `config/policy-rates.ts` |
+| Lãi suất thực | Lãi suất điều hành − CPI | — (dương = thắt, âm = nới) | Tính |
+| Lợi suất 10 năm | Trái phiếu chính phủ | — | OECD · tháng; Mỹ FRED `DGS10`, Indonesia CNBC · ngày |
+| Tỷ giá so USD từ đầu năm | Dương = đồng nội tệ mạnh lên; hàng Mỹ là DXY | ⚠️ mất giá ≥ 5%; 🛑 ≥ 10% | Yahoo · 3 phút |
+| Chỉ báo sớm | CLI OECD (100 = xu hướng), mũi tên = hướng 3 tháng | ⚠️ dưới 100 và còn giảm | OECD · tháng |
+| Nợ công | Nợ gộp chính phủ, % GDP | ⚠️ > 90%; 🛑 > 120% | IMF WEO · năm |
+| Vãng lai | Cán cân vãng lai, % GDP | ⚠️ < −3%; 🛑 < −5% | IMF WEO · năm |
+
+Mục tiêu lạm phát dùng để tô cột CPI khai báo trong `config/countries.ts` (`cpiTarget`): 2% cho phần lớn nước phát triển và Trung Quốc, Úc và Indonesia 2,5%, Brazil và Mexico 3%, Ấn Độ 4%, Việt Nam 4,5%.
+
+**Đồng hồ chu kỳ:** CLI > 100 và tăng = Mở rộng; > 100 và giảm = Chậm lại; < 100 và giảm = Suy yếu; < 100 và tăng = Phục hồi. Hướng tính theo thay đổi 3 tháng.
+
+**Panel theo chủ đề (Phase 2).** Ô KPI của Mỹ khai báo trong `config/series.ts` (`MACRO_US`, `RECESSION_SIGNALS` ở `config/macro.ts`); ⚠️/🛑 là ngưỡng theo dõi/báo động trong `threshold`.
+
+| Panel | Chỉ số | Là gì | Ngưỡng | Nguồn · tần suất |
+|---|---|---|---|---|
+| Tăng trưởng | **WEI** | Chỉ số kinh tế tuần của Fed New York, quy về tăng trưởng GDP so cùng kỳ | ⚠️ < 1%; 🛑 < 0 | FRED `WEI` · tuần |
+| Tăng trưởng | **CFNAI** | 85 chỉ số tháng; 0 = tăng trưởng đúng xu hướng | ⚠️ < −0,35; 🛑 < −0,7 | FRED `CFNAI` · tháng |
+| Tăng trưởng | **Sản xuất công nghiệp** | So cùng kỳ | ⚠️ < 0; 🛑 < −3% | FRED `INDPRO` · tháng |
+| Tăng trưởng | **Bán lẻ** | So cùng kỳ, danh nghĩa | ⚠️ < 2%; 🛑 < 0 | FRED `RSAFS` · tháng |
+| Tăng trưởng | **CLI các nước** | Chỉ báo sớm OECD, 24 tháng, đường 100; kèm GDP quý | — | OECD · tháng |
+| Lạm phát | **CPI lõi Mỹ** | Trừ lương thực và năng lượng, so cùng kỳ | ⚠️ > 3%; 🛑 > 4% | FRED `CPILFESL` · tháng |
+| Lạm phát | **PCE lõi Mỹ** | Thước đo Fed dùng cho mục tiêu 2% | ⚠️ > 2,75%; 🛑 > 3,5% | FRED `PCEPILFE` · tháng |
+| Lạm phát | **Giá lương thực IMF** | 2016 = 100 | — | FRED `PFOODINDEXM` · tháng |
+| Lạm phát | **CPI các nước** | So cùng kỳ, đường đứt = mục tiêu NHTW, tô như cột CPI của bảng sức khoẻ | như cột CPI | OECD · tháng |
+| Tiền tệ | **Thanh khoản ròng Mỹ** | `WALCL − RRPONTSYD − WTREGEN`, $ tỷ | — | Tự tính từ FRED · tuần |
+| Tiền tệ | **NFCI** | Điều kiện tài chính Fed Chicago; 0 = trung bình, dương = thắt | ⚠️ > 0; 🛑 > 0,5 | FRED `NFCI` · tuần |
+| Tiền tệ | **Lợi suất thực 10 năm** | TIPS 10 năm | ⚠️ > 2%; 🛑 > 2,5% | FRED `DFII10` · ngày |
+| Tiền tệ | **Lãi suất điều hành và lãi suất thực các nước** | Cuối mỗi tháng; lãi suất thực = điều hành − CPI tháng đó | — | BIS `WS_CBPOL` + OECD · tháng |
+| Tiền tệ | **Tỷ giá thực hiệu dụng** | So với trung bình 10 năm; dương = đắt hơn thường lệ | — | BIS `WS_EER` (thực, rổ rộng) · tháng |
+| Việc làm | **Việc làm phi nông nghiệp** | Số việc làm tăng thêm trong tháng | ⚠️ < 50K; 🛑 < 0 | FRED `PAYEMS` · tháng |
+| Việc làm | **Thất nghiệp Mỹ** | Tỷ lệ thất nghiệp | — (xem Sahm) | FRED `UNRATE` · tháng |
+| Việc làm | **Niềm tin tiêu dùng UMich** | 1966 = 100 | — | FRED `UMCSENT` · tháng |
+| Việc làm | **Thất nghiệp các nước** | 24 tháng, tô như cột thất nghiệp của bảng sức khoẻ | như cột thất nghiệp | OECD · tháng |
+| Việc làm | **Niềm tin người tiêu dùng / doanh nghiệp** | CCI / BCI, 100 = trung bình dài hạn, mũi tên = hướng 3 tháng | — | OECD `DF_CLI` · tháng |
+| Nợ | **Nợ liên bang Mỹ** | % GDP | — | FRED `GFDEGDQ188S` · quý |
+| Nợ | **Chi trả lãi của chính phủ Mỹ** | $ tỷ, quy năm | — | FRED `A091RC1Q027SBEA` · quý |
+| Nợ | **Chênh lệch tín dụng IG / EM** | So với trái phiếu chính phủ | IG ⚠️ > 1,5%, 🛑 > 2%; EM ⚠️ > 3,5%, 🛑 > 5% | FRED `BAMLC0A0CM`, `BAMLEMCBPIOAS` · ngày |
+| Nợ | **Cân đối ngân sách** | % GDP, ước tính năm nay | ⚠️ thâm hụt > 3%; 🛑 > 6% | IMF `GGXCNL_NGDP` · năm |
+| Nợ | **Khoảng trống tín dụng/GDP** | Tín dụng tư nhân/GDP trừ xu hướng dài hạn, điểm % | ⚠️ > 2; 🛑 > 10 (ngưỡng đệm phản chu kỳ Basel III) | BIS `WS_CREDIT_GAP` · quý |
+| Suy thoái | **Chauvet–Piger** | Xác suất Mỹ đang suy thoái | ⚠️ > 20%; 🛑 > 50% | FRED `RECPROUSM156N` · tháng |
+| Suy thoái | **Đường cong 10Y−3M** | Biến số của mô hình NY Fed | ⚠️ < 0; 🛑 < −0,5 | FRED `T10Y3M` · ngày |
+| Suy thoái | **Số nước có CLI ở pha Suy yếu** | Trên số nước có CLI | ⚠️ ≥ ⅓; 🛑 ≥ ½ | Tính từ OECD · tháng |
+
+Bảng Tín hiệu suy thoái còn dùng lại xác suất suy thoái NY Fed, Sahm, 2s10s và claims đã có ở trên.
+
+## Trang Công nghệ (BR-23)
+
+Tên và câu giải thích nằm trong `config/series.ts` (hai ô chỉ số) và `config/tech.ts` (danh sách cổ phiếu, trang trạng thái).
+
+| Chỉ số | Là gì | Tăng là… | Ngưỡng | Nguồn · tần suất |
+|---|---|---|---|---|
+| **Nasdaq Composite** | Chỉ số nặng về công nghệ (đã có ở Vital Signs) | Tốt | — | Yahoo · 3 phút |
+| **SOX** (chỉ số bán dẫn Philadelphia) | 30 công ty chip lớn nhất niêm yết ở Mỹ; thước đo thị trường sát nhất cho nhu cầu phần cứng AI và chu kỳ điện tử | Tốt | — (vẫn vào bộ dò "Điểm đáng chú ý" khi dao động bất thường hoặc chạm đỉnh/đáy 1 năm) | Yahoo · 3 phút |
+| **Cổ phiếu công nghệ** (20 mã) | Big Tech Mỹ, chuỗi bán dẫn, Samsung, SK hynix, Tencent, Alibaba, FPT, CMC: % hôm nay, 30 ngày, từ đầu năm, vốn hoá quy USD | — | — | Yahoo · 3 phút (lịch sử 1 giờ) |
+| **Dịch vụ đang báo sự cố** | Số trong 8 đám mây và dịch vụ AI/lập trình có sự cố đang mở | Xấu | Mỗi dịch vụ theo mức của chính nhà cung cấp | Trang trạng thái công khai · 10 phút |
+| **Model AI mới** | Số model OpenRouter đưa lên trong 30 ngày, số mở trọng số, giá mỗi triệu token | — | — | OpenRouter · 6 giờ |
+| **Lỗ hổng đang bị khai thác** | Số mục CISA thêm vào danh mục KEV trong 30 ngày, số dùng trong ransomware | Xấu | — | CISA KEV · 6 giờ |
+
 ## Ghi chú cách hiển thị
 
 - **Delta** hiển thị theo đơn vị phù hợp với từng chỉ số:

@@ -1,5 +1,5 @@
 import { intlLocale, type Locale } from "@/lib/i18n";
-import type { SeriesDef } from "@/config/series";
+import type { Freq, SeriesDef } from "@/config/series";
 import type { TileData } from "@/lib/data/series";
 
 // Pure formatting helpers, safe on server and client.
@@ -86,7 +86,34 @@ export function fmtDelta(def: SeriesDef, d: TileData, locale: Locale): string | 
     if (d.change === null) return null;
     if (def.deltaUnit === "pp") return fmtSigned(d.change, locale, 2, " pp");
     if (def.unit === "%" || def.unit === "pp") return fmtSigned(d.change * 100, locale, 0, " bp");
+    if (def.unit === "K") return fmtSigned(d.change / 1000, locale, 0, "K");
     return fmtSigned(d.change, locale, def.digits);
   }
   return d.changePct === null ? null : fmtPct(d.changePct, locale);
+}
+
+/**
+ * The period a low-frequency reading covers: "T9/2026" / "Sep 2026", "Q2/2026",
+ * "2026", or the week's date. `compact` shortens the year for table cells.
+ * Points are stamped at the period's first day, midnight UTC.
+ */
+export function fmtPeriod(ts: number, freq: Freq, locale: Locale, compact = false): string {
+  const d = new Date(ts);
+  const year = d.getUTCFullYear();
+  const yy = compact ? String(year).slice(2) : String(year);
+  switch (freq) {
+    case "y":
+      return String(year);
+    case "q": {
+      const q = Math.floor(d.getUTCMonth() / 3) + 1;
+      return locale === "vi" ? `Q${q}/${yy}` : compact ? `Q${q} '${yy}` : `Q${q} ${year}`;
+    }
+    case "m": {
+      if (locale === "vi") return `T${d.getUTCMonth() + 1}/${yy}`;
+      const mon = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" }).format(d);
+      return compact ? `${mon} '${yy}` : `${mon} ${year}`;
+    }
+    case "w":
+      return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(d);
+  }
 }

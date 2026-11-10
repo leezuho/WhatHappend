@@ -2,7 +2,7 @@
 
 > Phiên bản 0.3 · Ngày 2026-10-31 · Trạng thái: Đã triển khai
 > Liên quan: [HLDD](../HLDD/HLDD.md) · [01 Database schema](01-database-schema.md) · [03 Worker và framework nguồn](03-worker-and-sources-framework.md) · [05 AI pipeline](05-ai-pipeline.md)
-> Mã nguồn: `lib/sources/<id>.ts`, `lib/ai/{translate,brief}.ts`, `config/{sources,series,feeds,countries,cities,fomc}.ts`
+> Mã nguồn: `lib/sources/<id>.ts`, `lib/ai/{translate,brief}.ts`, `config/{sources,series,feeds,countries,macro,cities,fomc}.ts`
 
 Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026-10-31 từ máy phát triển. Tất cả đều **không cần API key**, trừ hai nguồn AI cần `AI_API_KEY` (Gemini hoặc Claude, xem [LLDD 05](05-ai-pipeline.md)). Phản hồi JSON luôn được kiểm bằng zod (`fetchJson`); sai định dạng thì lần chạy thất bại và ghi vào `source_status`, không ghi dữ liệu rác.
 
@@ -10,13 +10,17 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 
 | Id | Nhóm | Endpoint chính | Chu kỳ | Đích lưu |
 |---|---|---|---|---|
-| `yahoo` | Thị trường | `yahoo-finance2` (`quote`, `chart`) | 3 phút (lịch sử: 1 giờ) | `quotes`, `observations` `yahoo:<symbol>` |
-| `fred` | Vĩ mô Mỹ | `fred.stlouisfed.org/graph/fredgraph.csv` | 6 giờ | `observations` `fred:<code>` |
-| `imf` | Vĩ mô thế giới | IMF DataMapper API v1 | 24 giờ | `observations` `imf:<ind>:<iso3>` |
-| `bis` | Lãi suất điều hành | BIS SDMX `WS_CBPOL` | 12 giờ | `observations` `bis:<area>` |
+| `yahoo` | Thị trường | `yahoo-finance2` (`quote`, `chart`) | 3 phút (lịch sử: 1 giờ) | `quotes`, `observations` `yahoo:<symbol>`, `items` `tech_caps` |
+| `fred` | Vĩ mô Mỹ | `fred.stlouisfed.org/graph/fredgraph.csv` | 6 giờ | `observations` `fred:<code>`, chuỗi dẫn xuất `calc:GLOBAL_LIQ`, `calc:NETLIQ_US`, `calc:RECPROB_US` |
+| `imf` | Vĩ mô thế giới | IMF DataMapper API v1 | 24 giờ | `observations` `imf:<ind>:<iso3 hoặc nhóm>` |
+| `bis` | Lãi suất điều hành, tỷ giá thực hiệu dụng, khoảng trống tín dụng | BIS SDMX `WS_CBPOL`, `WS_EER`, `WS_CREDIT_GAP` | 12 giờ | `observations` `bis:<area>`, `bis:REER:<area>`, `bis:GAP:<area>` |
+| `oecd` | Vĩ mô thế giới | OECD SDMX REST (CSV) | 24 giờ | `observations` `oecd:<CLI\|CPI\|UNE\|GDP\|IRLT>:<area>` |
+| `imfcpi` | CPI tháng | IMF SDMX REST `IMF.STA,CPI` (CSV) | 24 giờ | `observations` `imf:CPI_M:<mã DataMapper>` |
+| `worldbank` | GDP quý (Việt Nam) | World Bank API v2, Global Economic Monitor | 24 giờ | `observations` `wb:GDP:<iso3>` |
+| `cnbc` | Lợi suất 10 năm (Indonesia) | CNBC `ts-api` chart 1Y | 6 giờ | `observations` `cnbc:<symbol>` |
 | `gpr` | Rủi ro địa chính trị | `data_gpr_daily_recent.xls` | 24 giờ | `observations` `gpr:GPRD`, `gpr:GPRD_MA7` |
 | `gscpi` | Chuỗi cung ứng | NY Fed GSCPI CSV | 24 giờ | `observations` `nyfed:GSCPI` |
-| `rss` | Tin tức | 18 feed (`config/feeds.ts`), 5 trong đó là báo crypto | 10 phút | `articles` |
+| `rss` | Tin tức | 23 feed (`config/feeds.ts`): 5 báo crypto, 5 báo công nghệ | 10 phút | `articles` |
 | `translate` | AI | Gemini hoặc Claude (tier `fast`) | 5 phút | cột `title_*`, `region`, `topic` |
 | `brief` | AI | Gemini hoặc Claude (tier `brief`) | hằng ngày 06:00 VN | `briefs` |
 | `usgs` | Bản đồ | USGS GeoJSON `4.5_week` | 10 phút | `events` (`earthquake`) |
@@ -36,20 +40,26 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `vnindex` | Việt Nam | SSI iBoard | 3 phút | `quotes`, `observations` `vn:VNINDEX`, `items` `vn_breadth` |
 | `sjc` | Việt Nam | vang.today (dự phòng: PNJ) | 30 phút | `items` `gold_vn`, `observations` `goldvn:<code>:sell` |
 | `vcb` | Việt Nam | Vietcombank exchange-rates JSON | 1 giờ | `items` `vcb`, `observations` `vcb:USD:sell` |
+| `sbv` | Việt Nam | Không gọi mạng: lãi suất tái cấp vốn khai báo trong `config/policy-rates.ts` | 12 giờ | `observations` `sbv:REFI` |
+| `macronote` | AI | Gemini hoặc Claude (tier `brief`), không gọi nguồn ngoài | mỗi tuần (thứ Hai giờ VN) | `kv` `macro:note` |
 | `coingecko` | Crypto | CoinGecko `global`, `coins/markets`, `search/trending` | 5 phút | `quotes`/`observations` `cg:*`, `items` `crypto_global`, `crypto_top`, `crypto_trending` |
 | `fng` | Crypto | alternative.me Fear & Greed | 1 giờ | `observations` `fng:crypto`, `items` `crypto_fng` |
 | `deribit` | Crypto | Deribit DVOL (BTC) | 1 giờ | `observations` `deribit:DVOL-BTC` |
 | `defillama` | Crypto | DefiLlama stablecoin charts | 6 giờ | `observations` `llama:stablecoins` |
 | `mempool` | Crypto | mempool.space | 10 phút | `items` `btc_network` |
 | `binance` | Crypto | Binance USDⓈ-M futures + P2P | 15 phút | `items` `crypto_perps`, `usdt_p2p`, `observations` `binance:USDTVND` |
+| `cloudstatus` | Công nghệ | Trang trạng thái AWS, Google Cloud, Azure, Cloudflare, GitHub, Vercel, OpenAI, Claude | 10 phút | `items` `status` |
+| `openrouter` | Công nghệ | OpenRouter `api/v1/models` | 6 giờ | `items` `ai_models` |
+| `huggingface` | Công nghệ | Hugging Face `api/daily_papers`, `api/models?sort=trendingScore` | 3 giờ | `items` `hf_papers`, `hf_models` |
+| `kev` | Công nghệ | CISA Known Exploited Vulnerabilities (JSON) | 6 giờ | `items` `kev` |
 
-Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không lấy từ API mà đặt trong `config/fomc.ts` (§5.2).
+Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC và lịch họp các NHTW khác không lấy từ API mà đặt trong `config/fomc.ts` và `config/central-banks.ts` (§5.2).
 
 ## 2. Thị trường và vĩ mô
 
 ### 2.1 `yahoo` — Yahoo Finance (`lib/sources/yahoo.ts`)
 - **Thư viện:** `yahoo-finance2` 4.0.5, khởi tạo `new YahooFinance({ suppressNotices: ["yahooSurvey"] })`.
-- **Mã:** lấy từ `YAHOO_SYMBOLS` trong `config/series.ts`: `^GSPC`, `^IXIC`, `^TNX`, `DX-Y.NYB`, `^VIX`, `BZ=F`, `GC=F`, `HG=F`, `BTC-USD`, `USDVND=X`, `^MOVE`.
+- **Mã:** lấy từ `YAHOO_SYMBOLS` trong `config/series.ts`: `^GSPC`, `^IXIC`, `^TNX`, `DX-Y.NYB`, `^VIX`, `BZ=F`, `GC=F`, `HG=F`, `BTC-USD`, `USDVND=X`, `^MOVE`, cộng 11 cặp tiền của trang Vĩ mô (`FX_SYMBOLS` trong `config/countries.ts`: `EURUSD=X`, `GBPUSD=X`, `JPY=X`, `CAD=X`, `AUDUSD=X`, `KRW=X`, `CNY=X`, `INR=X`, `IDR=X`, `BRL=X`, `MXN=X`), cộng 20 cổ phiếu của trang Công nghệ (`TECH_SYMBOLS` trong `config/tech.ts`) và `HKD=X` để quy đổi vốn hoá (`TECH_FX`). Cặp tiền và cổ phiếu không nằm trong `SERIES` nên không chạy trên ticker; chỉ số bán dẫn `^SOX` thì có (`SERIES.sox`).
 - **Giá:** gọi `quote(symbols, { return: "array" })` một lần cho tất cả mã. Các trường dùng:
   - `regularMarketPrice`, `regularMarketChange`
   - `regularMarketChangePercent` (đã ở đơn vị %)
@@ -57,6 +67,8 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không
   - Kết quả ghi vào `quotes`.
 - **Lịch sử:** gọi `chart(symbol, { period1, interval: "1d" })`, **tối đa 1 lần/giờ** (mốc thời gian lưu ở `kv['yahoo:history']`).
   - Mã có dưới 200 điểm thì backfill 430 ngày (để z-score 1 năm của Risk Regime đủ dữ liệu); các lần sau chỉ lấy 10 ngày.
+  - Riêng cổ phiếu của trang Công nghệ thì lần nào cũng lấy lại đủ 430 ngày. `close` của Yahoo đã điều chỉnh theo chia tách (FPT chia 11:10 tháng 9/2026: giá 31/12/2025 hiện là 87.091 thay vì 95.800) nhưng chưa điều chỉnh cổ tức tiền mặt. Sau mỗi lần chia tách, Yahoo viết lại cả lịch sử, nên chỉ ghi đè 10 ngày sẽ làm sai % 30 ngày và % từ đầu năm.
+- **Vốn hoá:** sau khi ghi giá, `quote` của các mã trong `TECH_SYMBOLS` còn cho `marketCap` (theo đồng tiền của sàn) và `currency`; ghi vào `items` `tech_caps` (`data = { cap, currency }`). Trang quy ra USD bằng `KRW=X`, `HKD=X`, `USDVND=X` (`lib/data/tech.ts`); thiếu tỷ giá thì hiện "—" thay vì một con số sai.
   - Ngày của mỗi nến tính theo `meta.exchangeTimezoneName` để sàn châu Á không bị lệch một ngày.
 - **Lưu ý:**
   - Mã không tồn tại bị bỏ qua mà không báo lỗi; worker log `no quote for: …`.
@@ -69,6 +81,12 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không
 - **Mã:** lấy từ `FRED_CODES`:
   - Các series trong `config/series.ts`: `T10Y2Y`, `DGS2`, `BAMLH0A0HYM2`, `STLFSI4`, `ICSA`, `SAHMREALTIME`, `GDPNOW`, `WALCL`, `T5YIFR`, `CPIAUCSL`, `FEDFUNDS`, `USEPUINDXD`.
   - Các kỳ hạn của đường cong lợi suất: `DGS1MO` … `DGS30`.
+  - Trang Vĩ mô: `DTWEXBGS` (USD rổ rộng), `PALLFNFINDEXM` (giá hàng hoá IMF), `GEPUCURRENT` (bất định chính sách toàn cầu), và đầu vào của chuỗi dẫn xuất (`FRED_CALC_CODES`): `ECBASSETSW` (€ triệu), `JPNASSETS` (100 triệu yên), `DEXUSEU`, `DEXJPUS`, `T10Y3M`, `RRPONTSYD` ($ tỷ, ngày), `WTREGEN` ($ triệu, tuần).
+  - Panel chủ đề của trang Vĩ mô (`MACRO_US`, `RECESSION_SIGNALS`): `WEI`, `CFNAI`, `INDPRO`, `RSAFS`, `CPILFESL`, `PCEPILFE`, `PFOODINDEXM`, `NFCI`, `DFII10`, `PAYEMS`, `UNRATE`, `UMCSENT`, `GFDEGDQ188S`, `A091RC1Q027SBEA`, `BAMLC0A0CM`, `BAMLEMCBPIOAS`, `RECPROUSM156N`, `T10Y3M`. Chuỗi lưu dạng mức (chỉ số giá, số việc làm) nhưng hiển thị dạng thay đổi thì khai `transform` trong `SeriesDef` (`yoy`: so cùng kỳ; `diff`: so kỳ trước) và `scale`; phép đổi nằm ở `displayPoints()` trong `lib/data/series.ts`, dùng chung cho ô KPI và drawer.
+- **Chuỗi dẫn xuất:** cuối mỗi lần chạy, `writeDerived()` tính lại từ dữ liệu đã lưu (hàm thuần trong `lib/signals/macro.ts`):
+  - `calc:GLOBAL_LIQ`: `WALCL + ECBASSETSW × DEXUSEU + JPNASSETS × 100 / DEXJPUS`, đơn vị $ triệu, theo ngày của `WALCL`. Tuần nào thiếu đầu vào (ECB cũ hơn 14 ngày, BOJ cũ hơn 75 ngày, tỷ giá cũ hơn 10 ngày) thì bỏ qua chứ không cộng thiếu.
+  - `calc:NETLIQ_US`: thanh khoản ròng Mỹ = `WALCL / 1000 − RRPONTSYD − WTREGEN / 1000`, đơn vị $ tỷ, theo ngày của `WALCL`. Tuần nào RRP cũ hơn 7 ngày hoặc TGA cũ hơn 10 ngày thì bỏ qua.
+  - `calc:RECPROB_US`: mô hình probit của NY Fed, `Φ(−0,5333 − 0,6330 × s) × 100` với `s` là chênh lệch 10Y–3M bình quân tháng; tháng hiện tại dùng các ngày đã có.
 - **CSV:** header là `observation_date,<CODE>`; giá trị thiếu là ô rỗng (bản cũ dùng `.`, cả hai đều bị bỏ qua).
 - **Cách gọi:** mỗi mã 1 request, cách nhau 300 ms. Nguồn chỉ FAIL khi hơn một nửa số mã lỗi.
 - **Lưu ý:**
@@ -76,17 +94,28 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không
   - Có thể gộp nhiều mã vào một request (`id=A,B&cosd=d1,d2`), nhưng nếu các mã **khác tần suất** thì FRED trả về **ZIP** chứ không phải CSV. Vì vậy ta gọi từng mã.
 
 ### 2.3 `imf` — IMF DataMapper (`lib/sources/imf.ts`)
-- **URL:** `https://www.imf.org/external/datamapper/api/v1/<IND>` với `IND` là `PCPIPCH` (lạm phát) hoặc `NGDP_RPCH` (tăng trưởng GDP thực).
+- **URL:** `https://www.imf.org/external/datamapper/api/v1/<IND>`, `IND` lấy từ `IMF_INDICATORS`: `PCPIPCH` (lạm phát), `NGDP_RPCH` (tăng trưởng GDP thực), `LUR` (thất nghiệp), `GGXWDG_NGDP` (nợ công % GDP), `GGXCNL_NGDP` (cân đối ngân sách % GDP), `BCA_NGDPD` (vãng lai % GDP).
 - **Định dạng:** `values[IND][ISO3][year] = number | null`; có cả giá trị dự báo đến 2031. Một số nền kinh tế trả `null` thay vì bảng năm.
-- **Lưu:** các quốc gia trong `config/countries.ts` (USA, EURO, JPN, GBR, CHN, IND, BRA, KOR, VNM), từ năm 2010, vào series `imf:<IND>:<ISO3>`, mỗi năm một điểm tại `ts = 1/1`.
-- **Lưu ý:** API **bỏ qua bộ lọc quốc gia** và luôn trả về khoảng 228 nền kinh tế (~120 KB), nên phải tự lọc. Khu vực euro có mã `EURO`.
+- **Lưu:** 16 quốc gia trong `config/countries.ts` và 3 nhóm `IMF_GROUPS` (`WEOWORLD` thế giới, `ADVEC` kinh tế phát triển, `OEMDC` mới nổi và đang phát triển), từ năm 2010, vào series `imf:<IND>:<mã>`, mỗi năm một điểm tại `ts = 1/1`. Hai chỉ số của bản đồ thế giới (`WORLD_MAP` trong `config/macro.ts`: `NGDP_RPCH`, `PCPIPCH`) được giữ cho **mọi** nền kinh tế API trả về (khoảng 223), chỉ năm trước đến năm sau. Một chỉ số lỗi chỉ ghi log; nguồn FAIL khi hơn nửa số chỉ số lỗi.
+- **Đọc ra:** điểm có `ts` ở năm tương lai là dự báo. Ô KPI và drawer (`lib/data/series.ts`) chỉ lấy điểm có `ts <= now`, tức năm hiện tại là ước tính mới nhất của IMF.
+- **Lưu ý:**
+  - API **bỏ qua bộ lọc quốc gia** và luôn trả về khoảng 228 nền kinh tế (~120 KB), nên phải tự lọc. Khu vực euro có mã `EURO`.
+  - Akamai trả **403 cho `curl`** nhưng cho `fetch` của Node đi qua. Kiểm tra bằng Node, đừng kết luận API hỏng từ `curl`.
 
-### 2.4 `bis` — Lãi suất điều hành (`lib/sources/bis.ts`)
-- **URL:** `https://stats.bis.org/api/v1/data/WS_CBPOL/D.US+XM+JP+GB+CN+IN+BR+KR?lastNObservations=400&format=csv&detail=dataonly`
-- **CSV:** cột `FREQ,REF_AREA,TIME_PERIOD,OBS_VALUE`. Kết quả lưu vào series `bis:<area>`.
+### 2.4 `bis` — BIS (`lib/sources/bis.ts`)
+Ba truy vấn mỗi lần chạy, mọi nước gộp bằng `+`:
+
+| Truy vấn | URL (`https://stats.bis.org/api/v1/data/...`) | Vùng | Lưu |
+|---|---|---|---|
+| Lãi suất điều hành | `WS_CBPOL/D.<areas>?lastNObservations=1200` (khoảng 3 năm ngày) | mã `bis` trong `config/countries.ts`: `US+XM+GB+JP+CA+AU+KR+CN+IN+ID+BR+MX`; Đức, Pháp, Ý dùng chung `XM` (ECB) | `bis:<area>` |
+| Tỷ giá thực hiệu dụng | `WS_EER/M.R.B.<areas>?lastNObservations=130` (thực, rổ rộng, 2020 = 100) | mã `bisArea` của 15 nước trang Vĩ mô (Việt Nam không có); Đức, Pháp, Ý có số riêng, khu vực euro là `XM` | `bis:REER:<area>` |
+| Khoảng trống tín dụng/GDP | `WS_CREDIT_GAP/Q.<areas>.P.A.C?lastNObservations=40` (khu vực tư nhân phi tài chính, mọi bên cho vay, chênh lệch so với xu hướng, điểm %) | như trên | `bis:GAP:<area>` |
+
+- **CSV:** `detail=dataonly`; cột vùng là `REF_AREA`, riêng dataflow tín dụng là `BORROWERS_CTY`. Kỳ `2026-11-03` / `2026-09` / `2026-Q1` đổi về UTC (`parseBisCsv`).
+- **Lỗi:** lãi suất điều hành lỗi thì cả nguồn FAIL; hai truy vấn còn lại lỗi chỉ ghi log, nguồn FAIL khi hơn nửa số truy vấn lỗi.
 - **Lưu ý:**
   - Thiếu `detail=dataonly` thì CSV có thêm nhiều cột văn bản dài.
-  - **BIS không có Việt Nam**: gọi `VN` trả lỗi SDMX "No data". UI hiển thị "—" kèm chú thích.
+  - **BIS không có Việt Nam** trong cả ba dataflow (kiểm tra 2026-11-09: `WS_CBPOL` 49 vùng, `WS_EER` 64, `WS_CREDIT_GAP` 44): gọi `VN` trả lỗi SDMX "No data". Lãi suất điều hành của Việt Nam lấy từ `sbv` (§7.4); tỷ giá thực hiệu dụng và khoảng trống tín dụng để "—".
 
 ### 2.5 `gpr` — Geopolitical Risk Index (`lib/sources/gpr.ts`)
 - **URL:** `https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls` (~3,3 MB). Đây là file BIFF `.xls` thật; bản `.xlsx`/`.csv` trả 404.
@@ -101,6 +130,50 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không
   - Giữ dữ liệu từ 2015, lưu vào `nyfed:GSCPI`.
 - **Lưu ý:** file `gscpi_data.xlsx` thực chất là BIFF `.xls`, nên dùng file CSV cho đơn giản.
 
+### 2.7 `oecd` — OECD Data Explorer (`lib/sources/oecd.ts`)
+- **URL:** `https://sdmx.oecd.org/public/rest/data/<flow>/<key>?startPeriod=<năm − 3>-01&format=csvfile`. Một truy vấn mỗi chỉ số, gộp mọi nước bằng `+`; 7 truy vấn mỗi lần chạy, cách nhau 4 giây, chạy 24 giờ một lần.
+- **Header bắt buộc:** gửi `Accept-Language: en`. OECD trả `HTTP 500 Internal server error` cho `Accept-Language: *`, mà `fetch` của Node (undici) gửi đúng giá trị này nếu không ghi đè, còn `curl` thì không gửi header này. Vì vậy cùng một URL chạy được bằng `curl` mà hỏng từ worker; trước khi sửa (2026-11-09) nguồn `oecd` chưa từng chạy thành công.
+
+| Mã | Dataflow | Key | Ghi chú |
+|---|---|---|---|
+| `CLI` | `OECD.SDD.STES,DSD_STES@DF_CLI,` | `<areas>.M.LI.IX._Z.AA.IX._Z.H` | Chỉ báo sớm, điều chỉnh biên độ (100 = xu hướng). Không có khu vực euro (`skip`); OECD chỉ có nhóm `G4E` (Đức, Pháp, Ý, Anh) |
+| `CPI` | `OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,` | `<areas>.M.N.CPI.PA._T.N.GY` | CPI toàn bộ, định nghĩa quốc gia, % so cùng kỳ. Ngày 2026-11-09: không có Nhật; Pháp, Ý, khu vực euro dừng ở 11–12/2025; Mexico dừng ở 7/2024. Trang đọc series nào mới hơn giữa OECD và `imfcpi` (§2.8) |
+| `UNE` | `OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,` | `<areas>.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M` | Thất nghiệp 15+, điều chỉnh mùa vụ. Euro = `EA`; không có CN, IN, ID, BR |
+| `GDP` | `OECD.SDD.NAD,DSD_NAMAIN1@DF_QNA_EXPENDITURE_GROWTH_OECD,` | `Q.Y.<areas>.S1.S1.B1GQ._Z...PC.L.GY.T0102` | GDP thực, % so cùng quý năm trước. Euro = `EA`; `PRICE_BASE` là `L` (không phải `LR`) |
+| `IRLT` | `OECD.SDD.STES,DSD_STES@DF_FINMARK,` | `<areas>.M.IRLT.PA._Z._Z._Z._Z.N` | Lợi suất trái phiếu chính phủ dài hạn (10 năm), bình quân tháng. Indonesia dừng ở 12/2024, nên trang dùng số ngày của `cnbc` (§2.10) khi mới hơn; Mỹ dùng FRED `DGS10` |
+| `BCI` | `OECD.SDD.STES,DSD_STES@DF_CLI,` | `<areas>.M.BCICP.IX._Z.AA.IX._Z.H` | Niềm tin doanh nghiệp, điều chỉnh biên độ (100 = trung bình dài hạn) |
+| `CCI` | `OECD.SDD.STES,DSD_STES@DF_CLI,` | `<areas>.M.CCICP.IX._Z.AA.IX._Z.H` | Niềm tin người tiêu dùng, như trên |
+
+- **Lưu:** `oecd:<mã>:<area>` với `area` là mã OECD của ta trong `config/countries.ts` (khu vực euro luôn lưu là `EA20`, kể cả khi dataflow gọi là `EA`, qua `alias`). Kỳ `2026-09` → 1/9, `2026-Q2` → 1/4 (UTC).
+- **Kiểm tra:** `parseSdmxCsv` gom theo `REF_AREA`. Nếu một nước khớp hơn một series (key quá lỏng) thì báo lỗi chứ không trộn. Một chỉ số lỗi chỉ ghi log; nguồn FAIL khi hơn nửa số chỉ số lỗi.
+- **Chốt key:** mỗi dataflow có số chiều riêng (STES 9, PRICES 8, LFS 9, NAMAIN1 13; ô trống là wildcard) và mã vùng riêng. Giá trị hợp lệ lấy từ content constraint: `GET /public/rest/dataflow/<agency>/<flow>/latest?references=all&detail=referencepartial`, đọc các `<common:KeyValue>`. Endpoint cấu trúc này không tính vào hạn mức tải dữ liệu.
+- **Lưu ý:**
+  - **Giới hạn tần suất:** OECD ghi 20 truy vấn/phút và 20 đến 60 lượt tải dữ liệu/giờ (các trang của OECD không thống nhất con số). Vượt mức thì IP bị chặn tạm, và mọi truy vấn dữ liệu **mới** trả `HTTP 500 Internal server error` (truy vấn y hệt lần trước vẫn có thể trả 200 từ cache CDN, dễ gây hiểu nhầm). Mã sai và `Accept-Language: *` cũng trả 500, nên gặp 500 thì thử lại URL đó bằng `curl` trước khi kết luận bị chặn; khi dò key thì dùng endpoint cấu trúc ở trên.
+  - `lastNObservations` hay trả 500 (OECD giới hạn tham số này từ 3/2026); dùng `startPeriod`.
+  - Các nước không có số tháng hoặc quý thì trang Vĩ mô dùng ước tính năm của IMF.
+  - **Việt Nam không có trong dataflow nào ở trên** (kiểm tra content constraint ngày 2026-11-09). Đọc vùng có số từ `<structure:ContentConstraint type="Actual">` → `<common:KeyValue id="REF_AREA">`; danh mục mã (codelist) có `VNM` nhưng không có nghĩa là có số liệu.
+
+### 2.8 `imfcpi` — IMF CPI dataset (`lib/sources/imfcpi.ts`)
+- **URL:** `https://api.imf.org/external/sdmx/2.1/data/IMF.STA,CPI/<areas>.CPI+HICP._T.YOY_PCH_PA_PT.M?startPeriod=<năm − 3>-01&detail=dataonly`, header `Accept: application/vnd.sdmx.data+csv;version=1.0.0` (không có header này thì trả XML). Một truy vấn cho cả 16 nước, khoảng 90 KB, 2 giây. Không cần key; khác DataMapper, endpoint này cho cả `curl` lẫn Node đi qua.
+- **Khoá:** `COUNTRY.INDEX_TYPE.COICOP_1999.TYPE_OF_TRANSFORMATION.FREQUENCY`. Khu vực euro là `G163` và chỉ có `HICP`; các nước còn lại lấy `CPI` (định nghĩa quốc gia, như OECD), có cả `HICP` thì bỏ HICP.
+- **Lưu:** `imf:CPI_M:<mã DataMapper>` (khu vực euro lưu là `EURO`), kỳ `2026-M09` → 1/9 UTC (`periodTs`).
+- **Đọc ra:** cột CPI và lãi suất thực của bảng sức khoẻ, small multiples Lạm phát và đường lãi suất thực lấy series có điểm mới nhất giữa `oecd:CPI:<area>` và `imf:CPI_M:<mã>` (`freshest` trong `lib/data/series.ts`; bằng nhau thì giữ OECD).
+- **Độ mới (2026-11-09):** đến 9/2026 cho phần lớn nước, Úc 8/2026, Ấn Độ 7/2026.
+- **Các dataflow IMF khác đã thử cho Việt Nam:** `MFS_IR` (lãi suất) và `EER` (tỷ giá hiệu dụng) không có Việt Nam; `QNEA` (GDP quý) chỉ có metadata; `LS` (thất nghiệp quý) dừng ở Q4/2024, cũng cũ với Brazil (2/2025) và Ấn Độ (Q4/2025).
+
+### 2.9 `worldbank` — World Bank Global Economic Monitor (`lib/sources/worldbank.ts`)
+- **URL:** `https://api.worldbank.org/v2/country/<iso3;…>/indicator/NYGDPMKTPSAKN?source=15&format=json&frequency=Q&mrv=24&per_page=500`: GDP thực theo quý, giá cố định nội tệ, đã điều chỉnh mùa vụ. Không cần key.
+- **Nước:** những nước có `gdp: "wb:GDP:<iso3>"` trong `config/countries.ts` (hiện chỉ Việt Nam, vì OECD không có tài khoản quốc gia quý của Việt Nam).
+- **Định dạng:** `[meta, rows]`; GEM để trống `countryiso3code`, mã ISO3 nằm ở `country.id`. `date` dạng `2026Q2`.
+- **Lưu:** `wb:GDP:<iso3>` là % thay đổi so với cùng quý năm trước (cùng thước đo với OECD `GDP`), `ts` = ngày đầu quý.
+- **Lưu ý:** GEM chậm khoảng một quý so với Tổng cục Thống kê (11/2026 mới có Q2/2026). Chỉ số `REER` của GEM cho Việt Nam dừng ở 10/2024, `UNEMPSA_` chỉ là số năm nội suy, nên không dùng.
+
+### 2.10 `cnbc` — Lợi suất trái phiếu theo ngày (`lib/sources/cnbc.ts`)
+- **URL:** `https://ts-api.cnbc.com/harmony/app/charts/1Y.json?symbol=<symbol>` (không chính thức, không cần key): `barData.priceBars[].{ close, tradeTime }`, khoảng 2 năm số ngày. `close` là lợi suất %.
+- **Mã:** lấy từ `y10: "cnbc:<symbol>"` trong `config/countries.ts`; hiện chỉ `ID10Y-ID` (Indonesia). CNBC không có Việt Nam (`VN10Y-VN` trả `code: 1`).
+- **Lưu:** `cnbc:<symbol>`, mỗi ngày giao dịch một điểm tại 00:00 UTC.
+- **Đọc ra:** cột lợi suất 10 năm lấy series mới hơn giữa `y10` (số ngày) và OECD `IRLT` (bình quân tháng). Số ngày cũ hơn 7 ngày thì hiện kèm ngày.
+
 ## 3. Tin tức và AI
 
 ### 3.1 `rss` — Feed tin tức (`lib/sources/rss.ts`, `config/feeds.ts`)
@@ -109,6 +182,7 @@ Chu kỳ khai báo trong `config/sources.ts` (`SOURCE_META`). Lịch FOMC không
   - CNBC World và Economy, SCMP Asia
   - VnExpress Thế giới, Kinh doanh, Thời sự
   - Crypto: CoinDesk, Cointelegraph, The Block, Decrypt, Coin68 (xem §8.7)
+  - Công nghệ: The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress Khoa học công nghệ (xem §8b.5)
 - **Cách chạy:** dùng `rss-parser`, các feed chạy song song.
   - Chỉ lấy bài trong 3 ngày gần nhất; xóa bài cũ hơn 14 ngày.
   - `id = sha1(URL đã chuẩn hóa)`, trong đó URL đã bỏ `utm_*`, `at_*` và hash.
@@ -206,6 +280,7 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
 - **Lưu:** kind `calendar`, `data = { country, impact, forecast, previous }`.
 - **Lưu ý:** cuối tuần (thứ Bảy) danh sách thường rỗng cho tới khi tuần mới được đăng.
 - **FOMC:** đặt cứng trong `config/fomc.ts` (`FOMC_MEETINGS`), lấy từ federalreserve.gov. Danh sách tính tới hết 2027; cần cập nhật khi Fed công bố năm mới. UI tự gộp FOMC vào lịch.
+- **NHTW khác** (chỉ hiện ở lịch của trang Vĩ mô): đặt cứng trong `config/central-banks.ts` (`CB_MEETINGS`): ECB, BoE, BoJ, BoC, RBA, BoK, RBI, BI, Copom, Banxico, mỗi ngân hàng kèm link nguồn chính thức, đọc ngày 2026-11-09. Ngày 2027 của BI, Banxico và RBI (từ 4/2027) chưa công bố lúc đó. PBoC không họp định kỳ: LPR công bố ngày 20 hằng tháng lúc 9:15 Bắc Kinh, rơi vào cuối tuần thì lùi sang thứ Hai (`LPR_DAY`; ngày lễ Trung Quốc chưa tính). `getCalendar(lang, days, kinds)` chọn loại mục: trang tổng quan `econ`, `fomc`, `launch`; trang Vĩ mô `econ`, `fomc`, `cb`.
 
 ### 5.3 `launches` (`lib/sources/launches.ts`)
 - **URL:** `https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=12`. **Giới hạn 15 request/giờ**, nên chu kỳ là 3 giờ.
@@ -336,12 +411,56 @@ Trang `/[lang]/crypto` đọc các nguồn dưới đây. Không nguồn nào c�
 - **RSS:** CoinDesk, Cointelegraph, The Block, Decrypt, Coin68 (`crypto: true` trong `config/feeds.ts`). Các bài này **không** vào danh sách tin thế giới và đầu vào Brief; trang crypto đọc chúng cùng bài có `topic = crypto` từ các báo khác (`getCryptoNews`). Coin68 dùng `coin68.com/rss/tin-moi-nhat.rss` (`/feed/` trả HTML).
 - **Polymarket:** nguồn `polymarket` gọi thêm tag `crypto` (`limit=40`), bỏ kèo kết thúc trong vòng 48 giờ (phần lớn là "BTC lên hay xuống hôm nay"), giữ 8 kèo vào kind `polymarket_crypto`.
 
+### 7.4 `sbv` — Lãi suất tái cấp vốn NHNN (`lib/sources/sbv.ts`, `config/policy-rates.ts`)
+- **Không gọi mạng.** Trang "Lãi suất" của NHNN (`https://sbv.gov.vn/vi/lãi-suất1`) có bảng "Các mức lãi suất do Ngân hàng Nhà nước quy định" (tái chiết khấu, tái cấp vốn, kèm số quyết định và ngày áp dụng) và lãi suất liên ngân hàng, nhưng tường lửa F5 của NHNN trả "Request Rejected" cho `fetch` của Node. Vì vậy các lần đổi lãi suất khai báo tay trong `SBV_REFI_STEPS`.
+- **Lưu:** `sbv:REFI`, mỗi ngày một điểm từ bước đầu (23/9/2022) đến hôm nay, cùng dạng với `bis:<area>` để trang đọc mọi lãi suất điều hành như nhau (`policyRateId` trong `config/countries.ts`).
+- **Hạn kiểm tra:** `SBV_CHECKED` là ngày đối chiếu gần nhất với trang NHNN. Quá `SBV_RECHECK_DAYS` (180 ngày) thì nguồn FAIL với lời nhắc, panel hiện "Dữ liệu cũ" hoặc "Lỗi nguồn" thay vì im lặng hiện số có thể đã cũ. NHNN đổi lãi suất thì thêm một bước và cập nhật `SBV_CHECKED`.
+- **Lịch sử đã khai báo:** 5,0% từ 23/9/2022 (1606/QĐ-NHNN), 6,0% từ 25/10/2022 (1809/QĐ-NHNN), 5,5% từ 3/4/2023 (574/QĐ-NHNN), 4,5% từ 19/6/2023 (1123/QĐ-NHNN; trang NHNN ghi nhầm ngày áp dụng là 19/03/2023).
+
+### 7.5 Lợi suất trái phiếu chính phủ Việt Nam (chưa tích hợp)
+- HNX công bố đường cong lợi suất mỗi ngày giao dịch: `POST https://hnx.vn/ModuleReportBonds/Bond_YieldCurve/SearchAndNextPageYieldCurveData` với `pDate=dd/mm/yyyy` trả bảng HTML (kỳ hạn, spot rate liên tục, par yield, spot rate theo năm); ngày không giao dịch chỉ có dòng tiêu đề. Ngày 6/11/2026: par yield 10 năm 4,51%.
+- `hnx.vn` không gửi chứng chỉ trung gian (GlobalSign GCC R3 EV TLS CA 2025), nên `fetch` của Node báo `UNABLE_TO_VERIFY_LEAF_SIGNATURE` dù `curl` trên macOS chạy được. Cần bổ sung chứng chỉ trung gian mới tích hợp được; đến lúc đó ô lợi suất 10 năm của Việt Nam để "—".
+
+## 8b. Công nghệ
+
+Trang `/[lang]/tech` (BR-23) đọc các nguồn dưới đây cùng `yahoo` (§2.1) và `hackernews` (§5.6). Không nguồn nào cần key. Danh sách cổ phiếu và trang trạng thái khai báo trong `config/tech.ts`.
+
+### 8b.1 `cloudstatus` — Trạng thái các đám mây và dịch vụ (`lib/sources/cloudstatus.ts`)
+- **Mỗi nhà cung cấp một định dạng**, cùng quy về `ServiceStatus = { level, description, incidents[] }` với `level` thuộc `none | maintenance | unknown | minor | major | critical`:
+  - **Statuspage của Atlassian** (Cloudflare, GitHub, Vercel, Claude): `/api/v2/status.json` và `/api/v2/incidents/unresolved.json`. Không dùng `summary.json` vì bản của Cloudflare liệt kê mọi PoP và nặng khoảng 200 KB. `level` lấy mức nặng hơn giữa chỉ báo chung và các sự cố đang mở: GitHub có lúc vẫn ghi "All Systems Operational" khi đang mở sự cố "minor".
+  - **OpenAI**: trang đã chuyển khỏi Statuspage, `incidents/unresolved.json` trả 404, nhưng `summary.json` vẫn đúng định dạng nên dùng nó.
+  - **AWS**: `health.aws.amazon.com/public/currentevents`, JSON mã hoá **UTF-16 big-endian có BOM** (`decodeUtf16`). `status` 1 = thông tin, 2 = suy giảm, 3 = gián đoạn; 0 (đã xử lý) bị bỏ. Ngày 9/11/2026 có hai sự kiện "Region Availability" ở UAE và Bahrain, mở từ đầu tháng 3/2026 và vẫn cập nhật đến tháng 9.
+  - **Google Cloud**: `status.cloud.google.com/incidents.json` (khoảng 290 KB). Sự cố đang mở là sự cố chưa có `end`; `status_impact` `SERVICE_OUTAGE` → major, `SERVICE_DISRUPTION` → minor, `SERVICE_INFORMATION` → none.
+  - **Azure**: RSS `azure.status.microsoft/en-us/status/feed/`, chỉ có item khi đang có sự cố và không ghi mức độ, nên mỗi item là `unknown` ("Có sự cố").
+- **Lỗi:** một trang đọc không được thì dòng của nó lưu `level: null` cùng `error` (giao diện ghi "Không đọc được trang trạng thái"), không bao giờ hiện là "bình thường". Nguồn chỉ FAIL khi cả 8 trang đều lỗi.
+- **Lưu:** `items` `status`, mỗi dịch vụ một dòng (`id` = khoá trong `STATUS_SERVICES`, `url` = trang trạng thái), tối đa 5 sự cố mỗi dịch vụ.
+
+### 8b.2 `openrouter` — Model AI mới (`lib/sources/openrouter.ts`)
+- **URL:** `openrouter.ai/api/v1/models` (khoảng 460 model, 830 KB).
+- **Lọc (`pickNewModels`):** model có `created` trong 30 ngày; bỏ biến thể (id có `:`, ví dụ `:free`, `:batch`), alias (`~vendor/...-latest`) và bộ định tuyến `openrouter/*`. Giá theo token đổi ra USD/1 triệu token; giá âm nghĩa là "tuỳ tuyến" nên lưu `null`, không coi là miễn phí. `open` = có `hugging_face_id` (trọng số công khai). Nhà cung cấp và tên tách từ `name` ("Google: Gemini …").
+- **Lưu ý:** `created` là ngày OpenRouter đưa model lên, thường chỉ sau ngày ra mắt vài hôm. Model "stealth" (ẩn danh, miễn phí) vẫn được giữ vì là tin.
+- **Lưu:** `items` `ai_models` (tối đa 80), `data` = `AiModel`.
+
+### 8b.3 `huggingface` — Nghiên cứu AI (`lib/sources/huggingface.ts`)
+- **Bài nghiên cứu:** `huggingface.co/api/daily_papers?limit=100`. Giữ bài được đưa lên Daily Papers trong 3 ngày (`submittedOnDailyAt`), xếp theo `upvotes`, lấy 20. `data = { en, upvotes, comments, org, authors, github }`; `en` là tiêu đề gốc để làm tooltip khi giao diện hiện bản dịch. Tiêu đề được AI dịch (kind `hf_papers` nằm trong `TRANSLATED_ITEM_KINDS`, LLDD 05 §2).
+- **Model đang hot:** `huggingface.co/api/models?sort=trendingScore&limit=50`, bỏ bản đóng gói lại của model khác (tên chứa gguf, awq, gptq, exl2, mlx, comfy, uncensored, abliterat, heretic), lấy 12. `data = { likes, downloads, task }`.
+- **Lưu:** `items` `hf_papers`, `hf_models`. Một phần rỗng thì giữ snapshot cũ của phần đó; nguồn FAIL khi cả hai rỗng.
+
+### 8b.4 `kev` — Lỗ hổng đang bị khai thác (`lib/sources/kev.ts`)
+- **URL:** `www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json` (toàn bộ danh mục, khoảng 1,8 MB, cập nhật vài lần mỗi tuần).
+- **Lọc (`recentKev`):** mục có `dateAdded` trong 30 ngày, mới nhất trước, cùng ngày thì số CVE lớn hơn trước; tối đa 60.
+- **Lưu:** `items` `kev`, `id` = CVE, `url` = trang NVD, `ts` = ngày thêm, `data = { vendor, product, due, ransomware, desc }`. `due` là hạn vá CISA đặt cho cơ quan liên bang Mỹ; `ransomware` = `knownRansomwareCampaignUse === "Known"`.
+
+### 8b.5 Tin công nghệ
+- **RSS:** The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress Khoa học công nghệ (`tech: true` trong `config/feeds.ts`). Giống báo crypto, các bài này **không** vào tin thế giới và đầu vào Brief (`DESK_OUTLETS`); trang Công nghệ đọc chúng cùng bài có `topic = tech` từ báo khác, trừ báo crypto (`getTechNews`).
+- Báo được nhận ra theo `name`, nên feed VnExpress mục KHCN mang tên riêng `VnExpress KHCN` để không kéo các mục VnExpress khác ra khỏi tin thế giới.
+
 ## 9. Nguồn đã loại
 
 | Nguồn | Lý do | Thay bằng |
 |---|---|---|
 | Frankfurter | v1 chỉ có dữ liệu ECB (không có VND); Yahoo đã có tỷ giá | Yahoo `USDVND=X`, Vietcombank |
-| World Bank | Rất chậm khi chưa có cache (11–72 giây); IMF đã đủ lạm phát và tăng trưởng, có cả dự báo | IMF DataMapper |
+| World Bank WDI (số năm) | Rất chậm khi chưa có cache (11–72 giây); IMF đã đủ lạm phát và tăng trưởng, có cả dự báo. Bộ GEM (`source=15`) thì nhanh và vẫn dùng cho GDP quý của Việt Nam (§2.9) | IMF DataMapper |
 | Reddit | `www.reddit.com` bị chặn ở tầng DNS; `api.reddit.com` 403; `old.reddit.com` bắt đăng nhập; cần OAuth | Wikipedia + Hacker News |
 | GDELT DOC 2.0 / GEO 2.0 | DOC luôn trả 429 *"one every 5 seconds"*; GEO trả 404 | GDELT events export |
 | OpenAQ v3 | Bắt buộc key (401) | Open-Meteo Air Quality |
@@ -350,6 +469,7 @@ Trang `/[lang]/crypto` đọc các nguồn dưới đây. Không nguồn nào c�
 | AP RSS | 403 | Các feed khác (Google News chỉ dùng cá nhân, chưa tích hợp) |
 | FRED JSON API | Cần key | FRED CSV công khai |
 | Lịch FRED, BLS ICS | FRED cần key; BLS trả 403 | ForexFactory + `config/fomc.ts` |
+| Genk (RSS) | Chủ yếu tin máy móc và giải trí, feed không có ảnh (thử 2026-11-09) | VnExpress Khoa học công nghệ |
 
 ## 10. Nhật ký kiểm chứng (2026-10-31)
 
@@ -383,3 +503,5 @@ Kết quả `npm run fetch -- <id>` lần đầu:
 | `who` | 8 |
 
 `translate` và `brief` lúc đó báo `skip` vì chưa cấu hình AI. Sau khi thêm key Gemini (cùng ngày), cả hai đã chạy `ok`: `translate` xử lý 220 mục trong 41 giây; `brief` dùng `gemini-3.8-flash`, mất 2–3 phút. Chi tiết ở [LLDD 05 §6](05-ai-pipeline.md).
+
+Lần chạy đầu của các nguồn công nghệ (2026-11-09): `cloudstatus` 8 (một dòng mỗi dịch vụ), `openrouter` 27, `huggingface` 31 (20 bài, 11 model), `kev` 30. Lượt lịch sử `yahoo` sau khi thêm 20 cổ phiếu và `^SOX`: 6726 điểm.

@@ -1,10 +1,9 @@
 import clsx from "clsx";
-import { CPI_YOY, SERIES, VITAL_SIGNS, type SeriesKey } from "@/config/series";
+import { SERIES, VITAL_SIGNS, type SeriesKey } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { fmtDate, fmtDelta, fmtNumber, fmtPct, fmtTime, fmtValue } from "@/lib/format";
 import { getCountryMacro, getHighlights, getHistory, getInsightNotes, getRegime, getTicker, getTiles, getWatchlist, getYieldCurve, type Tile } from "@/lib/queries";
 import { TileDetail } from "@/components/charts/TileDetail";
-import type { SeriesDef } from "@/config/series";
 import { KpiTile } from "@/components/charts/KpiTile";
 import { alertOf } from "@/lib/signals/notable";
 import { LineChart } from "@/components/charts/LineChart";
@@ -14,16 +13,16 @@ import { EmptyState } from "@/components/ui/Panel";
 // ---------------------------------------------------------------- tiles
 
 /** A KPI tile that opens its history (and pin toggle) on click. */
-export function DetailTile({ tile, def, lang, watched, note }: { tile: Tile; def?: SeriesDef; lang: Locale; watched: boolean; note?: string }) {
+export function DetailTile({ tile, lang, watched, note }: { tile: Tile; lang: Locale; watched: boolean; note?: string }) {
   const d = getDict(lang);
-  const shown = def ?? tile.def;
+  const shown = tile.def;
   return (
     <TileDetail
       seriesKey={tile.key}
       name={pick(shown.name, lang)}
       explain={pick(shown.explain, lang)}
       note={note}
-      unit={tile.key === "cpi" ? "%" : shown.unit}
+      unit={shown.unit}
       digits={shown.digits}
       watched={watched}
       price={shown.price}
@@ -55,7 +54,7 @@ export async function VitalSigns({ lang }: { lang: Locale }) {
           <h3 className="text-xs font-semibold text-ink-2">★ {d.detail.watchlist}</h3>
           <div className={grid}>
             {extra.map((t) => (
-              <DetailTile key={t.key} tile={t} def={t.key === "cpi" ? CPI_YOY : undefined} lang={lang} watched note={notes[t.key]} />
+              <DetailTile key={t.key} tile={t} lang={lang} watched note={notes[t.key]} />
             ))}
           </div>
         </>
@@ -74,7 +73,7 @@ export async function EconomyPulse({ lang }: { lang: Locale }) {
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {tiles.map((t) => (
-        <DetailTile key={t.key} tile={t} def={t.key === "cpi" ? CPI_YOY : undefined} lang={lang} watched={watch.includes(t.key)} note={notes[t.key]} />
+        <DetailTile key={t.key} tile={t} lang={lang} watched={watch.includes(t.key)} note={notes[t.key]} />
       ))}
     </div>
   );
@@ -220,7 +219,7 @@ export async function InflationRatesPanel({ lang }: { lang: Locale }) {
         locale={lang}
         tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
       />
-      <p className="text-[11px] text-muted">VN: {d.charts.noRateVn}.</p>
+      <p className="text-[11px] text-muted">{d.charts.rateVn}</p>
     </div>
   );
 }

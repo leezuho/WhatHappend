@@ -59,18 +59,26 @@ export interface ItemRow {
   data?: unknown;
 }
 
-/** Replace the whole snapshot list of one kind (trending, markets, calendars...). */
+/**
+ * Replace the whole snapshot list of one kind (trending, markets, calendars...). A row that brings no translation
+ * of its own keeps the one the AI pass stored for it, as long as its title has not changed, so a re-run does not
+ * send the same titles to translation again.
+ */
 export function replaceItems(db: DatabaseSync, kind: string, items: ItemRow[]): number {
+  const keepVi = db.prepare("SELECT id, title, title_vi FROM items WHERE kind = ? AND title_vi IS NOT NULL");
   const del = db.prepare("DELETE FROM items WHERE kind = ?");
   const ins = db.prepare(
     "INSERT OR REPLACE INTO items (kind, id, rank, title, title_vi, url, ts, data, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
   );
   const now = Date.now();
   return tx(db, () => {
+    const known = new Map((keepVi.all(kind) as { id: string; title: string; title_vi: string }[]).map((r) => [r.id, r]));
     del.run(kind);
-    items.forEach((it, i) =>
-      ins.run(kind, it.id, i, it.title, it.titleVi ?? null, it.url ?? null, it.ts ?? null, it.data === undefined ? null : JSON.stringify(it.data), now),
-    );
+    items.forEach((it, i) => {
+      const old = known.get(it.id);
+      const vi = it.titleVi !== undefined ? it.titleVi : old && old.title === it.title ? old.title_vi : null;
+      ins.run(kind, it.id, i, it.title, vi, it.url ?? null, it.ts ?? null, it.data === undefined ? null : JSON.stringify(it.data), now);
+    });
     return items.length;
   });
 }

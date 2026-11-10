@@ -1,7 +1,8 @@
 import YahooFinance from "yahoo-finance2";
 import { SOURCE_META } from "@/config/sources";
 import { YAHOO_SYMBOLS } from "@/config/series";
-import { upsertQuotes, upsertSeries, type QuoteRow } from "./store";
+import { TECH_SYMBOLS } from "@/config/tech";
+import { replaceItems, upsertQuotes, upsertSeries, type QuoteRow } from "./store";
 import type { Source } from "./types";
 
 // Quotes for every Yahoo symbol each run (one batched call); daily history at
@@ -12,6 +13,13 @@ const yf = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 const HISTORY_EVERY = 60 * 60_000;
 const BACKFILL_DAYS = 430;
 const DAY = 24 * 3600_000;
+const TECH = new Set(TECH_SYMBOLS);
+
+export interface TechCap {
+  /** In the listing's own currency. */
+  cap: number;
+  currency: string | null;
+}
 
 /** Calendar date of a bar in the exchange's own timezone, as midnight UTC. */
 function barDay(date: Date, tz: string | undefined): number {
@@ -43,6 +51,12 @@ export const yahoo: Source = {
     if (missing.length) log(`no quote for: ${missing.join(", ")}`);
     let written = upsertQuotes(db, rows);
 
+    // Market cap and trading currency of the tech page's stocks (the quotes table keeps only prices).
+    const caps = quotes.flatMap((q) =>
+      TECH.has(q.symbol) && typeof q.marketCap === "number" ? [{ id: q.symbol, title: q.symbol, data: { cap: q.marketCap, currency: q.currency ?? null } satisfies TechCap }] : [],
+    );
+    if (caps.length) replaceItems(db, "tech_caps", caps);
+
     const last = db.prepare("SELECT value FROM kv WHERE key = 'yahoo:history'").get() as { value: string } | undefined;
     if (last && Date.now() - Number(last.value) < HISTORY_EVERY) return written;
 
@@ -50,7 +64,9 @@ export const yahoo: Source = {
     for (const symbol of YAHOO_SYMBOLS) {
       const id = `yahoo:${symbol}`;
       const have = (count.get(id) as { n: number }).n;
-      const days = have < 200 ? BACKFILL_DAYS : 10;
+      // Yahoo rewrites a stock's whole history after a split (FPT splits most years), so the tech page's stocks
+      // re-pull the full window each time; indices, FX and futures never split and only top up the last days.
+      const days = have < 200 || TECH.has(symbol) ? BACKFILL_DAYS : 10;
       try {
         const chart = await yf.chart(symbol, { period1: new Date(Date.now() - days * DAY), interval: "1d" });
         const tz = chart.meta.exchangeTimezoneName;

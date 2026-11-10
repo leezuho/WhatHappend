@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { SOURCE_META } from "@/config/sources";
-import { CRYPTO_KEYS } from "@/config/series";
+import { CRYPTO_KEYS, TECH_SIGNS } from "@/config/series";
 import { tx } from "@/lib/db";
 import { fmtDelta, fmtValue } from "@/lib/format";
 import { findNotables, type Notable, type Reason } from "@/lib/signals/notable";
 import type { Source } from "@/lib/sources/types";
+import { BRIEF_RESERVE, callsLeft } from "./budget";
+import { aiStatus } from "./config";
 import { generateJson } from "./provider";
 import { recentHeadlines } from "./brief";
 import type { StoredInsight } from "./insights-shared";
@@ -16,8 +18,9 @@ import type { StoredInsight } from "./insights-shared";
 
 const REFRESH_MS = 12 * 3600_000;
 const MAX_HEADLINES = 60;
-/** Added on top when a crypto series is among the notables. */
+/** Added on top when a crypto (or tech) series is among the notables. */
 const MAX_CRYPTO_HEADLINES = 25;
+const MAX_TECH_HEADLINES = 25;
 
 const Out = z.object({
   items: z.array(z.object({ key: z.string(), en: z.string(), vi: z.string(), refs: z.array(z.number()) })),
@@ -93,9 +96,14 @@ export const insights: Source = {
     const todo = notables.filter((n) => needsNote(n.reasons, existing.get(n.key), now));
     if (!todo.length) return 0;
 
-    // Crypto moves are explained by crypto outlets far more often than by world news.
+    // Crypto and chip moves are explained by their own outlets far more often than by world news.
     const crypto = todo.some((n) => CRYPTO_KEYS.includes(n.key));
-    const headlines = [...recentHeadlines(db, now, MAX_HEADLINES), ...(crypto ? recentHeadlines(db, now, MAX_CRYPTO_HEADLINES, "crypto") : [])];
+    const tech = todo.some((n) => TECH_SIGNS.includes(n.key));
+    const headlines = [
+      ...recentHeadlines(db, now, MAX_HEADLINES),
+      ...(crypto ? recentHeadlines(db, now, MAX_CRYPTO_HEADLINES, "crypto") : []),
+      ...(tech ? recentHeadlines(db, now, MAX_TECH_HEADLINES, "tech") : []),
+    ];
     const input = {
       indicators: todo.map((n) => ({
         key: n.key,
@@ -110,7 +118,10 @@ export const insights: Source = {
       headlines: headlines.map((h, i) => ({ n: i + 1, source: h.source, title: h.title })),
     };
 
-    const res = await generateJson({ tier: "brief", system: SYSTEM, user: JSON.stringify(input), schema: Out });
+    // The brief model while its daily budget has room beyond what the brief and the macro note need; the fast one after.
+    const ai = aiStatus();
+    const tier = ai.ok && callsLeft(db, ai.config, "brief", now) > BRIEF_RESERVE ? "brief" : "fast";
+    const res = await generateJson({ tier, system: SYSTEM, user: JSON.stringify(input), schema: Out, db });
     if (!res.data) throw new Error(`insights not produced by ${res.model} (stop_reason=${res.stopReason})`);
 
     const byKey = new Map(todo.map((n) => [n.key as string, n]));

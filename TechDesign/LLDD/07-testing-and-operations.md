@@ -50,6 +50,7 @@ Dùng `node:test` có sẵn trong Node, chạy qua `tsx` nên đọc được al
 | `test/signals.test.ts` | `alertOf`, `computeRegime` (thiếu dữ liệu, risk-on/off, VIX > 35), `findNotables` trên DB `:memory:` |
 | `test/ai-scheduling.test.ts` | `needsNote` của insights, `brief.isDue` (khoảng cách 10 phút, lỗi gần đây, thiếu tin) |
 | `test/web-and-worker.test.ts` | `isCrossOrigin`, khóa worker (`worker/lock.ts`), các hàm định dạng |
+| `test/tech.test.ts` | Trang Công nghệ: `statuspageStatus`, `decodeUtf16` + `awsStatus` (UTF-16 BE có BOM), `gcpStatus`, `pickNewModels`, `topPapers`/`trendingModels`, `recentKev`, `replaceItems` giữ bản dịch, `recentHeadlines` tách báo công nghệ, `changeSince`/`thin`, `techStockRows` (đổi vốn hoá ra USD) trên DB `:memory:` |
 
 Chưa phủ: các fetcher gọi mạng (kiểm bằng `npm run fetch -- <id>`) và lớp gọi AI (`translate`, `brief.run`, `insights.run`).
 

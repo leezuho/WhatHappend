@@ -3,7 +3,13 @@
     "title": "WhatHappend — the world at a glance",
     "description": "Personal dashboard of what is happening in the world: markets, macro, news, events.",
     "cryptoTitle": "Crypto — WhatHappend",
-    "cryptoDescription": "Crypto market, sentiment, derivatives, Bitcoin network and news."
+    "cryptoDescription": "Crypto market, sentiment, derivatives, Bitcoin network and news.",
+    "techTitle": "Technology — WhatHappend",
+    "techDescription": "Technology at a glance: tech and chip stocks, outages at the big clouds and AI services, new AI models and research, actively exploited vulnerabilities and tech news.",
+    "vietnamTitle": "Vietnam — WhatHappend",
+    "vietnamDescription": "Vietnam at a glance: VN-Index, the dollar and gold, growth, inflation, the State Bank rate, the IMF outlook and news.",
+    "macroTitle": "World macro — WhatHappend",
+    "macroDescription": "World economy health check: growth, inflation, jobs, rates, liquidity and the business cycle across 15 major economies and Vietnam."
   },
   "common": {
     "updated": "Updated",
@@ -28,11 +34,14 @@
     "break": "Lunch break",
     "themeAnthropic": "Anthropic theme (warm cream)",
     "themeGroup": "Theme",
-    "language": "Language",
+    "switchLang": "Switch to Vietnamese",
     "ticker": "Market ticker",
     "nav": "Sections",
     "navOverview": "Overview",
-    "navCrypto": "Crypto"
+    "navCrypto": "Crypto",
+    "navTech": "Tech",
+    "navMacro": "Macro",
+    "navVietnam": "Vietnam"
   },
   "regime": {
     "title": "Risk regime",
@@ -107,6 +116,26 @@
       "title": "Vietnam corner",
       "subtitle": "VN-Index, USD/VND, SJC gold, VnExpress"
     },
+    "vnMarkets": {
+      "title": "Vietnam markets",
+      "subtitle": "Stocks, the dollar at the market, the bank and on crypto, gold"
+    },
+    "vnEconomy": {
+      "title": "Vietnam's economy",
+      "subtitle": "Growth, inflation, the State Bank rate and the IMF outlook"
+    },
+    "vnGold": {
+      "title": "Gold prices",
+      "subtitle": "Domestic brands vs the world price"
+    },
+    "vnBank": {
+      "title": "Vietcombank rates",
+      "subtitle": "Transfer and sell, VND per unit"
+    },
+    "vnNews": {
+      "title": "Vietnam news",
+      "subtitle": "VnExpress"
+    },
     "cryptoVitals": {
       "title": "Crypto vital signs",
       "subtitle": "Majors, market size, volatility and liquidity"
@@ -134,6 +163,82 @@
     "cryptoNews": {
       "title": "Crypto news",
       "subtitle": "CoinDesk, Cointelegraph, The Block, Decrypt, Coin68"
+    },
+    "worldPulse": {
+      "title": "World pulse",
+      "subtitle": "Growth, prices, the dollar, liquidity and recession risk"
+    },
+    "worldMap": {
+      "title": "World map",
+      "subtitle": "IMF growth and inflation estimates for this year, every economy"
+    },
+    "macroNote": {
+      "title": "This week in the world economy",
+      "subtitle": "AI reading of this page's numbers, once a week"
+    },
+    "cycleClock": {
+      "title": "Business cycle clock",
+      "subtitle": "Where each economy stands, from OECD leading indicators"
+    },
+    "scorecard": {
+      "title": "Economies at a glance",
+      "subtitle": "Latest reading per country, judged against its own targets and norms"
+    },
+    "growth": {
+      "title": "Growth",
+      "subtitle": "Is the economy speeding up or slowing down?"
+    },
+    "inflation": {
+      "title": "Inflation",
+      "subtitle": "Is inflation back near target?"
+    },
+    "money": {
+      "title": "Money & liquidity",
+      "subtitle": "Is money getting cheaper or dearer?"
+    },
+    "jobs": {
+      "title": "Jobs & consumers",
+      "subtitle": "Are workers and shoppers holding up?"
+    },
+    "debt": {
+      "title": "Debt & deficits",
+      "subtitle": "Is debt becoming a burden?"
+    },
+    "recession": {
+      "title": "Recession signals",
+      "subtitle": "What the indicators that ran ahead of past recessions say"
+    },
+    "macroCalendar": {
+      "title": "Macro calendar",
+      "subtitle": "Data releases and central-bank decisions ahead"
+    },
+    "techMarkets": {
+      "title": "Tech stocks",
+      "subtitle": "Nasdaq, chips, Big Tech, Asia and Vietnam"
+    },
+    "techStatus": {
+      "title": "Is it down?",
+      "subtitle": "Clouds, developer and AI services"
+    },
+    "techModels": {
+      "title": "New AI models",
+      "subtitle": "Added to OpenRouter in the last 30 days, with prices"
+    },
+    "techResearch": {
+      "title": "AI research",
+      "subtitle": "Hugging Face: papers of the day and trending models"
+    },
+    "techSecurity": {
+      "title": "Actively exploited vulnerabilities",
+      "subtitle": "CISA Known Exploited Vulnerabilities, last 30 days"
+    },
+    "techHn": {
+      "title": "What developers are reading",
+      "subtitle": "Hacker News front page"
+    },
+    "techNews": {
+      "title": "Tech news",
+      "subtitle": "The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress"
     }
   },
   "charts": {
@@ -143,16 +248,115 @@
     "inflation": "Inflation {year} (IMF est.)",
     "policyRate": "Policy rate",
     "realRate": "Real rate",
-    "noRateVn": "BIS publishes no policy rate for Vietnam",
+    "rateVn": "VN: the State Bank's refinancing rate (BIS publishes none).",
     "spread2s10s": "2s10s spread",
     "inverted": "Inverted",
     "normal": "Normal",
     "lastYear": "Last 12 months",
     "warnLine": "warning threshold",
-    "last30d": "last 30 days",
+    "spark": {
+      "d": "last 30 days",
+      "w": "last 26 weeks",
+      "m": "last 24 months",
+      "q": "last 12 quarters",
+      "y": "last 10 years"
+    },
     "range1y": "1-year range: low → high",
     "range1yShort": "1Y",
-    "realRateHint": "policy rate − inflation"
+    "realRateHint": "policy rate − inflation",
+    "period": "Period the number covers"
+  },
+  "macro": {
+    "phases": {
+      "expansion": "Expansion",
+      "slowdown": "Slowdown",
+      "downturn": "Downturn",
+      "recovery": "Recovery"
+    },
+    "phaseHints": {
+      "expansion": "Above trend and rising",
+      "slowdown": "Above trend but losing momentum",
+      "downturn": "Below trend and still falling",
+      "recovery": "Below trend but turning up"
+    },
+    "axisGap": "Leading indicator − 100 (above 0 = above trend)",
+    "axisMomentum": "Change over 3 months (right = gaining momentum)",
+    "trail": "Line = path over the last 6 months",
+    "country": "Economy",
+    "phase": "Phase",
+    "cliLevel": "CLI",
+    "momentum": "3-month change",
+    "month": "Month",
+    "noClock": "No leading indicators yet. They arrive with the OECD source (npm run fetch -- oecd).",
+    "groups": {
+      "dm": "Advanced economies",
+      "em": "Emerging economies"
+    },
+    "status": {
+      "good": "On target",
+      "warn": "Watch",
+      "crit": "Alarm"
+    },
+    "imfEst": "IMF estimate",
+    "dxy": "Dollar index (DXY)",
+    "rising": "rising",
+    "falling": "falling",
+    "footnote": "Grey text under a number = the period it covers. Hover a column name for what it measures and how it is coloured.",
+    "vnNote": "Vietnam is in no OECD or BIS dataflow: its CPI comes from the IMF, GDP from the World Bank, policy rate from the State Bank, and unemployment is the IMF's yearly estimate. It has no leading indicator, confidence survey, real effective exchange rate or credit gap.",
+    "us": "United States",
+    "world": "Major economies",
+    "period": "Period",
+    "scale": "Same scale in every cell",
+    "cliTitle": "OECD leading indicator, last 24 months; under each: latest GDP growth y/y",
+    "cliRef": "100 = growth at trend",
+    "cpiTitle": "CPI inflation y/y, last 24 months",
+    "cpiRef": "Central bank's target",
+    "policyRate": "Policy rate",
+    "realRate": "Real rate (policy − CPI)",
+    "euroNote": "Germany, France and Italy share the ECB's rate (the euro-area cell). Real rate above 0 = money is tight.",
+    "reerTitle": "Real effective exchange rate vs its 10-year average (BIS)",
+    "reerHint": "Positive = the currency buys more abroad than usual, so exports are less competitive; negative = cheaper than usual.",
+    "confTitle": "Confidence (OECD, 100 = long-run average)",
+    "consumer": "Consumers",
+    "business": "Business",
+    "change3m": "3-month change",
+    "confHint": "Arrow = direction over 3 months. Below 100, grey: more pessimistic than usual.",
+    "uneTitle": "Unemployment rate, last 24 months",
+    "unemployment": "Unemployment",
+    "uneStatus": {
+      "good": "Steady",
+      "warn": "Up 0.5 pp from its 12-month low",
+      "crit": "Up 1 pp or more from its 12-month low"
+    },
+    "uneNote": "Dot = rising from its 12-month low (the Sahm-rule logic).",
+    "debtNow": "Gov. debt {year}",
+    "debtHint": "General government gross debt, % of GDP, IMF estimate. Amber above 90%, red above 120%.",
+    "debtSince2019": "Since 2019",
+    "debtSince2019Hint": "Change of the debt ratio since 2019, before the pandemic, in percentage points.",
+    "balance": "Budget {year}",
+    "balanceHint": "General government net lending (+) or borrowing (−), % of GDP, IMF estimate. Deficits beyond 3% amber, beyond 6% red.",
+    "creditGap": "Credit gap",
+    "creditGapHint": "BIS: private credit-to-GDP ratio minus its long-run trend, pp. Above 2 amber, above 10 red: the zone where past credit booms turned into banking crises.",
+    "debtFootnote": "Gray text under each number = its period. Hover a column header for what it measures and how it is coloured.",
+    "signal": "Signal",
+    "latest": "Latest",
+    "rule": "Watch · alarm",
+    "state": "State",
+    "calm": "Calm",
+    "signalsOn": "{n} of {total} signals on",
+    "signalsHint": "one signal alone has often been a false alarm; several at once is what preceded past recessions.",
+    "cliDown": "Economies with the leading indicator in downturn",
+    "cliDownHint": "OECD leading indicator below 100 and still falling. A third of the major economies at once is a watch sign for world growth; half is an alarm.",
+    "signalsFootnote": "US signals except the last row. Hover a signal's name for what it measures.",
+    "ownScale": "Each cell has its own scale: read the direction, compare levels by the numbers",
+    "missing": "No monthly data for: {list}.",
+    "mapNoData": "No data",
+    "mapHint": "IMF World Economic Outlook estimates for the whole year; Vietnam is outlined. Hover a country for its number, or switch to the table.",
+    "noteEmpty": "The note is written once a week, on Monday (Vietnam time), from the numbers on this page.",
+    "noteNeedsKey": "Add AI_API_KEY (a Gemini or Claude key) to .env.local and restart the worker to get the weekly note.",
+    "noteMeta": "Week {week} · {date} · {model}",
+    "noteCaveat": "Written by AI from the numbers on this page only; check the tables before relying on it.",
+    "cpiNote": "Dot = distance from target: green within 1 pp, amber 1–3 pp above (or deflation), red more than 3 pp above."
   },
   "map": {
     "quake": "Earthquakes",
@@ -245,6 +449,17 @@
     "unchanged": "flat",
     "news": "VnExpress",
     "goldUnit": "Million VND per tael",
+    "more": "Vietnam page →",
+    "compare": "Compare with 15 major economies →",
+    "realRate": "Real rate (refinancing − CPI)",
+    "realRateHint": "The State Bank's refinancing rate minus the latest CPI inflation. Positive = money is tight; negative = still loose.",
+    "tight": "tight",
+    "loose": "loose",
+    "outlookTitle": "IMF World Economic Outlook",
+    "estimate": "est.",
+    "forecast": "fcst",
+    "emAvg": "EM avg {year}",
+    "outlookNote": "Yearly numbers from the IMF: this year is its estimate, later years are forecasts (italic). Last column: emerging and developing economies.",
     "goldProducts": {
       "SJL1L10": "SJC bar",
       "SJ9999": "SJC ring 99.99",
@@ -306,6 +521,59 @@
     "noOdds": "No long-dated crypto markets right now, or Polymarket is unreachable from this network.",
     "ends": "ends"
   },
+  "tech": {
+    "groups": {
+      "us": "US platforms",
+      "chips": "Chips",
+      "asia": "Asia",
+      "vietnam": "Vietnam"
+    },
+    "company": "Company",
+    "price": "Price",
+    "d1": "Today",
+    "m1": "30 days",
+    "ytd": "YTD",
+    "mcap": "Mkt cap",
+    "year": "1 year",
+    "bigTech": "{n} US platforms: {cap} combined · {up}/{n} up today",
+    "capNote": "Market caps in US$; Asian listings converted at today's exchange rate. Prices in each market's own currency.",
+    "levels": {
+      "none": "Operational",
+      "maintenance": "Maintenance",
+      "unknown": "Issue reported",
+      "minor": "Minor disruption",
+      "major": "Major disruption",
+      "critical": "Outage"
+    },
+    "unreadable": "Status page could not be read",
+    "since": "since {date}",
+    "moreIncidents": "+{n} more",
+    "statusSummary": "{bad} of {n} services report an issue",
+    "statusAllOk": "All {n} services operational",
+    "statusNote": "From each provider's public status page. An incident in a single region counts too, so read where it is.",
+    "model": "Model",
+    "listed": "Listed",
+    "priceIn": "Input",
+    "priceOut": "Output",
+    "context": "Context",
+    "openWeights": "open",
+    "openWeightsTitle": "Open weights on Hugging Face",
+    "free": "Free",
+    "modelsSummary": "{n} models listed in 30 days · {open} with open weights",
+    "modelsNote": "Price in US$ per million tokens. Date is when OpenRouter listed the model; :free and :batch variants are left out.",
+    "papers": "Papers",
+    "trendingModels": "Trending models",
+    "upvotes": "upvotes",
+    "likes": "likes",
+    "downloads": "downloads",
+    "papersNote": "Hugging Face Daily Papers from the last 3 days, most upvoted first.",
+    "modelsTrendNote": "Quantized copies and repackagings of other models are left out.",
+    "kevSummary": "{n} exploited flaws added in 30 days · {r} used in ransomware",
+    "due": "patch by {date}",
+    "ransomware": "Ransomware",
+    "kevNote": "Every flaw here is being exploited in the wild. The deadline is the one CISA sets for US federal agencies; elsewhere, patch sooner.",
+    "noKev": "No new entries in the last 30 days."
+  },
   "calendar": {
     "econ": "Econ",
     "fomc": "Fed",
@@ -318,7 +586,10 @@
     "forecast": "Forecast",
     "previous": "Previous",
     "fomcTitle": "Fed policy meeting (FOMC) {days}",
-    "fomcSep": "With projections (SEP, dot plot)"
+    "fomcSep": "With projections (SEP, dot plot)",
+    "cb": "Central bank",
+    "cbTitle": "{bank} rate decision",
+    "lpr": "China loan prime rate (LPR) fixing"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",

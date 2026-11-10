@@ -27,3 +27,6 @@ Bộ tài liệu yêu cầu nghiệp vụ của **WhatHappend**, một dashboard
 | M5 | Trending, lịch sự kiện, prediction markets |
 | M6 | Môi trường, sức khỏe, Góc Việt Nam |
 | M7 | Hoàn thiện |
+| M8 | Trang Vĩ mô thế giới (BR-21) |
+| M9 | Trang Việt Nam (BR-22) |
+| M10 | Trang Công nghệ (BR-23) |

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import Map, { Layer, Marker, NavigationControl, Popup, Source, type LngLatBoundsLike, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
+import Map, { Layer, Marker, NavigationControl, Popup, Source, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
 import { setWorkerUrl, type ExpressionSpecification, type Map as MaplibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -10,26 +10,15 @@ if (typeof window !== "undefined") setWorkerUrl("/vendor/maplibre-gl-worker.mjs"
 import clsx from "clsx";
 import { useTheme } from "@/lib/use-theme";
 import type { MapEvent } from "@/lib/queries";
+import { STYLE, tuneLabels, WORLD } from "./map-style";
 
 // Maps are an all-pairs color context: at most three categorical slots.
 const GROUP_COLOR: Record<MapEvent["group"], string> = { quake: "--s1", hazard: "--s2", news: "--s3" };
 
-const STYLE = {
-  light: "https://tiles.openfreemap.org/styles/positron",
-  dark: "https://tiles.openfreemap.org/styles/dark",
-};
-
-/** Inhabited latitudes, fitted to whatever size the panel is (flat map). */
-const WORLD: LngLatBoundsLike = [
-  [-170, -50],
-  [180, 72],
-];
 /** The globe opens over Southeast Asia. */
 const HOME = { lng: 105, lat: 14 };
 /** Below this zoom the news hotspots are soft lights; above it they are dots you can hover. */
 const NEWS_POINTS_ZOOM = 3.5;
-/** Place labels (cities, seas, roads) only show from here; country names show at every zoom. */
-const LABEL_MIN_ZOOM = 3;
 const ALERT_LIST_MAX = 6;
 /** Idle spin of the globe, and how long it waits after the pointer leaves before resuming. */
 const SPIN_DEG_PER_SEC = 2;
@@ -109,19 +98,6 @@ function globeZoom(el: HTMLElement | null): number {
   return Math.max(0.5, Math.log2((2 * Math.PI * radius) / 512 / Math.cos((HOME.lat * Math.PI) / 180)));
 }
 
-/** One language per label instead of "Latin\nnative", and only country names at world scale. */
-function tuneLabels(map: MaplibreMap, locale: "vi" | "en") {
-  const name: ExpressionSpecification =
-    locale === "vi"
-      ? ["coalesce", ["get", "name:vi"], ["get", "name:en"], ["get", "name_en"], ["get", "name"]]
-      : ["coalesce", ["get", "name:en"], ["get", "name_en"], ["get", "name"]];
-  for (const l of map.getStyle()?.layers ?? []) {
-    if (l.type !== "symbol") continue;
-    const field = JSON.stringify(map.getLayoutProperty(l.id, "text-field") ?? "");
-    if (field.includes("name")) map.setLayoutProperty(l.id, "text-field", name);
-    if (!l.id.includes("country")) map.setLayerZoomRange(l.id, Math.max(l.minzoom ?? 0, LABEL_MIN_ZOOM), l.maxzoom ?? 24);
-  }
-}
 
 /**
  * setProjection throws while a style is loading (the first load, or a theme switch in flight), so it is

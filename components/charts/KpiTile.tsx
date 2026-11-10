@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import type { SeriesDef } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtDelta, fmtValue } from "@/lib/format";
+import { fmtDelta, fmtPeriod, fmtValue } from "@/lib/format";
 import type { TileData } from "@/lib/data/series";
 import { alertOf } from "@/lib/signals/notable";
 import { Sparkline } from "./Sparkline";
@@ -46,8 +46,13 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
             {dir > 0 ? "▲" : dir < 0 ? "▼" : ""} {delta}
           </span>
         )}
+        {def.freq && (
+          <span className="text-[11px] whitespace-nowrap text-muted" title={d.charts.period}>
+            {fmtPeriod(data.ts, def.freq, locale)}
+          </span>
+        )}
       </div>
-      <Sparkline points={data.spark} height={34} fluid trend={def.price} label={`${name}, ${d.charts.last30d}`} />
+      <Sparkline points={data.spark} height={34} fluid trend={def.price} label={`${name}, ${d.charts.spark[def.freq ?? "d"]}`} />
       {data.range && <RangeBar def={def} value={data.value} range={data.range} locale={locale} />}
     </div>
   );

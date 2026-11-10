@@ -2,9 +2,11 @@ import { z } from "zod";
 import type { DatabaseSync } from "node:sqlite";
 import { SOURCE_META } from "@/config/sources";
 import { SERIES, VITAL_SIGNS } from "@/config/series";
-import { CRYPTO_OUTLETS } from "@/config/feeds";
+import { CRYPTO_OUTLETS, DESK_OUTLETS, TECH_OUTLETS } from "@/config/feeds";
 import { getTile } from "@/lib/data/series";
 import type { Source } from "@/lib/sources/types";
+import { callsLeft } from "./budget";
+import { aiStatus } from "./config";
 import { generateJson } from "./provider";
 import { FORCE_KEY, type StoredBrief } from "./brief-shared";
 
@@ -56,17 +58,18 @@ export interface HeadlineRow {
 }
 
 /** Last 24h of headlines (English where available), one per story, newest first, no sports. */
-export function recentHeadlines(db: DatabaseSync, now: number, limit = MAX_HEADLINES, outlets: "world" | "crypto" = "world"): HeadlineRow[] {
-  // Crypto-only outlets publish dozens of items a day: they are asked for separately.
-  const marks = CRYPTO_OUTLETS.map(() => "?").join(",");
+export function recentHeadlines(db: DatabaseSync, now: number, limit = MAX_HEADLINES, outlets: "world" | "crypto" | "tech" = "world"): HeadlineRow[] {
+  // Crypto and tech outlets publish dozens of items a day: the world list leaves them out, each desk is asked for separately.
+  const names = outlets === "crypto" ? CRYPTO_OUTLETS : outlets === "tech" ? TECH_OUTLETS : DESK_OUTLETS;
+  const marks = names.map(() => "?").join(",");
   return db
     .prepare(
       `SELECT COALESCE(title_en, title) AS title, url, source, region, topic, MAX(published_at) AS published_at
        FROM articles WHERE published_at >= ? AND (topic IS NULL OR topic != 'sports')
-         AND source ${outlets === "crypto" ? "IN" : "NOT IN"} (${marks})
+         AND source ${outlets === "world" ? "NOT IN" : "IN"} (${marks})
        GROUP BY title_key ORDER BY published_at DESC LIMIT ?`,
     )
-    .all(now - 24 * 3600_000, ...CRYPTO_OUTLETS, limit) as unknown as HeadlineRow[];
+    .all(now - 24 * 3600_000, ...names, limit) as unknown as HeadlineRow[];
 }
 
 function forcedAt(db: DatabaseSync): number {
@@ -79,6 +82,9 @@ export const brief: Source = {
   ...SOURCE_META.brief,
   isDue(now, status, db) {
     if (status && !status.ok && now - status.last_run < 30 * 60_000) return false;
+    // A spent daily quota only comes back at midnight Pacific: asking again before then wastes nothing but logs.
+    const ai = aiStatus();
+    if (ai.ok && callsLeft(db, ai.config, "brief", now) <= 0) return false;
     const latest = db.prepare("SELECT MAX(created_at) AS t FROM briefs").get() as { t: number | null };
     const last = latest.t ?? 0;
     const forced = forcedAt(db) > last && now - last >= MIN_FORCE_GAP;
@@ -106,7 +112,7 @@ export const brief: Source = {
       disasters: events,
     };
 
-    const res = await generateJson({ tier: "brief", system: SYSTEM, user: JSON.stringify(input), schema: BriefOut });
+    const res = await generateJson({ tier: "brief", system: SYSTEM, user: JSON.stringify(input), schema: BriefOut, db });
     if (!res.data) throw new Error(`brief not produced by ${res.model} (stop_reason=${res.stopReason})`);
     const out = res.data;
 

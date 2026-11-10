@@ -8,7 +8,7 @@
 Tài liệu này mô tả kiến trúc tổng thể của **WhatHappend**, dashboard cá nhân tổng hợp tình hình thế giới. Yêu cầu nghiệp vụ nằm trong [BRD](../../BRD/README.md); chi tiết thiết kế từng phần nằm trong [LLDD](../LLDD/README.md).
 
 Phạm vi gồm:
-- thu thập dữ liệu từ 33 nguồn đã đăng ký (30 nguồn dữ liệu ngoài + 3 bước AI: `translate`, `brief`, `insights`);
+- thu thập dữ liệu từ 39 nguồn đã đăng ký (35 nguồn dữ liệu, trong đó `sbv` đọc từ config, + 4 bước AI: `translate`, `brief`, `insights`, `macronote`);
 - lưu vào SQLite cục bộ;
 - render dashboard song ngữ bằng Next.js;
 - dùng một mô hình AI để dịch, phân loại và tóm tắt. Provider cấu hình được: Google Gemini hoặc Anthropic Claude (ADR-10).
@@ -86,6 +86,7 @@ flowchart LR
 | Bản đồ | USGS, GDACS, EONET, GDELT (events export) | `events` | USGS/GDACS/EONET thay snapshot theo `source` và giữ `title_vi` đã dịch. GDELT upsert theo ô lưới 1° và xóa ô cũ hơn 24 giờ |
 | Danh sách | Wikipedia, HN, Polymarket, Kalshi, lịch kinh tế, launches, WHO, chất lượng không khí, vàng VN, Vietcombank | `items` (theo `kind`) | Thay toàn bộ snapshot theo `kind`. Lịch FOMC không lưu DB mà lấy từ `config/fomc.ts` |
 | Crypto | Yahoo (BTC, ETH, SOL), CoinGecko, alternative.me, Deribit, DefiLlama, mempool.space, Binance (futures + P2P), RSS báo crypto | `quotes`, `observations`, `items`, `articles` | Trang riêng `/[lang]/crypto`. Báo crypto không vào tin thế giới và Brief |
+| Công nghệ | Yahoo (20 cổ phiếu, `^SOX`, vốn hoá), trang trạng thái 8 dịch vụ, OpenRouter, Hugging Face, CISA KEV, HN, RSS báo công nghệ | `quotes`, `observations`, `items`, `articles` | Trang riêng `/[lang]/tech`. Báo công nghệ không vào tin thế giới và Brief |
 | Watchlist | Người dùng ghim từ hộp thoại chi tiết | `watchlist` (`series_id` = `SeriesKey`) | Ghi qua `POST /api/watchlist` (ngoại lệ ghi duy nhất của web cùng với cờ `kv` của brief) |
 | AI Brief | Tin 24h qua + Vital Signs + sự kiện | `briefs` (`date`, `lang`) | 06:00 Asia/Ho_Chi_Minh |
 | Vận hành | Mọi nguồn | `source_status`, `fetch_log` | Cơ sở để tính stale trên từng panel |

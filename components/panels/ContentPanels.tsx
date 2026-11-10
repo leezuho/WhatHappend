@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { SERIES } from "@/config/series";
 import { getDict, type Locale } from "@/lib/i18n";
 import { fmtDateTime, fmtNumber, fmtPct } from "@/lib/format";
-import { getLatestBrief, getMapEvents, getNews, getVietnam, requestNow } from "@/lib/queries";
+import { getLatestBrief, getMapEvents, getNews, getVietnam, requestNow, type VietnamData } from "@/lib/queries";
 import { KpiTile } from "@/components/charts/KpiTile";
 import { EmptyState } from "@/components/ui/Panel";
 import { Thumb } from "@/components/ui/Thumb";
@@ -116,108 +116,134 @@ export async function MapBody({ lang }: { lang: Locale }) {
 }
 
 // ---------------------------------------------------------------- Vietnam
+// The overview's corner composes these blocks; the Vietnam page (VietnamPanels) shows them as panels of their own.
 
-export async function VietnamBody({ lang }: { lang: Locale }) {
+const mil = (n: number | null, lang: Locale) => (n === null ? "—" : fmtNumber(n / 1_000_000, lang, 1));
+
+export function VnBreadth({ v, lang }: { v: VietnamData; lang: Locale }) {
+  const d = getDict(lang);
+  if (!v.breadth) return null;
+  return (
+    <p className="text-xs text-ink-2">
+      {d.vn.breadth}: <span className="text-up">▲ {v.breadth.advances ?? "—"}</span> · <span className="text-down">▼ {v.breadth.declines ?? "—"}</span> ·{" "}
+      <span className="text-muted">
+        {v.breadth.unchanged ?? "—"} {d.vn.unchanged}
+      </span>
+    </p>
+  );
+}
+
+export function GoldTable({ v, lang, title = true }: { v: VietnamData; lang: Locale; title?: boolean }) {
   const d = getDict(lang);
   const goldProducts: Record<string, string> = d.vn.goldProducts;
-  const v = await getVietnam(lang);
-  if (!v.vnindex && !v.gold.length && !v.vcb.length) return <EmptyState lang={lang} />;
   const sjc = v.gold.find((g) => g.code === "SJL1L10");
   const premium = sjc?.sell && v.worldGoldVnd ? sjc.sell - v.worldGoldVnd : null;
-  const mil = (n: number | null) => (n === null ? "—" : fmtNumber(n / 1_000_000, lang, 1));
+  return (
+    <div className="flex flex-col gap-2">
+      {title && <h3 className="text-xs font-semibold text-ink-2">{d.vn.gold}</h3>}
+      <table className="tabular w-full text-xs">
+        <thead className="text-muted">
+          <tr>
+            <th className="py-1 text-left font-normal" />
+            <th className="py-1 text-right font-normal">{d.vn.buy}</th>
+            <th className="py-1 text-right font-normal">{d.vn.sell}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {v.gold.map((g) => (
+            <tr key={g.code} className="border-t border-line">
+              <td className="py-1 text-ink-2">{goldProducts[g.code] ?? g.name}</td>
+              <td className="py-1 text-right text-ink">{mil(g.buy, lang)}</td>
+              <td className="py-1 text-right font-medium text-ink">
+                {mil(g.sell, lang)}
+                {g.changeSell ? (
+                  <span className={clsx("ml-1 text-[10px]", g.changeSell > 0 ? "text-up" : "text-down")}>
+                    {g.changeSell > 0 ? "▲" : "▼"}
+                    {fmtNumber(Math.abs(g.changeSell) / 1_000_000, lang, 1)}
+                  </span>
+                ) : null}
+              </td>
+            </tr>
+          ))}
+          {v.worldGoldVnd && (
+            <tr className="border-t border-line">
+              <td className="py-1 text-ink-2">{d.vn.worldGold}</td>
+              <td />
+              <td className="py-1 text-right text-ink">{mil(v.worldGoldVnd, lang)}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      {premium !== null && v.worldGoldVnd && (
+        <p className="text-xs text-ink-2">
+          {d.vn.premium}: <span className="font-semibold text-ink">{mil(premium, lang)}</span> ({fmtPct((premium / v.worldGoldVnd) * 100, lang, 1)})
+        </p>
+      )}
+      <p className="text-[10px] text-muted">
+        {d.vn.goldUnit} · {v.gold[0]?.source}
+      </p>
+    </div>
+  );
+}
 
+export function VcbTable({ v, lang, title = true }: { v: VietnamData; lang: Locale; title?: boolean }) {
+  const d = getDict(lang);
+  return (
+    <div className="flex flex-col gap-2">
+      {title && <h3 className="text-xs font-semibold text-ink-2">{d.vn.vcb}</h3>}
+      <table className="tabular w-full text-xs">
+        <thead className="text-muted">
+          <tr>
+            <th className="py-1 text-left font-normal" />
+            <th className="py-1 text-right font-normal">{d.vn.transfer}</th>
+            <th className="py-1 text-right font-normal">{d.vn.sell}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {v.vcb.map((x) => (
+            <tr key={x.code} className="border-t border-line">
+              <td className="py-1 text-ink-2">{x.code}</td>
+              <td className="py-1 text-right text-ink">{x.transfer === null ? "—" : fmtNumber(x.transfer, lang, x.transfer < 1000 ? 2 : 0)}</td>
+              <td className="py-1 text-right font-medium text-ink">{x.sell === null ? "—" : fmtNumber(x.sell, lang, x.sell < 1000 ? 2 : 0)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function VnNewsList({ v, lang, title = true }: { v: VietnamData; lang: Locale; title?: boolean }) {
+  const d = getDict(lang);
+  return (
+    <div className="flex flex-col gap-1">
+      {title && <h3 className="text-xs font-semibold text-ink-2">{d.vn.news}</h3>}
+      <ul className="flex flex-col">
+        {v.news.map((n) => (
+          <li key={n.id} className="border-t border-line py-1.5 first:border-t-0">
+            <a href={n.url} target="_blank" rel="noreferrer" className="text-xs leading-snug text-ink hover:underline">
+              {n.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export async function VietnamBody({ lang }: { lang: Locale }) {
+  const v = await getVietnam(lang);
+  if (!v.vnindex && !v.gold.length && !v.vcb.length) return <EmptyState lang={lang} />;
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
       <div className="flex flex-col gap-2">
         <KpiTile def={SERIES.vnindex} data={v.vnindex} locale={lang} />
-        {v.breadth && (
-          <p className="text-xs text-ink-2">
-            {d.vn.breadth}: <span className="text-up">▲ {v.breadth.advances ?? "—"}</span> · <span className="text-down">▼ {v.breadth.declines ?? "—"}</span> ·{" "}
-            <span className="text-muted">
-              {v.breadth.unchanged ?? "—"} {d.vn.unchanged}
-            </span>
-          </p>
-        )}
+        <VnBreadth v={v} lang={lang} />
         <KpiTile def={SERIES.usdvnd} data={v.usdvnd} locale={lang} />
       </div>
-
-      <div className="flex flex-col gap-2">
-        <h3 className="text-xs font-semibold text-ink-2">{d.vn.gold}</h3>
-        <table className="tabular w-full text-xs">
-          <thead className="text-muted">
-            <tr>
-              <th className="py-1 text-left font-normal" />
-              <th className="py-1 text-right font-normal">{d.vn.buy}</th>
-              <th className="py-1 text-right font-normal">{d.vn.sell}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {v.gold.map((g) => (
-              <tr key={g.code} className="border-t border-line">
-                <td className="py-1 text-ink-2">{goldProducts[g.code] ?? g.name}</td>
-                <td className="py-1 text-right text-ink">{mil(g.buy)}</td>
-                <td className="py-1 text-right font-medium text-ink">
-                  {mil(g.sell)}
-                  {g.changeSell ? (
-                    <span className={clsx("ml-1 text-[10px]", g.changeSell > 0 ? "text-up" : "text-down")}>
-                      {g.changeSell > 0 ? "▲" : "▼"}
-                      {fmtNumber(Math.abs(g.changeSell) / 1_000_000, lang, 1)}
-                    </span>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-            {v.worldGoldVnd && (
-              <tr className="border-t border-line">
-                <td className="py-1 text-ink-2">{d.vn.worldGold}</td>
-                <td />
-                <td className="py-1 text-right text-ink">{mil(v.worldGoldVnd)}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {premium !== null && v.worldGoldVnd && (
-          <p className="text-xs text-ink-2">
-            {d.vn.premium}: <span className="font-semibold text-ink">{mil(premium)}</span> ({fmtPct((premium / v.worldGoldVnd) * 100, lang, 1)})
-          </p>
-        )}
-        <p className="text-[10px] text-muted">{d.vn.goldUnit} · {v.gold[0]?.source}</p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <h3 className="text-xs font-semibold text-ink-2">{d.vn.vcb}</h3>
-        <table className="tabular w-full text-xs">
-          <thead className="text-muted">
-            <tr>
-              <th className="py-1 text-left font-normal" />
-              <th className="py-1 text-right font-normal">{d.vn.transfer}</th>
-              <th className="py-1 text-right font-normal">{d.vn.sell}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {v.vcb.map((x) => (
-              <tr key={x.code} className="border-t border-line">
-                <td className="py-1 text-ink-2">{x.code}</td>
-                <td className="py-1 text-right text-ink">{x.transfer === null ? "—" : fmtNumber(x.transfer, lang, x.transfer < 1000 ? 2 : 0)}</td>
-                <td className="py-1 text-right font-medium text-ink">{x.sell === null ? "—" : fmtNumber(x.sell, lang, x.sell < 1000 ? 2 : 0)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h3 className="text-xs font-semibold text-ink-2">{d.vn.news}</h3>
-        <ul className="flex flex-col">
-          {v.news.map((n) => (
-            <li key={n.id} className="border-t border-line py-1.5 first:border-t-0">
-              <a href={n.url} target="_blank" rel="noreferrer" className="text-xs leading-snug text-ink hover:underline">
-                {n.title}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <GoldTable v={v} lang={lang} />
+      <VcbTable v={v} lang={lang} />
+      <VnNewsList v={v} lang={lang} />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import clsx from "clsx";
 import { THEMES, useThemeName, type ThemeName } from "@/lib/use-theme";
 
 const ICON: Record<ThemeName, ReactNode> = {
@@ -15,31 +14,26 @@ const ICON: Record<ThemeName, ReactNode> = {
   anthropic: <path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z" />,
 };
 
-/** Segmented light / dark / Anthropic switch; the choice is remembered in localStorage. */
+/** One button that shows the current theme and cycles light → dark → Anthropic; remembered in localStorage. */
 export function ThemeToggle({ labels }: { labels: Record<ThemeName, string> & { group: string } }) {
   const current = useThemeName();
+  const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
   return (
-    <div className="flex rounded-md border border-line p-0.5" role="group" aria-label={labels.group}>
-      {THEMES.map((t) => (
-        <button
-          key={t}
-          type="button"
-          aria-pressed={current === t}
-          aria-label={labels[t]}
-          title={labels[t]}
-          onClick={() => {
-            document.documentElement.dataset.theme = t;
-            try {
-              localStorage.setItem("theme", t);
-            } catch {}
-          }}
-          className={clsx("grid size-7 place-items-center rounded", current === t ? "bg-accent text-on-accent" : "text-ink-2 hover:bg-surface-2")}
-        >
-          <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            {ICON[t]}
-          </svg>
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      aria-label={`${labels.group}: ${labels[current]}`}
+      title={`${labels[current]} → ${labels[next]}`}
+      onClick={() => {
+        document.documentElement.dataset.theme = next;
+        try {
+          localStorage.setItem("theme", next);
+        } catch {}
+      }}
+      className="grid size-7 place-items-center rounded-md border border-line text-ink-2 hover:bg-surface-2 hover:text-ink"
+    >
+      <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {ICON[current]}
+      </svg>
+    </button>
   );
 }
