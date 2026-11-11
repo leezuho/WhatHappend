@@ -59,6 +59,7 @@ Dùng `node:test` có sẵn trong Node, chạy qua `tsx` nên đọc được al
 | `test/ai-scheduling.test.ts` | `needsNote` của insights, `brief.isDue` (khoảng cách 10 phút, lỗi gần đây, thiếu tin), đầu vào của bản tin: `nyTime`, `calendarForBrief`, `biggestMoves`, `bigMoves`, `regimeForPrompt` |
 | `test/themes.test.ts` | Chủ đề chi phối: `readGauge` (biến động tháng chia mức thường gặp, dấu, kẹp ±3, số trễ và lịch sử ngắn không tính, dòng tiền đọc theo tổng trượt), `themeHeat`/`statusOf`, `matchesNews` (từ khoá, báo chuyên mục, khu vực, "dong" là đơn vị hay địa danh), `themeStates` trên DB `:memory:` (sự kiện tỷ giá, gom tin, bỏ kèo gần chắc chắn), `themesDue`, `pickTier`, `macroInput` có chủ đề |
 | `test/changes.test.ts` | Nhật ký "Có gì mới": `diffState` (chỉ cái mới; hết ngưỡng, `crit` lùi về `warn`, trạng thái từ "chưa đủ dữ liệu" không tính), `logChanges` (cửa sổ lặp theo loại, xoá sau 30 ngày), `observe` (số liệu có thực tế, KEV chỉ của hãng theo dõi), nguồn `changes` (lần đầu chỉ lưu trạng thái), `describeChange`/`orderChanges` song ngữ |
+| `test/alerts.test.ts` | Cảnh báo Telegram: `stepConditions` (gửi một lần, giữ khi ở giữa hai mức, nhóm đầy đủ đóng khoá thiếu, quên sau 3 ngày), `vcbCheck`, `sjcCheck`, `polymarketCheck` (bỏ kèo crypto, danh sách cũ), `statusChecks` (mức tối thiểu, trang không đọc được, sự cố đóng), `eventLine`/`pendingEvents` (con trỏ, bỏ sự kiện quá 12 giờ, số liệu khớp dự báo), `packMessages`, `planAlerts` (lần đầu, lần sau), `sendTelegram` (thân tin, che token), nguồn `telegram` (chỉ lưu trạng thái khi gửi xong) |
 | `test/web-and-worker.test.ts` | `isCrossOrigin`, khóa worker (`worker/lock.ts`), worker tự báo phiên bản (`importGraph`, `changedSince`, `workerHealth`, mọi id của `SOURCE_META` đều được đăng ký), các hàm định dạng |
 | `test/tech.test.ts` | Trang Công nghệ: `statuspageStatus`, `decodeUtf16` + `awsStatus` (UTF-16 BE có BOM), `gcpStatus`, `pickNewModels`, `topPapers`/`trendingModels`, `recentKev`, `replaceItems` giữ bản dịch, `recentHeadlines` tách báo công nghệ, `changeSince`/`thin`, `techStockRows` (đổi vốn hoá ra USD) trên DB `:memory:` |
 
@@ -90,6 +91,7 @@ Mở `http://localhost:3000`. Web chỉ nghe trên `127.0.0.1` (script `dev`/`st
 | `AI_API_KEY` | Key cho nguồn `translate`, `brief`. Cũng nhận `GEMINI_API_KEY` / `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` | Không có dịch và Brief |
 | `AI_MODEL_BRIEF`, `AI_MODEL_FAST` | Đổi model cho Brief / dịch | Gemini: `gemini-flash-latest` / `gemini-flash-lite-latest`. Claude: `claude-sonnet-5-5` / `claude-haiku-5-5` |
 | `DB_PATH` | Vị trí file SQLite | Mặc định `./data/whathappend.db` |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Nguồn `telegram`: gửi cảnh báo qua bot (LLDD 03 §9). Cách lấy hai giá trị ở `.env.example` | Không gửi cảnh báo; worker in `skip telegram` |
 
 Không nguồn dữ liệu nào cần key: FRED dùng CSV công khai, chất lượng không khí dùng Open-Meteo. CoinGecko nhận `COINGECKO_API_KEY` (gói Demo miễn phí) nhưng không bắt buộc.
 
@@ -150,6 +152,7 @@ Muốn buộc một nguồn chạy lại ngay khi worker đang chạy: `DELETE F
 | Brief lỗi `429 … limit: 0` (Gemini) | Model không có hạn mức ở gói miễn phí (ví dụ Pro) | Dùng model Flash (`AI_MODEL_BRIEF=gemini-flash-latest`, mặc định) hoặc nâng lên gói trả phí |
 | Brief hoặc dịch lỗi `429` sau khi đã chạy nhiều lần | Hết hạn mức theo phút hoặc ngày | Chờ; worker tự thử lại sau `max(1 phút, interval/4)` (brief: sau 30 phút) |
 | Lỗi `503 … high demand` | Provider quá tải tạm thời | SDK Gemini tự thử lại 4 lần (5 → 60 giây); nếu vẫn lỗi, bộ lập lịch sẽ thử lại sau |
+| Nguồn `telegram` lỗi `Telegram HTTP 401: Unauthorized` / `400: Bad Request: chat not found` | Token sai, hoặc `TELEGRAM_CHAT_ID` sai hay chưa nhắn bot lần nào | Kiểm tra lại theo `.env.example`, khởi động lại worker, chạy `npm run fetch -- telegram` |
 | Worker in `AI: off` hoặc `skip translate: AI_PROVIDER must be …` | Sai `AI_PROVIDER` hoặc thiếu key | Sửa `.env.local` theo lý do trong log, rồi khởi động lại worker và web |
 | Build báo "blocking route" / "uncached data" | Truy cập dữ liệu ngoài `<Suspense>` | Đặt nội dung vào `Panel` (đã có `Suspense`) hoặc bọc `<Suspense>` |
 | Brief không tạo lúc 06:00 | Máy ngủ, AI chưa cấu hình, hết hạn mức, hoặc lỗi | Xem `source_status` của `brief`; bấm nút làm mới; worker sẽ tạo bù khi thức dậy (vì `isDue` chỉ yêu cầu ≥ 06:00 và chưa có brief hôm nay) |

@@ -28,6 +28,8 @@ export const SOURCE_META = {
   themes: { intervalMs: 24 * HOUR, needsAi: true },
   // Derived from the database only: the "What's new" change log (lib/data/changes.ts).
   changes: { intervalMs: 15 * MIN },
+  // Alerts: sends to Telegram what the change log and a few conditions report (lib/data/alerts.ts).
+  telegram: { intervalMs: 5 * MIN, requiresEnv: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] },
   // Map
   usgs: { intervalMs: 10 * MIN },
   gdacs: { intervalMs: 30 * MIN },

@@ -12,6 +12,7 @@ import { calendar } from "./calendar";
 import { releases } from "./releases";
 import { cloudstatus } from "./cloudstatus";
 import { changes } from "./changes";
+import { telegram } from "./telegram";
 import { cnbc } from "./cnbc";
 import { co2 } from "./co2";
 import { coingecko } from "./coingecko";
@@ -85,6 +86,7 @@ export const sources: Source[] = [
   technote,
   themes,
   changes,
+  telegram,
   // map
   usgs,
   gdacs,

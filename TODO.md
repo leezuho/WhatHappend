@@ -76,7 +76,7 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
   Mốc "lần trước" lưu ở `localStorage` (tiện ích riêng của người xem). Cần lưu thêm lịch sử regime theo ngày.
 
   Xong 2026-11-11 (BR-25, LLDD 04 §3 Hàng 0, LLDD 01 §3.13): worker có nguồn `changes` (15 phút, chỉ đọc DB) so trạng thái với lần trước và ghi cái mới vào bảng `changes` kèm giờ nhận ra; thêm cả trạng thái chủ đề chi phối đổi. Bỏ lặp theo cửa sổ từng loại (ngưỡng 3 ngày, biến động 20 giờ…). "Hãng đang theo dõi" của KEV là `KEV_WATCH` trong `config/tech.ts` (hãng đứng sau cổ phiếu, đám mây, dịch vụ AI và công cụ trên trang Công nghệ). Lịch sử regime: điểm mỗi ngày vào `calc:REGIME_SCORE`, mỗi lần đổi trạng thái vào bảng `changes`. Lần chạy đầu ngày 11/11 chỉ lưu trạng thái (regime trung tính; 6 chỉ số đang vượt ngưỡng; 4 biến động; 2 số liệu đã công bố; 3 lỗ hổng KEV của hãng theo dõi), nên dải chỉ bắt đầu có mục từ thay đổi sau đó. Cảnh báo Telegram có thể đọc chung bảng này.
-- [ ] **Cảnh báo qua Telegram**, do worker gửi. BRD 01 §5.2 đang để push ngoài phạm vi, nên cần cập nhật BRD. Bot token và chat id đặt trong `.env.local`. Các trường hợp cần báo:
+- [x] **Cảnh báo qua Telegram**, do worker gửi. BRD 01 §5.2 đang để push ngoài phạm vi, nên cần cập nhật BRD. Bot token và chat id đặt trong `.env.local`. Các trường hợp cần báo:
   - số thực tế lệch dự báo;
   - Vietcombank bán ra cách trần dưới 2%;
   - chênh lệch SJC đổi mạnh;
@@ -85,6 +85,8 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
   - regime đổi trạng thái.
 
   Mỗi cảnh báo chỉ gửi một lần cho tới khi điều kiện hết.
+
+  Xong 2026-11-11 (BR-26, LLDD 03 §9), chưa chạy thật vì chưa có bot token: đặt `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID` theo `.env.example`, khởi động lại worker, thử bằng `npm run fetch -- telegram`. Nguồn `telegram` chạy 5 phút một lần. Regime đổi và số liệu lệch dự báo đọc từ bảng `changes` theo con trỏ (bỏ sự kiện quá 12 giờ). Bốn điều kiện còn lại tính lại mỗi lần, có mức bật và mức tắt riêng để giá trị lơ lửng quanh ngưỡng không gửi lặp, ngưỡng trong `config/alerts.ts`: Vietcombank cách trần < 2% (tắt từ 2,5%; ngày 11/11 đang cách 4,0%); chênh lệch SJC đổi ≥ 3 triệu ₫/lượng so với ngày có giá trước (tắt dưới 1,5; nửa đầu 11/2026 đổi tối đa 2,4 một ngày); kèo Polymarket đổi ≥ 15 điểm trong 24 giờ (tắt dưới 10), chỉ kèo địa chính trị/kinh tế vì kèo giá BTC/ETH ngày nào cũng đổi 20–40 điểm; sự cố đám mây từ mức "gián đoạn lớn" trở lên ở cả 8 dịch vụ trên trang Công nghệ (Azure không ghi mức nên mọi mục của Azure đều tính). "Đám mây đang dùng" chưa biết nên để cả 8, sửa `statusServices` trong `config/alerts.ts` cho đúng. Lần chạy đầu gửi tin "Đã bật cảnh báo" kèm quy tắc và điều kiện đang có; ngày 11/11 sẽ có 2 sự cố AWS (vùng Bahrain và UAE, mở từ 3/2026). Polymarket đang bị chặn mạng nên điều kiện này chưa có dữ liệu mới.
 
 ### P2: chiều sâu cho nhà đầu tư
 

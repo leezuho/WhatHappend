@@ -53,6 +53,16 @@ Dừng `npm run worker` và `npm run dev` trước khi chạy: mỗi DB chỉ m�
 
 Với key Gemini miễn phí, dòng Pro không có hạn mức (lỗi 429 `limit: 0`). Muốn dùng `gemini-pro-latest` cho bản tin thì cần gói trả phí. Sau khi sửa `.env.local`, khởi động lại cả worker lẫn web.
 
+## Cảnh báo Telegram (tuỳ chọn)
+
+Worker gửi tin qua một bot Telegram khi trạng thái rủi ro đổi, số liệu Mỹ lệch dự báo, Vietcombank bán đô cách trần biên độ dưới 2%, chênh lệch vàng SJC đổi mạnh trong ngày, một kèo Polymarket đổi từ 15 điểm trong 24 giờ, hoặc một đám mây đang dùng báo sự cố lớn. Mỗi điều kiện chỉ gửi một lần cho tới khi nó hết.
+
+1. Tạo bot với [@BotFather](https://t.me/BotFather), lấy token.
+2. Nhắn bot một tin bất kỳ, rồi mở `https://api.telegram.org/bot<token>/getUpdates` để lấy `chat.id`.
+3. Đặt `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID` trong `.env.local`, khởi động lại worker. Thử ngay bằng `npm run fetch -- telegram`: lần đầu bot gửi tin "Đã bật cảnh báo" kèm các điều kiện đang có.
+
+Ngưỡng, danh sách đám mây theo dõi và ngôn ngữ tin nhắn nằm trong `config/alerts.ts`.
+
 ## Cấu trúc
 
 ```

@@ -135,6 +135,7 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 | Thị trường | `yahoo` 3 phút |
 | Vĩ mô | `fred`, `cnbc` 6 giờ · `bis` 12 giờ · `imf`, `imfcpi`, `ibge`, `oecd`, `worldbank`, `gpr`, `gscpi` 24 giờ |
 | Tin tức và AI | `rss` 10 phút · `gdelt` 15 phút · `translate` 5 phút* · `insights` 30 phút* · `brief` 24 giờ* (lúc 06:00) · `themes` 24 giờ* (sau 06:00, viết lại khi trạng thái một chủ đề đổi) · `macronote`, `technote` 1 tuần* (thứ Hai) · `changes` 15 phút (chỉ đọc DB) |
+| Cảnh báo | `telegram` 5 phút (cần `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`; xem §9) |
 | Bản đồ | `usgs` 10 phút · `gdacs` 30 phút · `eonet` 1 giờ |
 | Trending / lịch / dự đoán | `hackernews` 20 phút · `polymarket`, `kalshi` 15 phút · `wikipedia`, `calendar`, `launches` 3 giờ |
 | Môi trường và sức khỏe | `airquality` 1 giờ · `who` 6 giờ · `co2`, `gistemp` 24 giờ |
@@ -142,3 +143,25 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 | Công nghệ | `cloudstatus` 10 phút · `huggingface` 3 giờ · `openrouter`, `kev` 6 giờ |
 
 \* `needsAi`: cần AI provider đã cấu hình (`AI_API_KEY`, Gemini hoặc Claude). Lúc khởi động, worker in `AI: <provider> (brief …, fast …)` hoặc `AI: off`, rồi in một dòng `skip <id>: <lý do>` cho mỗi nguồn còn thiếu cấu hình. Cả 43 nguồn đã được cài đặt.
+
+## 9. Cảnh báo Telegram (`lib/data/alerts.ts`, `lib/sources/telegram.ts`)
+
+Nguồn `telegram` (BR-26) chạy mỗi 5 phút, chỉ khi có `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID` (`requiresEnv`). Nó đọc DB, quyết định gửi gì, gửi qua `sendMessage` của Bot API (HTML, tắt xem trước link), rồi mới lưu trạng thái vào `kv['alerts:state']` (JSON `AlertState`). Một tin gửi lỗi thì ném lỗi trước khi lưu, nên lần sau gửi lại. Token nằm trong URL của Bot API nên `sendTelegram` không dùng `fetchJson` (lỗi của nó in cả URL) và che token trong mọi thông báo lỗi.
+
+Hai loại cảnh báo:
+
+| Loại | Lấy từ | Gửi khi |
+|---|---|---|
+| Sự kiện | Bảng `changes` (LLDD 01 §3.13), các dòng có `id` lớn hơn `cursor` và ghi trong 12 giờ qua | `regime` (mọi lần đổi); `release` có dự báo và `surprise ≠ 0` |
+| Điều kiện | Tính lại mỗi lần chạy từ dữ liệu đang có | Điều kiện chuyển sang "bật" mà chưa có trong `active` |
+
+Mỗi điều kiện trả về một trong ba trạng thái: bật (qua mức "bật"), tắt (lùi qua mức "tắt") hoặc giữ nguyên (ở giữa hai mức). `stepConditions` gửi khi bật lần đầu, xoá khỏi `active` khi tắt, và quên một khoá không được đánh giá lại trong 3 ngày. Dữ liệu cũ thì không trả gì, điều kiện giữ nguyên trạng thái.
+
+| Điều kiện | Khoá | Bật / tắt (mặc định trong `config/alerts.ts`) | Không đánh giá khi |
+|---|---|---|---|
+| Vietcombank gần trần | `vcb:ceiling` | cách trần (tỷ giá trung tâm × 1,05) < 2% / ≥ 2,5% | Giá Vietcombank cũ hơn 3 ngày |
+| Chênh lệch SJC | `sjc:up`, `sjc:down` | đổi so với ngày có giá trước đó ≥ 3 / < 1,5 triệu ₫/lượng (cùng cách tính với biểu đồ trang Việt Nam) | Hôm nay (giờ Hà Nội) chưa có giá |
+| Polymarket | `pm:<id sự kiện>` | một kết quả đổi ≥ 15 / mọi kết quả < 10 điểm trong 24 giờ; chỉ `polymarket` (bỏ `polymarket_crypto`) | Danh sách lấy cách đây hơn 2 giờ |
+| Sự cố đám mây | `status:<dịch vụ>:<hash tiêu đề + vùng>` | sự cố đang mở có mức ≥ `statusMinImpact` (hoặc không rõ mức, như Azure) / sự cố không còn trong danh sách | Trang trạng thái không đọc được (`level = null`) hoặc lấy cách đây hơn 2 giờ |
+
+Lần chạy đầu (chưa có trạng thái) gửi một tin "Đã bật cảnh báo" kèm quy tắc và các điều kiện đang bật, đặt `cursor` bằng `MAX(changes.id)` để không gửi lại nhật ký cũ. Nhiều cảnh báo trong một lần chạy gộp thành một tin, tách tin khi dài quá 3.800 ký tự. Muốn gửi lại tin "Đã bật" thì xoá khoá `alerts:state` trong `kv`.

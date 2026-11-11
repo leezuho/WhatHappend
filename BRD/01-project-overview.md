@@ -65,7 +65,7 @@ Trạng thái chi tiết từng yêu cầu: xem cột **Trạng thái** trong [0
 
 - Đăng nhập, nhiều người dùng, chia sẻ công khai.
 - Giao dịch, đặt lệnh, tư vấn đầu tư.
-- Ứng dụng di động native, push notification.
+- Ứng dụng di động native, push notification của ứng dụng. Cảnh báo qua bot Telegram thì có (BR-26), tuỳ chọn.
 - Dữ liệu trả phí: Bloomberg, Refinitiv, CME FedWatch API, PMI của S&P Global/ISM.
 - Dữ liệu tick theo thời gian thực (độ trễ vài phút là chấp nhận được).
 - Lưu trữ lịch sử dài hạn ngoài phạm vi các nguồn cung cấp.

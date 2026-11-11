@@ -37,6 +37,7 @@
 | BR-23 | Trang Công nghệ | S | M10 | Partial (Phase 1 xong, Phase 2–3 trong `TODO.md`) |
 | BR-24 | Chủ đề chi phối | S | — | Done |
 | BR-25 | Có gì mới từ lần trước | S | — | Done |
+| BR-26 | Cảnh báo qua Telegram | S | — | Done (chờ người dùng đặt bot token) |
 
 ---
 
@@ -423,4 +424,31 @@
 - Giá trị lơ lửng quanh ngưỡng không tạo mục trùng lặp.
 - Không có gì mới thì nói rõ "Không có gì mới kể từ …".
 
-**Ngoài phạm vi:** đồng bộ mốc giữa nhiều máy hay trình duyệt; thông báo đẩy (cảnh báo Telegram là mục riêng trong `TODO.md`, sẽ đọc cùng nhật ký).
+**Ngoài phạm vi:** đồng bộ mốc giữa nhiều máy hay trình duyệt; thông báo đẩy (cảnh báo Telegram ở BR-26, đọc cùng nhật ký).
+
+---
+
+## BR-26 — Cảnh báo qua Telegram · S
+
+**Trạng thái:** Done (2026-11-11), chưa chạy thật vì chưa có bot token. Thiết kế ở [LLDD 03 §9](../TechDesign/LLDD/03-worker-and-sources-framework.md).
+
+**Mô tả:** Worker gửi tin qua một bot Telegram tới một chat khi có chuyện cần biết ngay, không đợi người dùng mở dashboard:
+- trạng thái rủi ro đổi;
+- số liệu Mỹ vừa công bố lệch dự báo;
+- Vietcombank bán đô cách trần biên độ của NHNN dưới 2%;
+- chênh lệch vàng SJC so với giá thế giới đổi từ 3 triệu ₫/lượng so với ngày có giá trước đó;
+- một kèo Polymarket (địa chính trị, kinh tế) đổi từ 15 điểm xác suất trong 24 giờ;
+- một dịch vụ đám mây đang theo dõi báo sự cố từ mức "gián đoạn lớn" trở lên.
+
+Ngưỡng, danh sách đám mây và ngôn ngữ tin nhắn khai trong `config/alerts.ts`. Tuỳ chọn: thiếu `TELEGRAM_BOT_TOKEN` hoặc `TELEGRAM_CHAT_ID` thì nguồn `telegram` không chạy, mọi thứ khác không đổi.
+
+**User story:** Là người đầu tư, tôi muốn điện thoại báo ngay khi tỷ giá sát trần, Fed được định giá lại hay đám mây mình dùng gặp sự cố, để không phải mở dashboard liên tục.
+
+**Tiêu chí nghiệm thu:**
+- Mỗi điều kiện chỉ gửi một lần cho tới khi nó hết; giá trị lơ lửng quanh ngưỡng không gửi lặp (điều kiện chỉ hết khi lùi qua mức "tắt", ví dụ tỷ giá phải cách trần từ 2,5% trở lên).
+- Lần chạy đầu gửi một tin "Đã bật cảnh báo" kèm quy tắc và các điều kiện đang có, không gửi lại nhật ký cũ.
+- Gửi lỗi (mạng, token sai) thì lần sau gửi lại, không mất cảnh báo; lỗi hiện trong `source_status` và không chứa token.
+- Dữ liệu cũ (Polymarket bị chặn, trang trạng thái không đọc được) không bật cũng không tắt điều kiện.
+- Sự kiện trong nhật ký cũ hơn 12 giờ (worker hoặc Telegram ngừng lâu) không gửi.
+
+**Ngoài phạm vi:** nhiều người nhận hoặc nhiều chat; giờ im lặng (dùng cài đặt thông báo của Telegram); lệnh hai chiều với bot.
