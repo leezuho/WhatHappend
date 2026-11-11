@@ -118,6 +118,10 @@
       "title": "Asset classes this year",
       "subtitle": "What is winning: return since the start of the year"
     },
+    "cot": {
+      "title": "Futures positioning",
+      "subtitle": "How speculators are placed, against their last three years"
+    },
     "yieldCurve": {
       "title": "US yield curve",
       "subtitle": "Treasury yields by maturity"
@@ -765,6 +769,38 @@
     "noteCommodities": "Front-month futures, each in its contract's unit (¢ = US cents). Energy and food reach consumer prices in importing countries within months, Vietnam included.",
     "assetsLabel": "Year-to-date return by asset class, {year}",
     "noteAssets": "Change since last year's final close, in each asset's own currency (VN-Index in dong). World and emerging-market stocks and Treasuries are ETFs (ACWI, EEM, IEF): price only, without dividends or coupons."
+  },
+  "cot": {
+    "commodity": "Commodities",
+    "financial": "Financials",
+    "market": "Market",
+    "net": "Net",
+    "netHint": "Contracts held long minus short by the group, as of Tuesday",
+    "pctOi": "% of OI",
+    "pctOiHint": "Net position as a share of all open contracts",
+    "week": "Week",
+    "weekHint": "Change in the net position since the previous report, contracts",
+    "rank": "vs 3 years",
+    "rankHint": "Where the net position (% of open interest) ranks among the last 156 weeks: 0 = the most short, 100 = the most long",
+    "history": "3 years",
+    "historyHint": "Net position as % of open interest, weekly over three years",
+    "groups": {
+      "mm": "Managed money",
+      "lf": "Leveraged funds",
+      "am": "Asset managers"
+    },
+    "groupHints": {
+      "mm": "CTAs and hedge funds trading commodity futures",
+      "lf": "Hedge funds and proprietary traders",
+      "am": "Pension, insurance and mutual funds; leveraged funds' short in Treasuries is mostly the cash–futures basis trade, so this side reads as the view on rates"
+    },
+    "high": "Near 3-year high",
+    "low": "Near 3-year low",
+    "extremeHint": "In the top or bottom 10% of the last three years. When one side is this full, a surprise can force a sharp unwind.",
+    "summaryHigh": "Near 3-year high: {list}.",
+    "summaryLow": "Near 3-year low: {list}.",
+    "summaryNone": "No market is at either end of its three-year range.",
+    "note": "CFTC Commitments of Traders, futures only: positions on Tuesday {date}, published the following Friday afternoon (US time). K = thousand, M = million contracts."
   },
   "crypto": {
     "musd": "${v}M",

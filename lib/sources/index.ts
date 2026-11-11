@@ -14,6 +14,7 @@ import { cloudstatus } from "./cloudstatus";
 import { changes } from "./changes";
 import { telegram } from "./telegram";
 import { cnbc } from "./cnbc";
+import { cot } from "./cot";
 import { co2 } from "./co2";
 import { coingecko } from "./coingecko";
 import { defillama } from "./defillama";
@@ -77,6 +78,7 @@ export const sources: Source[] = [
   ibge,
   gpr,
   gscpi,
+  cot,
   // news & AI
   rss,
   translate,

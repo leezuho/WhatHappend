@@ -21,6 +21,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `ibge` | Thất nghiệp tháng (Brazil) | IBGE SIDRA API, bảng 6381 | 24 giờ | `observations` `ibge:UNE:BRA` |
 | `gpr` | Rủi ro địa chính trị | `data_gpr_daily_recent.xls` | 24 giờ | `observations` `gpr:GPRD`, `gpr:GPRD_MA7` |
 | `gscpi` | Chuỗi cung ứng | NY Fed GSCPI CSV | 24 giờ | `observations` `nyfed:GSCPI` |
+| `cot` | Vị thế trên thị trường tương lai | CFTC COT, file năm `fut_disagg_txt_<năm>.zip`, `fut_fin_txt_<năm>.zip` | 12 giờ | `observations` `cot:<KEY>:net`, `cot:<KEY>:oi` |
 | `rss` | Tin tức | 23 feed (`config/feeds.ts`): 5 báo crypto, 5 báo công nghệ | 10 phút | `articles` |
 | `translate` | AI | Gemini hoặc Claude (tier `fast`) | 5 phút | cột `title_*`, `region`, `topic` |
 | `brief` | AI | Gemini hoặc Claude (tier `brief`) | hằng ngày 06:00 VN | `briefs` |
@@ -202,6 +203,16 @@ Ba truy vấn mỗi lần chạy, mọi nước gộp bằng `+`:
   - **Trung Quốc:** `data.stats.gov.cn` trả 403 WAF (`UrlACL`); DBnomics `NBS` chỉ cập nhật đến 6/2026.
   - **ILOSTAT** (`sdmx.ilo.org`, `DF_UNE_DEAP_SEX_AGE_RT`): từ 2025 không có Trung Quốc, Indonesia, Việt Nam; Ấn Độ dừng ở Q4/2025.
   - **Indonesia** (BPS) chỉ công bố hai lần một năm (tháng 2 và 8), **Việt Nam** theo quý; không có số tháng để lấy.
+
+### 2.12 `cot` — Vị thế trên thị trường tương lai, CFTC Commitments of Traders (`lib/sources/cot.ts`, `config/cot.ts`)
+- **URL:** file năm trên `www.cftc.gov`, chỉ hợp đồng tương lai: `https://www.cftc.gov/files/dea/history/fut_disagg_txt_<năm>.zip` (báo cáo disaggregated, hàng hoá, bên trong là `f_year.txt`) và `fut_fin_txt_<năm>.zip` (Traders in Financial Futures, bên trong là `FinFutYY.txt`). Mỗi zip một file CSV có dòng tiêu đề, tên thị trường trong ngoặc kép, số không ngoặc và có khoảng trắng đệm; file tài chính xuống dòng CRLF. CFTC ghi đè file năm hiện tại mỗi thứ Sáu với báo cáo của tuần (vị thế ngày thứ Ba). Giải nén bằng `unzipFirst` (`lib/sources/gdelt.ts`).
+- **API Socrata** `publicreporting.cftc.gov` (dataset `72hh-3qpy`, `gpe5-46if`) trả 403 với cả `curl` lẫn Node (thử 2026-11-11), nên không dùng.
+- **Cột dùng:** `Report_Date_as_YYYY-MM-DD`, `CFTC_Contract_Market_Code`, `Open_Interest_All`, và `<nhóm>_Positions_Long_All` / `_Short_All` với nhóm `M_Money` (managed money), `Lev_Money` (leveraged funds) hoặc `Asset_Mgr` (asset managers). Thiếu cột hay số không đọc được thì nguồn báo lỗi. Năm 2022–2026 cùng bộ cột (191 và 87 cột).
+- **Thị trường** (`COT_MARKETS`, mã CFTC): dầu WTI `067651`, khí Henry Hub `023651`, vàng `088691`, bạc `084691`, đồng `085692` (managed money); S&P 500 E-mini `13874A`, chỉ số USD `098662`, euro `099741`, yên `097741`, bitcoin CME `133741` (leveraged funds); trái phiếu 10 năm `043602` (asset managers, vì vị thế bán của leveraged funds ở đây chủ yếu là giao dịch chênh lệch giá cơ sở, phía đối ứng của asset managers).
+- **Lưu:** mỗi thị trường hai series theo tuần (ngày báo cáo, 00:00 UTC): `cot:<KEY>:net` (mua − bán của nhóm, số hợp đồng) và `cot:<KEY>:oi` (tổng hợp đồng mở).
+- **Lịch đọc:** mỗi 12 giờ đọc file năm hiện tại (khoảng 2,7 MB). Tháng 1 đọc thêm file năm trước (báo cáo cuối tháng 12 vẫn vào file đó); file năm mới chưa có (404) trong tháng 1 thì bỏ qua. Lần đầu, hoặc khi một thị trường mới thêm vào config chưa có điểm nào, đọc thêm 3 năm trước để đủ 156 tuần (lần chạy đầu 2026-11-11: 4 năm, 4422 điểm, khoảng 4 giây).
+- **Báo lỗi khi:** một thị trường không có dòng nào; báo cáo mới nhất cũ hơn 17 ngày (CFTC ngừng công bố khi chính phủ Mỹ đóng cửa); một thị trường chậm hơn báo cáo mới nhất quá 14 ngày (mã hợp đồng có thể đã đổi).
+- **Đọc ra** (`lib/data/cot.ts`): vị thế ròng theo % hợp đồng mở (so được giữa các thị trường và qua các năm khi hợp đồng mở tăng), thay đổi so với báo cáo trước, và hạng phần trăm trong 156 tuần gần nhất (`percentileRank`: tỷ lệ các tuần khác thấp hơn, bằng nhau tính một nửa; 0 = bán ròng nhiều nhất, 100 = mua ròng nhiều nhất; cần ít nhất 52 tuần). Từ 90 trở lên là "gần đỉnh 3 năm", từ 10 trở xuống là "gần đáy 3 năm". Không gọi là "đông bên mua/bán" vì một nhóm có thể ở đỉnh 3 năm mà vẫn bán ròng (leveraged funds ở bitcoin CME ngày 3/11/2026: −14,8% hợp đồng mở, hạng 100).
 
 ## 3. Tin tức và AI
 

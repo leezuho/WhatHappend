@@ -22,6 +22,7 @@ import { imfId } from "@/config/macro";
 import { OZ_PER_LUONG, vnMarketDates } from "@/lib/data/vietnam";
 import { clusterStories } from "@/lib/data/news";
 import { btcLeverage, etfFlows, type BtcLeverage, type EtfFlows } from "@/lib/data/crypto";
+import { cotRows, type CotRow } from "@/lib/data/cot";
 import type { Point } from "@/lib/sources/store";
 import type { RegimeResult } from "@/lib/signals/risk-regime";
 import { regimeFromDb } from "@/lib/data/regime";
@@ -339,6 +340,14 @@ export async function getCommodities(lang: Locale): Promise<CommodityRow[]> {
 export async function getAssetClasses(lang: Locale): Promise<AssetClassRow[]> {
   await connection();
   return assetClassRows(getDb(), lang);
+}
+
+export type { CotRow } from "@/lib/data/cot";
+
+/** Futures positioning from the CFTC's weekly Commitments of Traders, one row per market of config/cot.ts. */
+export async function getCot(): Promise<CotRow[]> {
+  await connection();
+  return cotRows(getDb());
 }
 
 /** Daily `num / den` over the last `days` (ETH priced in bitcoin). */

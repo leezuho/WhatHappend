@@ -40,6 +40,7 @@ Hàng 2  Brief [xl:5]                     │ Điểm đáng chú ý [xl:7]
 Hàng 3  Vital Signs [xl:12] (+ hàng "Bạn đã ghim" nếu có watchlist)
         Thị trường thế giới [xl:12]
         Hàng hoá [xl:7]                  │ Các lớp tài sản năm nay [xl:5]
+Hàng 3c Vị thế trên thị trường tương lai [xl:12]: hàng hoá │ tài chính (hai bảng cạnh nhau từ lg)
 Hàng 4  Yield curve [xl:6]               │ Lạm phát vs lãi suất [xl:6]      (lưới 2×2)
         Căng thẳng thị trường [xl:6]     │ Nhịp đập kinh tế Mỹ [xl:6]
 Hàng 5  Tin tức [xl:8]                   │ Lịch sắp tới [xl:4]
@@ -58,6 +59,7 @@ Hàng 7  Góc Việt Nam [xl:12]
 | Thị trường thế giới | `WorldMarkets` (`MarketPanels.tsx`): bảng 20 chỉ số chứng khoán chính chia 3 khu vực (`config/markets.ts`) | `yahoo`, `vnindex` |
 | Hàng hoá | `Commodities` (`MarketPanels.tsx`): 11 hợp đồng tương lai kỳ gần (`COMMODITIES` trong `config/markets.ts`) chia năng lượng / kim loại / lương thực, cùng bảng `MarketTable` với Thị trường thế giới | `yahoo` |
 | Các lớp tài sản năm nay | `AssetClasses`: `BarList` lợi nhuận từ đầu năm của 10 lớp tài sản (`ASSET_CLASSES`), tốt nhất trước | `yahoo`, `vnindex` |
+| Vị thế trên thị trường tương lai | `CotBody` (`CotPanel.tsx`): vị thế ròng của giới đầu cơ ở 11 thị trường (`COT_MARKETS` trong `config/cot.ts`), xếp hạng so với 3 năm | `cot` |
 | Yield curve | `YieldCurvePanel`: đường cong hôm nay / 1 tháng / 1 năm trước; dưới là lịch sử 2 năm của 2s10s và 10Y−3M (`getSpreadHistory`) | `fred` |
 | Lạm phát vs lãi suất | `InflationRatesPanel` | `imf`, `bis`, `sbv` |
 | Căng thẳng thị trường | `StressPanel` (small multiples VIX, HY OAS, STLFSI, GPR MA7) | `yahoo`, `fred`, `gpr` |
@@ -92,6 +94,7 @@ Ghi chú hành vi từng panel:
 - **Thị trường thế giới:** chỉ số chính của mỗi nền kinh tế trên trang Vĩ mô, cộng Russell 2000, Hang Seng và TAIEX; Châu Mỹ và Châu Âu một cột, Châu Á – Thái Bình Dương một cột (hai cột từ `xl`). Cột: điểm, phiên gần nhất (`change_pct` của quote, sàn đang mở hay đã đóng), 1 tuần, 1 tháng, từ đầu năm (`changeSince` trên giá đóng cửa, `lib/data/markets.ts`) và sparkline 1 năm. Ô % tô nền `up`/`down` 3 mức, thang riêng từng cột (`HEAT_STEPS`: phiên 0,5/1,5/3%, tuần 1/3/6%, tháng 2/5/10%, năm 5/15/30%); chữ vẫn màu `ink` và có dấu nên không phụ thuộc màu. Dòng tóm tắt đếm số thị trường tăng và nêu chỉ số mạnh nhất, yếu nhất. Mobile chỉ giữ tên, phiên và từ đầu năm. Tính bằng nội tệ.
 - **Hàng hoá:** dầu Brent, WTI, khí Henry Hub, khí TTF; vàng, bạc, đồng; lúa mì, ngô, gạo, cà phê arabica (gạo và cà phê vì Việt Nam xuất khẩu nhiều). Cột và tô nền như Thị trường thế giới (`MarketTable` + `MoveSummary` trong `components/panels/MarketTable.tsx`, `commodityRows` trong `lib/data/markets.ts`); sau tên là đơn vị của hợp đồng (`$/thùng`, `¢/giạ`…).
 - **Các lớp tài sản năm nay:** cổ phiếu Mỹ (`^GSPC`), thế giới (`ACWI`), mới nổi (`EEM`), VN-Index, trái phiếu Mỹ 7–10 năm (`IEF`), vàng, dầu Brent, đồng, DXY, Bitcoin; % so với giá đóng cửa cuối năm trước (`assetClassRows`), thanh xanh/đỏ theo dấu. ETF chỉ tính giá, không gồm cổ tức và coupon (chú thích ghi rõ).
+- **Hàng 3c, vị thế trên thị trường tương lai** (từ 2026-11-11, TODO P2): số liệu từ `cotRows` (`lib/data/cot.ts`, LLDD 02 §2.12), web đọc qua `getCot`. Dòng đầu tóm tắt các thị trường gần đỉnh và gần đáy 3 năm. Hai bảng, hàng hoá và tài chính (cạnh nhau từ `lg`), mỗi dòng: tên và nhóm nhà đầu tư (tooltip giải thích nhóm), vị thế ròng (K/M hợp đồng, có dấu), % hợp đồng mở, thay đổi trong tuần (từ `sm`), thanh hạng 0–100 có chấm và số, sparkline % hợp đồng mở 3 năm (từ `md`). Thanh tô hai đầu 10%; chấm màu `warning` khi hạng ≥ 90 hoặc ≤ 10 và thêm nhãn "Gần đỉnh/đáy 3 năm", còn lại chấm `ink-2`. Không tô xanh/đỏ vì mua ròng không phải là tốt. Chân panel ghi ngày thứ Ba của báo cáo.
 - **Yield curve, lịch sử chênh lệch:** `spreadHistory` gộp `fred:T10Y2Y` và `fred:T10Y3M` theo ngày trong 730 ngày, giữ khoảng 1/3 số điểm; đường 0 là `refY`. Dưới biểu đồ, mỗi chênh lệch một dòng: số hiện tại, nhãn Bình thường/Đảo ngược, "dương/đảo ngược từ ngày X" (`spreadRun`, tính trên toàn bộ lịch sử đã lưu; "hoặc sớm hơn" khi chuỗi chạm điểm đầu tiên), và lời nhắc suy thoái thường đến sau khi hết đảo ngược.
 - **Lạm phát vs lãi suất:** lạm phát là CPI so cùng kỳ tháng mới nhất (OECD hoặc IMF CPI, lấy số mới hơn: `cpiIds` + `freshest`, giống bảng sức khoẻ trang Vĩ mô) nên lãi suất thực ở hai trang khớp nhau. Nước chưa có số tháng thì dùng ước tính năm của IMF và có dấu `*`.
 - **Brief:** hiện tiêu đề chính và 3 ý đầu (`BRIEF_SHOWN`), các ý còn lại nằm trong `<details>` "Xem thêm N ý" (không cần JS). Mỗi ý có ảnh nhỏ của bài báo đầu tiên được trích dẫn mà có ảnh. `getLatestBrief` tra ảnh theo URL nguồn trong `articles` (`BriefView.images`).

@@ -118,6 +118,10 @@
       "title": "Các lớp tài sản năm nay",
       "subtitle": "Cái gì đang thắng: lợi nhuận từ đầu năm"
     },
+    "cot": {
+      "title": "Vị thế trên thị trường tương lai",
+      "subtitle": "Giới đầu cơ đang đứng về phía nào, so với 3 năm qua"
+    },
     "yieldCurve": {
       "title": "Đường cong lợi suất Mỹ",
       "subtitle": "Lợi suất trái phiếu theo kỳ hạn"
@@ -765,6 +769,38 @@
     "noteCommodities": "Hợp đồng tương lai kỳ hạn gần nhất, tính theo đơn vị của từng hợp đồng (¢ = xu Mỹ). Giá năng lượng và lương thực truyền vào giá tiêu dùng ở các nước nhập khẩu trong vài tháng, kể cả Việt Nam.",
     "assetsLabel": "Lợi nhuận từ đầu năm {year} theo lớp tài sản",
     "noteAssets": "Thay đổi so với giá đóng cửa cuối năm trước, tính bằng đồng tiền của từng tài sản (VN-Index bằng VND). Cổ phiếu thế giới, cổ phiếu mới nổi và trái phiếu Mỹ là quỹ ETF (ACWI, EEM, IEF): chỉ tính giá, chưa gồm cổ tức và lãi coupon."
+  },
+  "cot": {
+    "commodity": "Hàng hoá",
+    "financial": "Tài chính",
+    "market": "Thị trường",
+    "net": "Ròng",
+    "netHint": "Số hợp đồng mua trừ số hợp đồng bán của nhóm, tính đến thứ Ba",
+    "pctOi": "% HĐ mở",
+    "pctOiHint": "Vị thế ròng chia cho tổng số hợp đồng đang mở",
+    "week": "Tuần",
+    "weekHint": "Vị thế ròng thay đổi bao nhiêu hợp đồng so với báo cáo trước",
+    "rank": "So với 3 năm",
+    "rankHint": "Vị thế ròng (% hợp đồng mở) xếp hạng trong 156 tuần gần nhất: 0 là bán ròng nhiều nhất, 100 là mua ròng nhiều nhất",
+    "history": "3 năm",
+    "historyHint": "Vị thế ròng theo % hợp đồng mở, từng tuần trong 3 năm",
+    "groups": {
+      "mm": "Quỹ đầu cơ hàng hoá",
+      "lf": "Quỹ dùng đòn bẩy",
+      "am": "Quỹ quản lý tài sản"
+    },
+    "groupHints": {
+      "mm": "Quỹ phòng hộ và quỹ giao dịch theo xu hướng (CTA) trên hợp đồng tương lai hàng hoá",
+      "lf": "Quỹ phòng hộ và công ty tự doanh",
+      "am": "Quỹ hưu trí, bảo hiểm và quỹ tương hỗ. Vị thế bán của quỹ đòn bẩy ở trái phiếu Mỹ chủ yếu là giao dịch chênh lệch giá cơ sở, nên phía này mới phản ánh quan điểm về lãi suất"
+    },
+    "high": "Gần đỉnh 3 năm",
+    "low": "Gần đáy 3 năm",
+    "extremeHint": "Nằm trong nhóm 10% cao nhất hoặc thấp nhất của 3 năm. Khi một phía đã dồn quá đông, tin bất ngờ dễ buộc họ đóng vị thế ồ ạt.",
+    "summaryHigh": "Gần đỉnh 3 năm: {list}.",
+    "summaryLow": "Gần đáy 3 năm: {list}.",
+    "summaryNone": "Không thị trường nào ở hai đầu khoảng dao động 3 năm.",
+    "note": "Báo cáo Commitments of Traders của CFTC, chỉ hợp đồng tương lai: vị thế ngày thứ Ba {date}, công bố chiều thứ Sáu sau đó (giờ Mỹ). K = nghìn, M = triệu hợp đồng."
   },
   "crypto": {
     "musd": "{v} triệu USD",

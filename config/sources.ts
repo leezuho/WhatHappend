@@ -17,6 +17,8 @@ export const SOURCE_META = {
   ibge: { intervalMs: 24 * HOUR },
   gpr: { intervalMs: 24 * HOUR },
   gscpi: { intervalMs: 24 * HOUR },
+  // CFTC Commitments of Traders: weekly, Tuesday's positions published Friday afternoon (US time).
+  cot: { intervalMs: 12 * HOUR },
   // News & AI
   rss: { intervalMs: 10 * MIN },
   gdelt: { intervalMs: 15 * MIN },

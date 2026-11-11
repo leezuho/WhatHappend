@@ -90,8 +90,8 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
 
 ### P2: chiều sâu cho nhà đầu tư
 
-- [ ] **Định giá và vị thế.** Lớp này hiện chưa có.
-  - Vị thế trên thị trường tương lai theo báo cáo COT của CFTC (dầu, vàng, USD, trái phiếu Mỹ, BTC): API Socrata `publicreporting.cftc.gov`, không cần key, chưa thử.
+- [ ] **Định giá và vị thế.** Phần vị thế đã xong, còn phần định giá của Việt Nam.
+  - [x] Vị thế trên thị trường tương lai theo báo cáo COT của CFTC (dầu, vàng, USD, trái phiếu Mỹ, BTC). Xong 2026-11-11: API Socrata `publicreporting.cftc.gov` trả 403, nên nguồn `cot` đọc file năm trên `www.cftc.gov` (lịch sử từ 2023, LLDD 02 §2.12). Panel "Vị thế trên thị trường tương lai" ở Hàng 3c trang Tổng quan: 11 thị trường, vị thế ròng theo % hợp đồng mở, hạng so với 3 năm. Báo cáo ngày 3/11/2026: khí tự nhiên và euro ở đáy 3 năm; quỹ quản lý tài sản mua ròng trái phiếu Mỹ 10 năm nhiều nhất 3 năm; managed money ở dầu WTI gần đáy dù đang có cú sốc năng lượng vùng Vịnh. Bản tin AI và "Điểm đáng chú ý" chưa đọc số liệu này.
   - P/E, P/B của VN-Index; dư nợ margin; số tài khoản mở mới (VSDC). Chưa dò nguồn.
 - [ ] **Góc nhìn nhà đầu tư Việt.** Bảng "Các lớp tài sản" có chế độ quy ra VND, kèm mốc lãi tiết kiệm 12 tháng, để trả lời "năm nay cái gì thắng tiền gửi". Cần dò nguồn lãi suất niêm yết của các ngân hàng lớn.
 - [ ] **Số liệu tháng của Việt Nam:** xuất khẩu (nhất là sang Mỹ), FDI giải ngân, tăng trưởng tín dụng, sản xuất công nghiệp. **Cần người dùng chọn** một trong hai cách:

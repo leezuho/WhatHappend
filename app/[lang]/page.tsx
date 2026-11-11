@@ -22,6 +22,7 @@ import { BriefBody, MapBody, NewsBody, VietnamBody } from "@/components/panels/C
 import { CalendarBody, EnvBody, PredictionBody, TrendingBody } from "@/components/panels/WorldPanels";
 import { ThemesBody } from "@/components/panels/ThemePanels";
 import { WhatsNewBody } from "@/components/panels/WhatsNew";
+import { CotBody } from "@/components/panels/CotPanel";
 
 export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -81,6 +82,11 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         </Panel>
         <Panel lang={lang} title={p.assetClasses.title} subtitle={p.assetClasses.subtitle} sources={["yahoo", "vnindex"]} className="xl:col-span-5">
           <AssetClasses lang={lang} />
+        </Panel>
+
+        {/* Row 3c: how speculators are placed in futures, against their own last three years */}
+        <Panel lang={lang} title={p.cot.title} subtitle={p.cot.subtitle} sources={["cot"]} className="md:col-span-2 xl:col-span-12">
+          <CotBody lang={lang} />
         </Panel>
 
         {/* Row 4: context */}
