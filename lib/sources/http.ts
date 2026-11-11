@@ -51,10 +51,13 @@ export async function fetchBuffer(url: string, opts?: FetchOpts): Promise<Buffer
   return Buffer.from(await (await request(url, opts)).arrayBuffer());
 }
 
-/** Fetch JSON and validate it; a schema mismatch fails the run loudly instead of storing junk. */
+/**
+ * Fetch JSON and validate it; a schema mismatch fails the run loudly instead of storing junk.
+ * A 204 No Content reaches the schema as `null`, so only a source whose schema accepts null treats it as "nothing found".
+ */
 export async function fetchJson<S extends z.ZodType>(url: string, schema: S, opts?: FetchOpts): Promise<z.infer<S>> {
   const res = await request(url, { ...opts, headers: { Accept: "application/json", ...opts?.headers } });
-  const json: unknown = await res.json();
+  const json: unknown = res.status === 204 ? null : await res.json();
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
     throw new Error(`Unexpected response shape from ${new URL(url).host}: ${parsed.error.issues.slice(0, 3).map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`);

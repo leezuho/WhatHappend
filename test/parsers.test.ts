@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { deflateRawSync } from "node:zlib";
-import { parseCsv } from "@/lib/sources/http";
+import { z } from "zod";
+import { fetchJson, parseCsv } from "@/lib/sources/http";
 import { unzipFirst } from "@/lib/sources/gdelt";
 import { absoluteUrl, normalizeUrl, pickImage, titleKey } from "@/lib/sources/rss";
 
@@ -95,4 +96,11 @@ test("pickImage: widest media wins, relative paths resolve, http upgrades, non-i
   assert.equal(pickImage({ media: [m("https://v.example/clip.mp4", 1920, "video")], enclosure: { url: "https://i.example/e.jpg", type: "image/jpeg" } }, base), "https://i.example/e.jpg");
   assert.equal(pickImage({ enclosure: { url: "https://a.example/pod.mp3", type: "audio/mpeg" } }, base), null);
   assert.equal(pickImage({}, base), null);
+});
+
+test("fetchJson: 204 No Content reaches the schema as null", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => new Response(null, { status: 204 }));
+  const Resp = z.object({ features: z.array(z.unknown()) });
+  assert.equal(await fetchJson("https://example.test/x", Resp.nullable()), null);
+  await assert.rejects(fetchJson("https://example.test/x", Resp), /Unexpected response shape/);
 });

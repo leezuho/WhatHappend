@@ -22,7 +22,8 @@ const Feature = z.object({
     url: z.object({ report: z.string().nullish() }).passthrough().nullish(),
   }).passthrough(),
 });
-const Resp = z.object({ features: z.array(Feature).nullish() });
+// A query with no matching events comes back as 204 No Content (null here), e.g. a week without cyclones, floods or eruptions.
+const Resp = z.object({ features: z.array(Feature).nullish() }).nullable();
 
 const TYPE: Record<string, string> = { TC: "cyclone", FL: "flood", VO: "volcano", DR: "drought", WF: "wildfire", EQ: "earthquake" };
 
@@ -44,7 +45,7 @@ async function search(eventlist: string, days: number, alertlevel?: string) {
   const params = new URLSearchParams({ eventlist, fromdate: ymd(now - days * 24 * 3600_000), todate: ymd(now + 24 * 3600_000) });
   if (alertlevel) params.set("alertlevel", alertlevel);
   const r = await fetchJson(`https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?${params}`, Resp, { timeoutMs: 30_000 });
-  return r.features ?? [];
+  return r?.features ?? [];
 }
 
 export const gdacs: Source = {

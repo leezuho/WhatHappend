@@ -259,6 +259,7 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
   - Chỉ lấy feature dạng Point.
   - Không lọc theo mức cảnh báo thì cháy rừng (WF) chiếm gần hết kết quả.
   - Tên sự kiện hạn hán liệt kê hàng chục nước, nên được cắt còn khoảng 90 ký tự.
+  - Truy vấn không có sự kiện nào thì GDACS trả `204 No Content` (body rỗng). `fetchJson` đưa `null` cho schema, gdacs coi đó là danh sách rỗng chứ không phải lỗi.
   - Mỗi trang tối đa 100 kết quả.
 
 ### 4.3 `eonet` (`lib/sources/eonet.ts`)
