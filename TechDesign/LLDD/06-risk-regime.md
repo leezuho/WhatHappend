@@ -103,6 +103,10 @@ interface RegimeResult {
 - Mở ra (rộng 22rem, không quá màn hình trừ 2rem): khối cảnh báo phân kỳ (nếu có), câu giải thích, điểm và "từ ngày", dòng `pending` (nếu có), bảng thành phần (tên · giá trị gốc · ngày · z; z > 0,5 tô `--down`, z < −0,5 tô `--up`), dòng quy tắc.
 - Giá trị gốc theo đơn vị riêng: VIX và STLFSI là số, tín dụng là %, USD và S&P là % có dấu, 2s10s theo `fmtValue` của series, độ rộng là "10/20".
 
+### 6.1 Lịch sử theo ngày (từ 2026-11-11)
+
+Badge tính lại toàn bộ lịch sử mỗi lần đọc, nên điểm của một ngày cũ có thể khác điểm người dùng thấy hôm đó (số liệu được sửa, số trễ đến sau). Nguồn `changes` (LLDD 03, LLDD 01 §3.13) ghi điểm như worker thấy vào series `calc:REGIME_SCORE`, mỗi ngày Việt Nam một điểm (lần chạy sau trong ngày ghi đè), và ghi mỗi lần trạng thái đổi vào bảng `changes` (`kind = 'regime'`) kèm giờ nhận ra. Dải "Có gì mới từ lần trước" đọc bảng này; cảnh báo Telegram (TODO) sẽ đọc cùng nguồn.
+
 ## 7. Kiểm thử
 
 `test/signals.test.ts`:

@@ -68,6 +68,33 @@ export const STATUS_SERVICES: StatusService[] = [
   { key: "claude", name: "Claude", page: "https://status.claude.com", kind: "statuspage" },
 ];
 
+/**
+ * CISA KEV vendors (`vendorProject`, matched case-insensitively from the start) whose newly exploited
+ * vulnerabilities make the overview's "What's new" strip: the companies behind the stocks, clouds, AI services
+ * and tools this dashboard follows. Every other vendor stays on the tech page only.
+ */
+export const KEV_WATCH = [
+  "Microsoft",
+  "Google",
+  "Apple",
+  "Amazon",
+  "Meta",
+  "Oracle",
+  "Nvidia",
+  "Broadcom",
+  "VMware",
+  "Cloudflare",
+  "GitHub",
+  "Vercel",
+  "OpenAI",
+  "Anthropic",
+  "Linux",
+  "Node.js",
+  "PostgreSQL",
+  "Kubernetes",
+  "Python",
+];
+
 // Taiwan's monthly revenue reports (TWSE OpenAPI, around the 10th): the AI
 // hardware chain's sales a month after the fact, long before quarterly results.
 

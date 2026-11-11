@@ -149,7 +149,7 @@ Index: `events_ts (ts DESC)`.
 
 Web server ghi cờ (ví dụ khi bấm nút "Làm mới" Brief). Worker đọc cờ trong `isDue` của nguồn liên quan.
 
-Các khoá đang dùng: `brief:force` (yêu cầu viết lại bản tin), `ai:calls:<ngày Thái Bình Dương>:<model>` (số lần gọi AI trong ngày) và `ai:exhausted:<model>` (ngày model hết quota), xem LLDD 05 §4.1; `macro:note` (nhận định vĩ mô tuần, JSON `StoredMacroNote`), LLDD 05 §3b; `tech:note` (nhận định công nghệ tuần, `StoredTechNote`), LLDD 05 §3c. Các nguồn cũng giữ trạng thái nhỏ ở đây (LLDD 02): `vnstocks:shares` (số cổ phiếu lưu hành của VN30, làm mới mỗi ngày), `sbvrate:backfilled-to` (ngày đã lùi tới khi nạp lịch sử tỷ giá trung tâm), `ibrate:done` (60 bài Thời báo Ngân hàng đã đọc).
+Các khoá đang dùng: `brief:force` (yêu cầu viết lại bản tin), `ai:calls:<ngày Thái Bình Dương>:<model>` (số lần gọi AI trong ngày) và `ai:exhausted:<model>` (ngày model hết quota), xem LLDD 05 §4.1; `macro:note` (nhận định vĩ mô tuần, JSON `StoredMacroNote`), LLDD 05 §3b; `tech:note` (nhận định công nghệ tuần, `StoredTechNote`), LLDD 05 §3c; `themes:notes` (ghi chú AI cho các chủ đề chi phối, `StoredThemeNotes`), LLDD 05 §3d; `changes:state` (trạng thái lần chạy trước của nguồn `changes`, JSON `WatchState`), §3.13. Các nguồn cũng giữ trạng thái nhỏ ở đây (LLDD 02): `vnstocks:shares` (số cổ phiếu lưu hành của VN30, làm mới mỗi ngày), `sbvrate:backfilled-to` (ngày đã lùi tới khi nạp lịch sử tỷ giá trung tâm), `ibrate:done` (60 bài Thời báo Ngân hàng đã đọc).
 
 ### 3.11 `watchlist`
 | Cột | Kiểu | Ý nghĩa |
@@ -168,6 +168,17 @@ Ghi bởi `POST /api/watchlist` (web). Đọc bởi `getWatchlist()`; khóa khô
 | `created_at` | INTEGER NOT NULL | Thời điểm viết. Web chỉ hiện ghi chú dưới 24 giờ (`INSIGHT_MAX_AGE`) |
 
 Ghi bởi nguồn `insights` (worker). Đọc bởi `getHighlights()` / `getInsightNotes()`. Bảng mới tạo bằng `CREATE TABLE IF NOT EXISTS`, nên DB cũ không cần xóa.
+
+### 3.13 `changes` — nhật ký thay đổi (từ 2026-11-11)
+| Cột | Kiểu | Ý nghĩa |
+|---|---|---|
+| `id` | INTEGER PK | Tự tăng |
+| `at` | INTEGER NOT NULL | Lúc worker nhận ra thay đổi (ms), không phải ngày của số liệu: số tháng 9 công bố giữa tháng 10 mang giờ công bố |
+| `kind` | TEXT NOT NULL | `regime`, `theme`, `threshold`, `move`, `release`, `kev` |
+| `key` | TEXT NOT NULL | Cái đã đổi, để bỏ lặp: `risk-off`, `ai:cooling`, `brent:warn`, `brent:week:-`, id lịch, mã CVE |
+| `data` | TEXT NOT NULL | JSON `ChangeData` (`lib/data/changes.ts`), dạng theo `kind` |
+
+Chỉ mục `changes_at (at DESC)` và `changes_key (kind, key, at)`. Ghi bởi nguồn `changes` (worker, mỗi 15 phút, LLDD 03 §8); cùng `kind` + `key` đã ghi trong cửa sổ lặp của loại đó thì bỏ (`regime`, `theme` 1 ngày, `threshold` 3 ngày, `move` 20 giờ, `release`, `kev` 30 ngày). Giữ 30 ngày. Đọc bởi `getChanges()` cho dải "Có gì mới từ lần trước" (LLDD 04 §3). Bảng mới tạo bằng `CREATE TABLE IF NOT EXISTS`, nên DB cũ không cần xóa.
 
 ## 4. Quy ước id
 

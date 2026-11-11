@@ -58,7 +58,7 @@ export function vnDate(now: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(now);
 }
 
-function vnHour(now: number): number {
+export function vnHour(now: number): number {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hour12: false }).format(now));
 }
 

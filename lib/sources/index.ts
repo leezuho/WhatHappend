@@ -2,6 +2,7 @@ import { brief } from "@/lib/ai/brief";
 import { insights } from "@/lib/ai/insights";
 import { macronote } from "@/lib/ai/macronote";
 import { technote } from "@/lib/ai/technote";
+import { themes } from "@/lib/ai/themes";
 import { translate } from "@/lib/ai/translate";
 import { airquality } from "./airquality";
 import { binance } from "./binance";
@@ -10,6 +11,7 @@ import { bis } from "./bis";
 import { calendar } from "./calendar";
 import { releases } from "./releases";
 import { cloudstatus } from "./cloudstatus";
+import { changes } from "./changes";
 import { cnbc } from "./cnbc";
 import { co2 } from "./co2";
 import { coingecko } from "./coingecko";
@@ -81,6 +83,8 @@ export const sources: Source[] = [
   insights,
   macronote,
   technote,
+  themes,
+  changes,
   // map
   usgs,
   gdacs,

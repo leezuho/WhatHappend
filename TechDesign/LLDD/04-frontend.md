@@ -2,7 +2,7 @@
 
 > Phiên bản 0.5 · Ngày 2026-11-09 · Trạng thái: Đã triển khai (M1–M7), M8 Phase 1
 > Liên quan: [HLDD](../HLDD/HLDD.md) · [01 Database schema](01-database-schema.md) · [06 Risk Regime](06-risk-regime.md) · [BRD 02](../../BRD/02-business-requirements.md)
-> Mã nguồn: `proxy.ts`, `app/[lang]/{layout,page}.tsx`, `app/[lang]/{crypto,macro,vietnam,tech}/page.tsx`, `app/api/{brief,series/[key],watchlist}/route.ts`, `app/globals.css`, `components/{TopBar.tsx,ui,panels,charts}`, `lib/{queries,queries-macro,queries-vietnam,queries-tech,i18n,format,use-theme}.ts`, `lib/data/{series,macro,tech}.ts`, `messages/{vi,en}.json`, `scripts/copy-maplibre-worker.mjs`
+> Mã nguồn: `proxy.ts`, `app/[lang]/{layout,page}.tsx`, `app/[lang]/{crypto,macro,vietnam,tech}/page.tsx`, `app/api/{brief,series/[key],watchlist}/route.ts`, `app/globals.css`, `components/{TopBar.tsx,ui,panels,charts}`, `lib/{queries,queries-macro,queries-vietnam,queries-tech,i18n,format,use-theme}.ts`, `lib/data/{series,macro,tech,themes,changes}.ts`, `config/themes.ts`, `messages/{vi,en}.json`, `scripts/copy-maplibre-worker.mjs`
 
 ## 1. Routing
 
@@ -33,6 +33,8 @@ Lưới `grid-cols-1` → `md:grid-cols-2` → `xl:grid-cols-12`, `max-w-[1600px
 ```
 TopBar: MarketClocks · RegimeBadge · LangSwitch · ThemeToggle      (sticky)
         Ticker (dải giá chạy ngang)
+Hàng 0  Có gì mới từ lần trước [xl:12]: dải danh sách (1/2/3 cột)
+        Chủ đề chi phối [xl:12]: 4 thẻ (2 cột ở md, 4 cột ở xl)
 Hàng 1  Bản đồ [xl:12]: bản đồ + cột "Cảnh báo & động đất lớn"
 Hàng 2  Brief [xl:5]                     │ Điểm đáng chú ý [xl:7]
 Hàng 3  Vital Signs [xl:12] (+ hàng "Bạn đã ghim" nếu có watchlist)
@@ -47,6 +49,8 @@ Hàng 7  Góc Việt Nam [xl:12]
 
 | Panel | Component (thân) | Nguồn (`sources`) dùng để tính trạng thái |
 |---|---|---|
+| Có gì mới từ lần trước | `WhatsNewBody` (`WhatsNew.tsx`, server: viết câu) → `WhatsNewList` (`components/ui/WhatsNewList.tsx`, client: lọc theo lần xem trước) | `changes` |
+| Chủ đề chi phối | `ThemesBody` (`ThemePanels.tsx`), mỗi chủ đề một thẻ (`ThemeCard`) | `themes`, `yahoo`, `fred`, `rss` |
 | Brief | `BriefBody` (`ContentPanels.tsx`) + `BriefRefresh` | `brief` |
 | Bản đồ | `MapBody` → `MapView` (client) | `usgs`, `gdacs`, `eonet`, `gdelt` |
 | Điểm đáng chú ý | `HighlightsBody` (`MarketPanels.tsx`), mỗi thẻ mở `TileDetail` | `insights`, `yahoo`, `fred` |
@@ -66,6 +70,23 @@ Hàng 7  Góc Việt Nam [xl:12]
 | Việt Nam | `VietnamBody` | `vnindex`, `sjc`, `vcb` |
 
 Ghi chú hành vi từng panel:
+- **Hàng 0, Có gì mới từ lần trước** (từ 2026-11-11, TODO P1, phục vụ KPI-1 nắm tình hình dưới 2 phút): những gì đổi kể từ lần người đọc xem trước. Worker ghi nhật ký (`changes`, LLDD 01 §3.13): mỗi 15 phút nguồn `changes` đọc trạng thái hiện tại (`observe`, `lib/data/changes.ts`), so với trạng thái lần trước lưu ở `kv['changes:state']` (`diffState`) và ghi cái mới kèm giờ nhận ra. Chỉ ghi cái mới xuất hiện, không ghi cái mất đi:
+  - trạng thái rủi ro đổi (badge, LLDD 06), trạng thái một chủ đề chi phối đổi; đổi từ hoặc sang "chưa đủ dữ liệu" không tính;
+  - chỉ số trong `SERIES` vừa vượt mức lưu ý, hoặc từ lưu ý lên nguy hiểm (`alertOf` trên giá trị tile);
+  - biến động bất thường mà "Điểm đáng chú ý" thấy (`findNotables`: lý do `move` trong phiên, `week` trong 7 ngày, từ 2 lần mức thường gặp);
+  - số liệu lịch vừa có thực tế (`items.calendar` trong 2 ngày qua), kèm dự báo và tốt hay xấu hơn cho nền kinh tế;
+  - lỗ hổng KEV mới (14 ngày) của các hãng trong `KEV_WATCH` (`config/tech.ts`: hãng đứng sau cổ phiếu, đám mây, dịch vụ AI và công cụ mà dashboard theo dõi).
+
+  Lần chạy đầu tiên chỉ lưu trạng thái, để DB mới không ghi mọi thứ đang có thành "mới". Cùng một thứ ghi lại trong cửa sổ lặp của loại đó thì bỏ (giá trị lơ lửng quanh ngưỡng sẽ ghi mỗi lượt). Web đọc nhật ký 14 ngày (`getChanges`), viết thành câu theo ngôn ngữ (`describeChange`; mục trỏ tới chủ đề hay chỉ số đã bỏ khỏi config thì ẩn), xếp loại quan trọng trước (`orderChanges`: trạng thái rủi ro, chủ đề, ngưỡng nguy hiểm, ngưỡng lưu ý, số liệu công bố, biến động, lỗ hổng), trong mỗi loại mới nhất trước. Client (`WhatsNewList`) giữ mục có `at` sau mốc "lần trước", hiện 6 mục đầu và nút "+N mục", chấm màu theo tác động (xanh/đỏ theo tốt hay xấu, cam nóng lên, lam hạ nhiệt, vàng/đỏ thẫm cho mức lưu ý/nguy hiểm). Nút "Đã xem" dời mốc tới hiện tại. Không có gì mới thì một dòng "Không có gì mới kể từ …".
+
+  Mốc "lần trước" nằm ở `localStorage['wh:visit']` (`{ prev, last }`, tiện ích riêng của người xem, không cần lưu bền): một lần xem kết thúc sau 30 phút vắng mặt, nên tải lại trang và `AutoRefresh` giữ nguyên mốc; tab để mở qua đêm thì khi được nhìn lại (`visibilitychange`) mốc tự dời tới lúc tab bị ẩn. Lần đầu (chưa có gì trong `localStorage`, hoặc bị chặn) hiện 24 giờ qua. Đọc qua `useSyncExternalStore`, snapshot phía server là `null` nên khung tĩnh chỉ giữ chỗ.
+- **Hàng 0, Chủ đề chi phối** (từ 2026-11-11, TODO P1): vài câu chuyện đang dẫn dắt thị trường, khai báo tay trong `config/themes.ts` (`THEMES`: Năng lượng vùng Vịnh, Lạm phát Mỹ và Fed, Chu kỳ AI và bán dẫn, Vốn ngoại và tỷ giá) và giữ đúng thứ tự khai báo để người đọc biết thẻ nào ở đâu. Số liệu tính ở `lib/data/themes.ts` (`themeStates`, không import Next, worker dùng chung cho ghi chú AI và nhận định vĩ mô tuần); web đọc qua `getThemes()`. Mỗi thẻ có:
+  - **Trạng thái** Nóng lên / Hạ nhiệt / Đi ngang / Chưa đủ dữ liệu, kèm điểm. Mỗi chỉ số (`gauges`) lấy biến động khoảng một tháng: series ngày so với điểm cuối cùng cách ít nhất 30 ngày (giá live mới hơn giá đóng cửa được tính là điểm hôm nay), series tuần 4 kỳ, tháng và quý 1 kỳ; chia cho độ lệch chuẩn của các biến động cùng độ dài trong khoảng 2 năm, nhân `sign` của chỉ số (+1: tăng là nóng lên), kẹp ±3. Dòng tiền (`sumSessions`, khối ngoại ròng 20 phiên) dùng z của tổng trượt so với lịch sử các tổng đó. Chỉ số có dưới 12 biến động trước đó hoặc số liệu ngày trễ quá 10 ngày vẫn hiện nhưng không tính. Điểm của chủ đề là trung bình các chỉ số được tính (cần ít nhất 2); từ +0,5 là nóng lên, từ −0,5 trở xuống là hạ nhiệt. Tooltip của chip nói "nóng lên" nghĩa là gì với chủ đề đó (`heat`).
+  - **Ghi chú AI** 2–3 câu (`kv['themes:notes']`, LLDD 05 §3d); chưa có thì bỏ trống, chân panel hướng dẫn đặt `AI_API_KEY`.
+  - **Các chỉ số:** tên ngắn (`label`), giá trị, thay đổi 1 tháng (% cho giá, bp hoặc điểm % cho lãi suất như tile), sparkline 90 ngày (13 kỳ với số tháng). Mũi tên tô theo hướng tác động lên chủ đề, không theo "tăng là tốt": `serious` khi đẩy chủ đề nóng lên, `s1` khi làm hạ nhiệt. Tooltip ghi tên đầy đủ, mô tả, thay đổi tính từ ngày nào và gấp bao nhiêu lần mức thường gặp. Dưới chỉ số là các "sự kiện" tính riêng (`facts`): Vietcombank bán ra cách trần biên độ bao xa, doanh thu tháng của TSMC so cùng kỳ.
+  - **Việt Nam:** một câu về kênh truyền dẫn (`vietnam.text`) và các chỉ số Việt Nam (giá xăng RON 95, CPI, USD/VND, liên ngân hàng qua đêm, FPT), chỉ để xem, không tính vào trạng thái.
+  - **Kèo:** tối đa 2 kèo Polymarket có tiêu đề khớp `markets`, khối lượng 24 giờ lớn nhất trước, hiện kết quả dẫn đầu và mức đổi 24 giờ. Bỏ kèo gần như đã ngã ngũ (kết quả dẫn đầu ≥ 97%, hoặc "Yes" ≤ 3%) và snapshot cũ hơn 3 ngày (nguồn hay bị chặn).
+  - **Tin:** đếm bài khớp trong 24 giờ và 7 ngày (mỗi `title_key` một lần), 3 câu chuyện mới nhất trong 2 ngày, gom bằng `clusterStories` trên tiêu đề tiếng Anh. Bài khớp khi tiêu đề tiếng Anh (gốc hoặc bản dịch) khớp `news.en`, hoặc tiêu đề tiếng Việt chưa dịch khớp `news.vi`; bỏ thể thao và báo crypto, chỉ chủ đề AI đọc báo công nghệ; `news.regions` lọc theo khu vực AI gán (Fed: `americas`, `global`; Vốn ngoại: `vietnam`). Từ khoá được thử trên tin thật ngày 2026-11-11: "Iran" chỉ tính khi đi cùng chiến tranh, đàm phán, phong toả… (một vụ tấn công mạng đổ cho Iran không phải chuyện năng lượng); "Huang" phải là "Jensen Huang"; "dong" bị bỏ vì khớp cả Đồng Nai, Đồng Tháp và "tỷ đồng".
 - **Hàng 1:** bản đồ chiếm cả hàng, cao 360 / 440 / 520px (mobile / `md` / `xl`), xem §9.
 - **Hàng 2:** Brief và Điểm đáng chú ý nằm cạnh nhau. Điểm đáng chú ý có tối đa 8 thẻ (`findNotables`), nên hiện hết mà không cần cuộn. Chân Brief (`mt-auto`) luôn nằm đáy panel.
 - **Thị trường thế giới:** chỉ số chính của mỗi nền kinh tế trên trang Vĩ mô, cộng Russell 2000, Hang Seng và TAIEX; Châu Mỹ và Châu Âu một cột, Châu Á – Thái Bình Dương một cột (hai cột từ `xl`). Cột: điểm, phiên gần nhất (`change_pct` của quote, sàn đang mở hay đã đóng), 1 tuần, 1 tháng, từ đầu năm (`changeSince` trên giá đóng cửa, `lib/data/markets.ts`) và sparkline 1 năm. Ô % tô nền `up`/`down` 3 mức, thang riêng từng cột (`HEAT_STEPS`: phiên 0,5/1,5/3%, tuần 1/3/6%, tháng 2/5/10%, năm 5/15/30%); chữ vẫn màu `ink` và có dấu nên không phụ thuộc màu. Dòng tóm tắt đếm số thị trường tăng và nêu chỉ số mạnh nhất, yếu nhất. Mobile chỉ giữ tên, phiên và từ đầu năm. Tính bằng nội tệ.
@@ -299,6 +320,7 @@ Kiểu dữ liệu brief dùng chung nằm ở `lib/ai/brief-shared.ts`, cấu h
 | `ThemeToggle` | Một nút icon hiện theme đang dùng; mỗi lần bấm chuyển vòng sáng → tối → Anthropic. Đọc theme qua `useThemeName()` (`lib/use-theme.ts`: `useSyncExternalStore` + `MutationObserver` trên `<html data-theme>`); click thì đổi `data-theme` và lưu `localStorage.theme`. `aria-label` ghi theme hiện tại, `title` ghi theme kế tiếp |
 | `LangSwitch` | Một link hiện mã ngôn ngữ đang dùng (`VI`/`EN`), trỏ sang ngôn ngữ còn lại và giữ nguyên trang; khi click ghi cookie `lang` (1 năm) để proxy nhớ lựa chọn; nhãn `topbar.switchLang` |
 | `AutoRefresh` | Gọi `router.refresh()` mỗi 60 giây khi tab đang hiện, và gọi ngay khi tab hiện lại |
+| `WhatsNewList` | Lọc nhật ký thay đổi theo mốc lần xem trước trong `localStorage['wh:visit']` (§3, Hàng 0). External store đọc qua `useSyncExternalStore`, nghe `visibilitychange` để ghi lúc tab bị ẩn và dời mốc khi quay lại sau hơn 30 phút; snapshot phía server là `null`. Thời gian tương đối tính theo giờ server của lần render (trang tự làm mới mỗi phút), không gọi `Date.now()` khi render |
 | `Ticker` (server) | Hai bản sao danh sách trượt ngang với CSS `@keyframes ticker` 90 giây; dừng khi rê chuột; tắt khi `prefers-reduced-motion` |
 | `RegimeBadge` (server) | `<details>` hiện nhãn regime, thêm dấu "!" khi có cảnh báo phân kỳ tín dụng; mở ra thấy cảnh báo, điểm và ngày bắt đầu trạng thái, giá trị gốc · ngày · z của từng thành phần, quy tắc (LLDD 06 §6) |
 | `Tabs` | Tab phía client bọc các pane đã render ở server (dùng cho Trending) |

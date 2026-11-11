@@ -1,6 +1,6 @@
 # WhatHappend
 
-Dashboard cá nhân "thế giới đang diễn ra gì": thị trường, vĩ mô, tin tức, bản đồ sự kiện, lịch, xu hướng, thị trường dự đoán, môi trường và góc Việt Nam. Trang `/vi/macro` khám sức khoẻ kinh tế thế giới: 8 chỉ số toàn cầu, nhận định tuần do AI viết, bảng sức khoẻ 15 nền kinh tế cộng Việt Nam, đồng hồ chu kỳ theo chỉ báo sớm OECD và bản đồ tăng trưởng, lạm phát của mọi nước. Trang `/vi/vietnam` gom thị trường, tỷ giá, vàng, tăng trưởng, lạm phát, lãi suất NHNN và dự báo IMF của Việt Nam. Trang `/vi/crypto` riêng cho crypto: top coin, Fear & Greed, DVOL, stablecoin, funding/OI, USDT/VND P2P, mạng Bitcoin, kèo Polymarket và tin crypto. Trang `/vi/tech` cho công nghệ: cổ phiếu công nghệ và bán dẫn (Mỹ, châu Á, FPT, CMC), trạng thái AWS, Google Cloud, Azure, Cloudflare, GitHub, Vercel, OpenAI, Claude, model AI mới kèm giá (OpenRouter), nghiên cứu AI (Hugging Face), lỗ hổng đang bị khai thác (CISA KEV), Hacker News và tin công nghệ. Giao diện song ngữ Việt/Anh, có ba giao diện: sáng, tối và Anthropic (nền kem, tiêu đề serif).
+Dashboard cá nhân "thế giới đang diễn ra gì": thị trường, vĩ mô, tin tức, bản đồ sự kiện, lịch, xu hướng, thị trường dự đoán, môi trường và góc Việt Nam. Đầu trang Tổng quan là dải "Có gì mới từ lần trước" (những gì đổi kể từ lần bạn xem trước) và các chủ đề chi phối thị trường (khai báo trong `config/themes.ts`), mỗi chủ đề cho biết đang nóng lên hay hạ nhiệt, tin mới, kèo và tác động tới Việt Nam. Trang `/vi/macro` khám sức khoẻ kinh tế thế giới: 8 chỉ số toàn cầu, nhận định tuần do AI viết, bảng sức khoẻ 15 nền kinh tế cộng Việt Nam, đồng hồ chu kỳ theo chỉ báo sớm OECD và bản đồ tăng trưởng, lạm phát của mọi nước. Trang `/vi/vietnam` gom thị trường, tỷ giá, vàng, tăng trưởng, lạm phát, lãi suất NHNN và dự báo IMF của Việt Nam. Trang `/vi/crypto` riêng cho crypto: top coin, Fear & Greed, DVOL, stablecoin, funding/OI, USDT/VND P2P, mạng Bitcoin, kèo Polymarket và tin crypto. Trang `/vi/tech` cho công nghệ: cổ phiếu công nghệ và bán dẫn (Mỹ, châu Á, FPT, CMC), trạng thái AWS, Google Cloud, Azure, Cloudflare, GitHub, Vercel, OpenAI, Claude, model AI mới kèm giá (OpenRouter), nghiên cứu AI (Hugging Face), lỗ hổng đang bị khai thác (CISA KEV), Hacker News và tin công nghệ. Giao diện song ngữ Việt/Anh, có ba giao diện: sáng, tối và Anthropic (nền kem, tiêu đề serif).
 
 ## Chạy
 
@@ -59,9 +59,9 @@ Với key Gemini miễn phí, dòng Pro không có hạn mức (lỗi 429 `limit
 app/[lang]/            trang dashboard (vi | en), proxy.ts chuyển / → /vi
 app/api/               brief (yêu cầu viết lại), series/[key] (lịch sử), watchlist
 components/panels/     các panel; components/charts/ biểu đồ; components/ui/ khung chung
-config/                danh mục chỉ số (series.ts), lịch chạy (sources.ts), feed, quốc gia, FOMC, thành phố
+config/                danh mục chỉ số (series.ts), lịch chạy (sources.ts), chủ đề chi phối (themes.ts), feed, quốc gia, FOMC, thành phố
 lib/sources/           mỗi nguồn một file: fetch → zod → upsert
-lib/ai/                lớp provider (Gemini / Claude), dịch + phân loại tiêu đề, bản tin hằng ngày, diễn giải chỉ số
+lib/ai/                lớp provider (Gemini / Claude), dịch + phân loại tiêu đề, bản tin hằng ngày, diễn giải chỉ số, nhận định tuần, ghi chú chủ đề
 lib/queries.ts         lớp đọc cho UI (lib/queries-macro.ts, -vietnam.ts, -tech.ts cho từng trang); lib/signals/ Risk Regime, quy tắc chọn chỉ số đáng chú ý, tính toán vĩ mô
 worker/, scripts/      bộ lập lịch (kèm khóa một worker) và CLI fetch
 test/                  test tự động cho parser, tín hiệu, lịch AI, khóa worker, chặn cross-origin

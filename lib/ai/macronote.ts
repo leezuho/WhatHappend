@@ -9,6 +9,7 @@ import { FOMC_MEETINGS } from "@/config/fomc";
 import { MACRO_COUNTRIES } from "@/config/countries";
 import { cycleRows, scorecardRows, type ScoreCell } from "@/lib/data/macro";
 import { getTile } from "@/lib/data/series";
+import { themeForPrompt, themeStates } from "@/lib/data/themes";
 import { fmtPeriod, fmtValue } from "@/lib/format";
 import { alertOf } from "@/lib/signals/notable";
 import { DAY, HOUR, type Source } from "@/lib/sources/types";
@@ -47,13 +48,14 @@ const Out = z.object({ en: NoteText, vi: NoteText });
 
 const SYSTEM = `You write a weekly world-economy note for one reader's personal dashboard. The reader lives in Vietnam, follows the news, but has no finance training.
 
-You get this week's numbers from the dashboard's macro page: world indicators, a scorecard of economies (Vietnam last), each economy's business-cycle phase from the OECD leading indicator, US recession signals, what changed since last week's note, and the next week's central-bank decisions and major data releases.
+You get this week's numbers from the dashboard's macro page: world indicators, a scorecard of economies (Vietnam last), each economy's business-cycle phase from the OECD leading indicator, US recession signals, what changed since last week's note, and the next week's central-bank decisions and major data releases. You also get the dashboard's dominant market themes (themes): each with its status over about a month (heating, cooling or steady; heatMeans says what heating means), its gauges with their latest values and changes, and how it reaches Vietnam.
 Scorecard keys: gdp = real GDP vs a year earlier, latest quarter; cpi = consumer inflation vs a year earlier, latest month (cpiTarget = the central bank's target); unemp = unemployment rate; policy = central-bank rate; real = policy rate minus inflation (positive = money is tight); y10 = 10-year government bond yield; fxYtd = currency vs the US dollar since 31 Dec, % (positive = stronger; for the US, the dollar index); cli = OECD leading indicator (100 = trend growth) and its 3-month direction; debt = government debt, % of GDP; ca = current account, % of GDP. The period of each reading follows its number; "IMF est" marks an IMF yearly estimate standing in for missing monthly or quarterly data. [warn] and [crit] are the dashboard's watch and alarm levels; [good] = inflation near its target.
 
 Write:
 - headline: one sentence on the state of the world economy this week.
 - bullets: 4 to 6 themes, most important first (growth and the cycle, inflation and rates, jobs, currencies and debt, recession risk, Vietnam). Each has a short title and 2 or 3 sentences that name the economies and cite the numbers given. Exactly one bullet is about Vietnam compared with its peers.
 - watch: 2 to 4 items from the upcoming list worth watching, each saying why in a few words.
+Where a theme bears on the world economy (an energy shock on inflation and central banks, a strong dollar on emerging-market currencies), work it into the relevant bullet with its numbers; a theme that is heating up should not go unmentioned.
 Use only the numbers given; never invent figures, dates or events. When a reading is old, say so. Explain any technical term in a few words. No investment advice and no predictions beyond the IMF estimates given.
 
 Produce the same note twice: "en" in English and "vi" in natural Vietnamese (standard Vietnamese names, e.g. Mỹ, Trung Quốc, khu vực euro; "lạm phát", "lãi suất", "lợi suất"). Both cover the same points with the same numbers.`;
@@ -173,6 +175,8 @@ export function macroInput(db: DatabaseSync, now: number, prev?: StoredMacroNote
     usRecessionSignals: RECESSION_SIGNALS.flatMap((k) => tileLine(db, k, now) ?? []),
     changesSinceLastNote: prev ? changesSince(prev.snapshot, snapshot) : "no earlier note",
     upcoming: upcoming(db, now),
+    // Before 2026-11-11 the note read only the macro page's table: week 46's note never said "oil" during a Gulf energy shock.
+    themes: themeStates(db, now).map((t) => themeForPrompt(t, false)),
   };
   const withCpi = rows.filter((r) => r.cells.cpi.value !== null && !r.cells.cpi.est).length;
   return { input, snapshot, hash, withCpi };

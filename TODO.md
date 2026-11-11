@@ -49,7 +49,7 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
 
 ### P1: nối các chấm
 
-- [ ] **Chủ đề chi phối**, đặt ở đầu trang Tổng quan. `config/themes.ts` khai 4–6 chủ đề (tên kiểu `Bi`). Mỗi chủ đề gắn series, từ khoá tin, kèo Polymarket và kênh truyền dẫn sang Việt Nam. Ví dụ theo dữ liệu ngày 2026-11-10:
+- [x] **Chủ đề chi phối**, đặt ở đầu trang Tổng quan. `config/themes.ts` khai 4–6 chủ đề (tên kiểu `Bi`). Mỗi chủ đề gắn series, từ khoá tin, kèo Polymarket và kênh truyền dẫn sang Việt Nam. Ví dụ theo dữ liệu ngày 2026-11-10:
 
   | Chủ đề | Gắn với |
   |---|---|
@@ -59,12 +59,14 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
   | Dòng vốn ngoại vào Việt Nam | khối ngoại, FTSE nâng hạng, khoảng cách tới trần tỷ giá |
 
   Mỗi thẻ có trạng thái leo thang hay hạ nhiệt (tính từ số liệu), 3 tin mới nhất và xác suất trên Polymarket. AI viết 2–3 câu cho mỗi chủ đề, chỉ từ dữ liệu gắn với chủ đề đó, dùng chung ngân sách lượt gọi với `macronote`. Đưa luôn các chủ đề vào đầu vào của `macronote`: nhận định tuần 46 không có chữ "dầu" vì AI chỉ đọc bảng số của trang Vĩ mô.
+
+  Xong 2026-11-11 (BR-24, LLDD 04 §3 Hàng 0, LLDD 05 §3d): `config/themes.ts` khai 4 chủ đề như bảng trên, panel đầu trang Tổng quan giữ thứ tự khai báo. Trạng thái tính từ số liệu: biến động khoảng một tháng của mỗi chỉ số chia cho mức thường gặp trong 2 năm (khối ngoại dùng tổng 20 phiên), trung bình các chỉ số, ±0,5 là nóng lên/hạ nhiệt. Ngày 11/11: Năng lượng đi ngang (−0,4: Brent −13% trong tháng nhưng CPI năng lượng Mỹ +4,3 điểm %), Fed đi ngang (−0,4), AI hạ nhiệt (−2,0: Nvidia −26%, SOX −20%), Vốn ngoại hạ nhiệt (−0,9: USD/VND −1,1%). Kênh sang Việt Nam chỉ để xem (xăng RON 95, CPI, USD/VND, liên ngân hàng, FPT, Vietcombank cách trần). Tin khớp theo từ khoá trên tiêu đề tiếng Anh, 3 câu chuyện mới nhất trong 2 ngày; kèo Polymarket bỏ kèo ≥ 97% hoặc ≤ 3%. Nguồn AI `themes` viết 2–3 câu mỗi chủ đề mỗi ngày sau 06:00 và khi trạng thái đổi (tối đa 6 giờ một lần); chạy thật với `gemini-3.8-flash`: 4/4 chủ đề, 2,2K token vào. `BRIEF_RESERVE` lên 6. Chưa lưu lịch sử trạng thái theo ngày (cần cho mục dưới).
 - [ ] **Lớp địa chính trị.** Hiện chỉ có chấm GDELT trên bản đồ (482 điểm ngày 2026-11-10, phần lớn là nhiễu) và một con số GPR toàn cầu. Cần thêm (chưa thử endpoint nào):
   - lưu lượng tàu qua Hormuz, Bab el-Mandeb, Suez, Malacca và eo biển Đài Loan: IMF PortWatch;
   - trừng phạt, kiểm soát xuất khẩu, thuế quan: Federal Register API (`federalregister.gov/api/v1`, không cần key);
   - GPR theo quốc gia: bản tháng của Caldara–Iacoviello (nguồn `gpr` đang đọc bản ngày, chỉ có chỉ số toàn cầu);
   - lịch bầu cử khai báo tay trong `config/` (BR-10 còn thiếu).
-- [ ] **"Có gì mới từ lần trước"**: một dải ở đầu trang Tổng quan, phục vụ KPI-1 (nắm tình hình dưới 2 phút). Liệt kê:
+- [x] **"Có gì mới từ lần trước"**: một dải ở đầu trang Tổng quan, phục vụ KPI-1 (nắm tình hình dưới 2 phút). Liệt kê:
   - regime đổi trạng thái;
   - ngưỡng mới vượt;
   - số thực tế lệch dự báo;
@@ -72,6 +74,8 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
   - lỗ hổng KEV mới của các hãng đang theo dõi.
 
   Mốc "lần trước" lưu ở `localStorage` (tiện ích riêng của người xem). Cần lưu thêm lịch sử regime theo ngày.
+
+  Xong 2026-11-11 (BR-25, LLDD 04 §3 Hàng 0, LLDD 01 §3.13): worker có nguồn `changes` (15 phút, chỉ đọc DB) so trạng thái với lần trước và ghi cái mới vào bảng `changes` kèm giờ nhận ra; thêm cả trạng thái chủ đề chi phối đổi. Bỏ lặp theo cửa sổ từng loại (ngưỡng 3 ngày, biến động 20 giờ…). "Hãng đang theo dõi" của KEV là `KEV_WATCH` trong `config/tech.ts` (hãng đứng sau cổ phiếu, đám mây, dịch vụ AI và công cụ trên trang Công nghệ). Lịch sử regime: điểm mỗi ngày vào `calc:REGIME_SCORE`, mỗi lần đổi trạng thái vào bảng `changes`. Lần chạy đầu ngày 11/11 chỉ lưu trạng thái (regime trung tính; 6 chỉ số đang vượt ngưỡng; 4 biến động; 2 số liệu đã công bố; 3 lỗ hổng KEV của hãng theo dõi), nên dải chỉ bắt đầu có mục từ thay đổi sau đó. Cảnh báo Telegram có thể đọc chung bảng này.
 - [ ] **Cảnh báo qua Telegram**, do worker gửi. BRD 01 §5.2 đang để push ngoài phạm vi, nên cần cập nhật BRD. Bot token và chat id đặt trong `.env.local`. Các trường hợp cần báo:
   - số thực tế lệch dự báo;
   - Vietcombank bán ra cách trần dưới 2%;

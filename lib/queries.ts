@@ -30,6 +30,9 @@ import { INSIGHT_MAX_AGE, type StoredInsight } from "@/lib/ai/insights-shared";
 import { findNotables, type Reason } from "@/lib/signals/notable";
 import { AI_ENV_HINT, aiStatus, isAiConfigured } from "@/lib/ai/config";
 import { WORKER_INFO_KEY, WORKER_LOCK_KEY, workerHealth, type WorkerHealth } from "@/lib/worker-info";
+import { themeStates, type ThemeState } from "@/lib/data/themes";
+import { readChanges, type ChangeRow } from "@/lib/data/changes";
+import { parseThemeNotes, THEME_NOTES_KEY, type StoredThemeNotes } from "@/lib/ai/themes-shared";
 
 // Read side for the UI. SQLite reads are synchronous, which Cache Components
 // would otherwise freeze into the build-time shell; connection() makes every
@@ -457,6 +460,24 @@ export async function getHighlights(lang: Locale): Promise<{ items: Highlight[];
     note: stored && { text: stored.content[lang], sources: stored.content.sources, model: stored.content.model, createdAt: stored.createdAt },
   }));
   return { items, hasKey: isAiConfigured() };
+}
+
+// ---------------------------------------------------------------- dominant themes
+
+/** The overview's dominant themes (config/themes.ts) with their AI notes, if any. */
+export async function getThemes(): Promise<{ themes: ThemeState[]; notes: StoredThemeNotes | null; hasKey: boolean; now: number }> {
+  await connection();
+  const db = getDb();
+  const now = Date.now();
+  const row = db.prepare("SELECT value FROM kv WHERE key = ?").get(THEME_NOTES_KEY) as { value: string | null } | undefined;
+  return { themes: themeStates(db, now), notes: parseThemeNotes(row?.value), hasKey: isAiConfigured(), now };
+}
+
+/** The change log of the last two weeks for "What's new since last time"; the browser keeps what is newer than the last visit. */
+export async function getChanges(days = 14): Promise<{ rows: ChangeRow[]; now: number }> {
+  await connection();
+  const now = Date.now();
+  return { rows: readChanges(getDb(), now - days * 24 * 3600_000), now };
 }
 
 /** AI notes by series key, for the tile detail dialogs. */

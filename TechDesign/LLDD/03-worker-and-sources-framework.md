@@ -134,7 +134,7 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 |---|---|
 | Thị trường | `yahoo` 3 phút |
 | Vĩ mô | `fred`, `cnbc` 6 giờ · `bis` 12 giờ · `imf`, `imfcpi`, `ibge`, `oecd`, `worldbank`, `gpr`, `gscpi` 24 giờ |
-| Tin tức và AI | `rss` 10 phút · `gdelt` 15 phút · `translate` 5 phút* · `insights` 30 phút* · `brief` 24 giờ* (lúc 06:00) · `macronote` 1 tuần* (thứ Hai) |
+| Tin tức và AI | `rss` 10 phút · `gdelt` 15 phút · `translate` 5 phút* · `insights` 30 phút* · `brief` 24 giờ* (lúc 06:00) · `themes` 24 giờ* (sau 06:00, viết lại khi trạng thái một chủ đề đổi) · `macronote`, `technote` 1 tuần* (thứ Hai) · `changes` 15 phút (chỉ đọc DB) |
 | Bản đồ | `usgs` 10 phút · `gdacs` 30 phút · `eonet` 1 giờ |
 | Trending / lịch / dự đoán | `hackernews` 20 phút · `polymarket`, `kalshi` 15 phút · `wikipedia`, `calendar`, `launches` 3 giờ |
 | Môi trường và sức khỏe | `airquality` 1 giờ · `who` 6 giờ · `co2`, `gistemp` 24 giờ |

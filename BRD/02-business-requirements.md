@@ -35,6 +35,8 @@
 | BR-21 | Trang Vĩ mô thế giới | S | M8 | Partial (Phase 1–3 xong, còn chỗ thiếu dữ liệu) |
 | BR-22 | Trang Việt Nam | S | M9 | Partial (chưa có lợi suất 10 năm) |
 | BR-23 | Trang Công nghệ | S | M10 | Partial (Phase 1 xong, Phase 2–3 trong `TODO.md`) |
+| BR-24 | Chủ đề chi phối | S | — | Done |
+| BR-25 | Có gì mới từ lần trước | S | — | Done |
 
 ---
 
@@ -382,3 +384,43 @@
 - Hacker News và tin công nghệ (The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress Khoa học công nghệ). Tin của các báo công nghệ không vào danh sách tin thế giới và Brief, giống báo crypto.
 
 **Ngoài phạm vi:** dữ liệu cần key (Cloudflare Radar, Product Hunt, Artificial Analysis); bảng xếp hạng chất lượng model (chưa tìm được nguồn không cần key); giá DRAM và GPU cho thuê (chỉ có nguồn trả phí).
+
+---
+
+## BR-24 — Chủ đề chi phối · S
+
+**Trạng thái:** Done (2026-11-11). Panel đầu trang Tổng quan, 4 chủ đề, ghi chú AI đã chạy thật với Gemini. Thiết kế ở [LLDD 04 §3](../TechDesign/LLDD/04-frontend.md) (Hàng 0) và [LLDD 05 §3d](../TechDesign/LLDD/05-ai-pipeline.md).
+
+**Mô tả:** Vài câu chuyện đang dẫn dắt thị trường (năng lượng vùng Vịnh, lạm phát Mỹ và Fed, chu kỳ AI và bán dẫn, vốn ngoại và tỷ giá Việt Nam), khai báo tay trong `config/themes.ts`. Mỗi chủ đề gắn với các chỉ số cho biết nó đang nóng lên hay hạ nhiệt, kênh truyền dẫn sang Việt Nam, kèo Polymarket và tin liên quan. Đây là phần "nối các chấm" mà review sản phẩm ngày 2026-11-10 thấy thiếu: dashboard có đủ mảnh ghép nhưng không nói ra câu chuyện chính (Brent +48% từ đầu năm, khí TTF +192%, CPI năng lượng Mỹ +20,4% mà bản tin, nhận định tuần và "Điểm đáng chú ý" đều không nhắc).
+
+**User story:** Là người đầu tư theo dõi vĩ mô và địa chính trị, tôi muốn mở trang là thấy ngay vài câu chuyện lớn đang chi phối thị trường, mỗi chuyện đang nóng lên hay hạ nhiệt và ảnh hưởng gì tới Việt Nam, để không phải tự ghép từ hàng chục panel.
+
+**Tiêu chí nghiệm thu:**
+- Panel nằm đầu trang Tổng quan, mỗi chủ đề một thẻ, giữ thứ tự khai báo.
+- Trạng thái tính từ số liệu (không do AI): biến động khoảng một tháng của từng chỉ số so với mức thường gặp của chính nó, có nhãn chữ (Nóng lên / Hạ nhiệt / Đi ngang / Chưa đủ dữ liệu) và tooltip giải thích.
+- Mỗi chỉ số hiện giá trị, thay đổi 1 tháng và kỳ dữ liệu với số liệu tháng; chỉ số thiếu lịch sử hoặc số liệu trễ vẫn hiện nhưng không tính vào trạng thái.
+- Mỗi chủ đề có tối đa 3 tin mới nhất (gom tin trùng), số bài 24 giờ và 7 ngày, và tối đa 2 kèo Polymarket chưa ngã ngũ.
+- AI viết 2–3 câu cho mỗi chủ đề, chỉ từ dữ liệu của chủ đề đó, song ngữ; mỗi ngày một lần sau 06:00 và khi trạng thái một chủ đề đổi (tối đa 6 giờ một lần), không lấy lượt gọi của bản tin.
+- Nhận định vĩ mô tuần nhận các chủ đề trong đầu vào.
+- Chưa cấu hình AI thì thẻ vẫn đủ số liệu, tin, kèo; chân panel hướng dẫn đặt `AI_API_KEY`.
+
+**Ngoài phạm vi:** tự phát hiện chủ đề mới từ tin tức (chủ đề do người dùng khai báo); lịch sử trạng thái theo ngày (cần cho "Có gì mới từ lần trước", xem `TODO.md`).
+
+---
+
+## BR-25 — Có gì mới từ lần trước · S
+
+**Trạng thái:** Done (2026-11-11). Dải đầu trang Tổng quan, nhật ký do worker ghi. Thiết kế ở [LLDD 04 §3](../TechDesign/LLDD/04-frontend.md) (Hàng 0) và [LLDD 01 §3.13](../TechDesign/LLDD/01-database-schema.md).
+
+**Mô tả:** Một dải liệt kê những gì đã đổi kể từ lần người dùng xem trước: trạng thái rủi ro đổi, trạng thái chủ đề chi phối đổi, chỉ số vừa vượt ngưỡng, số liệu vừa công bố so với dự báo, biến động bất thường, lỗ hổng vừa bị khai thác ở các hãng đang theo dõi. Phục vụ KPI-1 (nắm tình hình dưới 2 phút, [BRD 01 §7](01-project-overview.md)): người đọc buổi sáng không phải dò lại 17 panel để biết cái gì mới.
+
+**User story:** Là người mở dashboard mỗi sáng, tôi muốn thấy ngay những gì đã thay đổi từ lần trước, để chỉ đọc kỹ phần có chuyện.
+
+**Tiêu chí nghiệm thu:**
+- Mốc "lần trước" lưu trong trình duyệt (không cần đăng nhập); tải lại trang trong cùng lần xem không làm mất danh sách; lần đầu hiện 24 giờ qua.
+- Mỗi mục là một câu song ngữ có giờ tương đối, loại quan trọng đứng trước; lỗ hổng có link.
+- Nút "Đã xem" xoá danh sách tới lần thay đổi sau.
+- Giá trị lơ lửng quanh ngưỡng không tạo mục trùng lặp.
+- Không có gì mới thì nói rõ "Không có gì mới kể từ …".
+
+**Ngoài phạm vi:** đồng bộ mốc giữa nhiều máy hay trình duyệt; thông báo đẩy (cảnh báo Telegram là mục riêng trong `TODO.md`, sẽ đọc cùng nhật ký).

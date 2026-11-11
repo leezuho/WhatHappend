@@ -20,6 +20,8 @@ import {
 } from "@/components/panels/MarketPanels";
 import { BriefBody, MapBody, NewsBody, VietnamBody } from "@/components/panels/ContentPanels";
 import { CalendarBody, EnvBody, PredictionBody, TrendingBody } from "@/components/panels/WorldPanels";
+import { ThemesBody } from "@/components/panels/ThemePanels";
+import { WhatsNewBody } from "@/components/panels/WhatsNew";
 
 export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -44,6 +46,14 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         }
       />
       <main className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-12">
+        {/* Row 0: what changed since the reader last looked, then the few stories driving markets */}
+        <Panel lang={lang} title={p.whatsNew.title} subtitle={p.whatsNew.subtitle} sources={["changes"]} className="md:col-span-2 xl:col-span-12">
+          <WhatsNewBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.themes.title} subtitle={p.themes.subtitle} sources={["themes", "yahoo", "fred", "rss"]} className="md:col-span-2 xl:col-span-12">
+          <ThemesBody lang={lang} />
+        </Panel>
+
         {/* Row 1: the world at a glance */}
         <Panel lang={lang} title={p.map.title} subtitle={p.map.subtitle} sources={["usgs", "gdacs", "eonet", "gdelt"]} className="md:col-span-2 xl:col-span-12">
           <MapBody lang={lang} />

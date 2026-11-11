@@ -16,10 +16,10 @@ const QUOTA_TZ = "America/Los_Angeles";
 const GEMINI_FREE_BRIEF = 20;
 
 /**
- * Calls of the "brief" model that the optional jobs (indicator notes) leave untouched each day: the daily brief,
- * one "Regenerate" press, the weekly macro and tech notes, and one retry.
+ * Calls of the "brief" model that the optional jobs (indicator notes, theme rewrites during the day) leave untouched
+ * each day: the daily brief, one "Regenerate" press, the weekly macro and tech notes, the daily theme notes, and one retry.
  */
-export const BRIEF_RESERVE = 5;
+export const BRIEF_RESERVE = 6;
 
 /** The quota day a timestamp falls in (YYYY-MM-DD, Pacific time). */
 export function quotaDay(now: number): string {

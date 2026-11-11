@@ -121,6 +121,18 @@ CREATE TABLE IF NOT EXISTS kv (
   updated_at INTEGER NOT NULL
 );
 
+-- What changed and when the worker noticed (lib/data/changes.ts): the overview's
+-- "What's new since last time" strip reads it from the reader's last visit.
+CREATE TABLE IF NOT EXISTS changes (
+  id    INTEGER PRIMARY KEY,
+  at    INTEGER NOT NULL,               -- ms epoch the change was seen
+  kind  TEXT NOT NULL,                  -- 'regime' | 'theme' | 'threshold' | 'move' | 'release' | 'kev'
+  key   TEXT NOT NULL,                  -- what changed, for de-duplication: 'brent:warn', 'ai:cooling', a CVE id
+  data  TEXT NOT NULL                   -- JSON, shape by kind (ChangeData)
+);
+CREATE INDEX IF NOT EXISTS changes_at ON changes (at DESC);
+CREATE INDEX IF NOT EXISTS changes_key ON changes (kind, key, at);
+
 CREATE TABLE IF NOT EXISTS watchlist (
   series_id  TEXT PRIMARY KEY,
   added_at   INTEGER NOT NULL

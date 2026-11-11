@@ -82,6 +82,14 @@
     }
   },
   "panels": {
+    "whatsNew": {
+      "title": "What's new since last time",
+      "subtitle": "Since your last visit, remembered in this browser"
+    },
+    "themes": {
+      "title": "Dominant themes",
+      "subtitle": "The stories driving markets: heating up or cooling, the latest news, the odds, and how they reach Vietnam"
+    },
     "brief": {
       "title": "Daily brief",
       "subtitle": "AI summary of the last 24 hours"
@@ -593,6 +601,57 @@
       "weekUp": "Big rise this week",
       "weekDown": "Big fall this week"
     }
+  },
+  "themes": {
+    "status": {
+      "heating": "Heating up",
+      "cooling": "Cooling",
+      "steady": "Steady",
+      "unknown": "Not enough data"
+    },
+    "heatTip": "{means} Score {heat}: the gauges' moves over about a month, in units of their usual monthly move.",
+    "month": "1 mo",
+    "sinceTip": "Change since {date}; {heat}× its usual size, toward {dir}",
+    "toHeat": "heating",
+    "toCool": "cooling",
+    "notCounted": "Not counted in the status (history too short or data late)",
+    "vietnam": "Vietnam",
+    "odds": "Odds",
+    "news": "News",
+    "newsCount": "{day} articles in 24h · {week} in 7 days",
+    "noNews": "No matching headlines in the last two days.",
+    "more": "+{n}",
+    "rules": "Status: the mean of the gauges' moves over about a month (a month for daily data, the latest release for monthly data), each divided by its usual monthly move over two years; at least +0.5 is heating up, −0.5 or below cooling. Vietnam readings are shown but not counted. Themes are set in config/themes.ts.",
+    "needsKey": "Add AI_API_KEY to .env.local for a short AI note on each theme.",
+    "aiAt": "AI notes {time} · {model}",
+    "yes": "Yes"
+  },
+  "whatsNew": {
+    "since": "Since {time}",
+    "firstVisit": "First visit here: the last 24 hours",
+    "nothing": "Nothing new since {time}.",
+    "seen": "Mark as seen",
+    "more": "+{n} more",
+    "less": "Show less",
+    "rules": "Logged by the worker every 15 minutes: risk-regime and theme status changes, indicators newly past their watch or danger level, unusual moves (at least twice the usual size in a session or a week), data releases with the actual against the forecast, and newly exploited vulnerabilities (CISA KEV) at the companies this dashboard follows. Your last visit is kept in this browser only.",
+    "regime": "Risk regime: {from} → {to}",
+    "theme": "{name}: {from} → {to}",
+    "above": "{name} rose above its {level} ({line}): now {value}",
+    "below": "{name} fell below its {level} ({line}): now {value}",
+    "levels": {
+      "warn": "watch level",
+      "crit": "danger level"
+    },
+    "dayUp": "{name}: unusual jump in a session, {change} ({z}× the usual)",
+    "dayDown": "{name}: unusual drop in a session, {change} ({z}× the usual)",
+    "weekUp": "{name}: big rise over the week, {change} ({z}× the usual)",
+    "weekDown": "{name}: big fall over the week, {change} ({z}× the usual)",
+    "release": "{event} ({country}): {actual} vs {forecast} forecast",
+    "releaseNoForecast": "{event} ({country}): {actual}",
+    "better": "better than expected",
+    "worse": "worse than expected",
+    "kev": "Exploited vulnerability: {vendor} {product} ({id})",
+    "ransomware": "used by ransomware"
   },
   "vn": {
     "fuelAdjusted": "Last adjusted {t}",

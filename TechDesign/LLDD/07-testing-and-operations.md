@@ -57,10 +57,12 @@ Dùng `node:test` có sẵn trong Node, chạy qua `tsx` nên đọc được al
 | `test/parsers.test.ts` | `parseCsv` (ngoặc kép, CRLF, dòng trống), `unzipFirst` (ZIP stored/deflate, extra field, comment), `normalizeUrl`, `titleKey` |
 | `test/signals.test.ts` | `alertOf`, `computeRegime` v2 (thiếu dữ liệu, risk-on/off, VIX > 35 đổi ngay, giữ 2 phiên, cửa sổ 10 năm, nửa trọng số khi trễ, phân kỳ tín dụng, độ rộng), `mergeDaily`, `findNotables` trên DB `:memory:` (ngưỡng mới vượt, cũ mờ dần, `crit` cũ giữ sàn, biến động 1 tuần), `scoreOf` |
 | `test/ai-scheduling.test.ts` | `needsNote` của insights, `brief.isDue` (khoảng cách 10 phút, lỗi gần đây, thiếu tin), đầu vào của bản tin: `nyTime`, `calendarForBrief`, `biggestMoves`, `bigMoves`, `regimeForPrompt` |
+| `test/themes.test.ts` | Chủ đề chi phối: `readGauge` (biến động tháng chia mức thường gặp, dấu, kẹp ±3, số trễ và lịch sử ngắn không tính, dòng tiền đọc theo tổng trượt), `themeHeat`/`statusOf`, `matchesNews` (từ khoá, báo chuyên mục, khu vực, "dong" là đơn vị hay địa danh), `themeStates` trên DB `:memory:` (sự kiện tỷ giá, gom tin, bỏ kèo gần chắc chắn), `themesDue`, `pickTier`, `macroInput` có chủ đề |
+| `test/changes.test.ts` | Nhật ký "Có gì mới": `diffState` (chỉ cái mới; hết ngưỡng, `crit` lùi về `warn`, trạng thái từ "chưa đủ dữ liệu" không tính), `logChanges` (cửa sổ lặp theo loại, xoá sau 30 ngày), `observe` (số liệu có thực tế, KEV chỉ của hãng theo dõi), nguồn `changes` (lần đầu chỉ lưu trạng thái), `describeChange`/`orderChanges` song ngữ |
 | `test/web-and-worker.test.ts` | `isCrossOrigin`, khóa worker (`worker/lock.ts`), worker tự báo phiên bản (`importGraph`, `changedSince`, `workerHealth`, mọi id của `SOURCE_META` đều được đăng ký), các hàm định dạng |
 | `test/tech.test.ts` | Trang Công nghệ: `statuspageStatus`, `decodeUtf16` + `awsStatus` (UTF-16 BE có BOM), `gcpStatus`, `pickNewModels`, `topPapers`/`trendingModels`, `recentKev`, `replaceItems` giữ bản dịch, `recentHeadlines` tách báo công nghệ, `changeSince`/`thin`, `techStockRows` (đổi vốn hoá ra USD) trên DB `:memory:` |
 
-Chưa phủ: các fetcher gọi mạng (kiểm bằng `npm run fetch -- <id>`) và lớp gọi AI (`translate`, `brief.run`, `insights.run`).
+Chưa phủ: các fetcher gọi mạng (kiểm bằng `npm run fetch -- <id>`) và lớp gọi AI (`translate`, `brief.run`, `insights.run`, `themes.run`).
 
 ## 2. Runbook
 

@@ -25,6 +25,9 @@ export const SOURCE_META = {
   insights: { intervalMs: 30 * MIN, needsAi: true },
   macronote: { intervalMs: 24 * HOUR, needsAi: true },
   technote: { intervalMs: 24 * HOUR, needsAi: true },
+  themes: { intervalMs: 24 * HOUR, needsAi: true },
+  // Derived from the database only: the "What's new" change log (lib/data/changes.ts).
+  changes: { intervalMs: 15 * MIN },
   // Map
   usgs: { intervalMs: 10 * MIN },
   gdacs: { intervalMs: 30 * MIN },

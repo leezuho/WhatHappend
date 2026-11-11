@@ -2,7 +2,7 @@
 
 > Phiên bản 0.3 · Ngày 2026-10-31 · Trạng thái: Đã chạy thật với Gemini; Claude chưa chạy thật
 > Liên quan: [HLDD](../HLDD/HLDD.md) (ADR-10) · [01 Database schema](01-database-schema.md) · [03 Worker](03-worker-and-sources-framework.md) · [BRD-07, BRD-08](../../BRD/02-business-requirements.md) · [NFR-07](../../BRD/03-non-functional-requirements.md)
-> Mã nguồn: `lib/ai/{config,provider,taxonomy,translate,brief,brief-shared,insights,insights-shared}.ts`, `lib/ai/providers/{gemini,anthropic}.ts`, `lib/signals/notable.ts`, `app/api/brief/route.ts`; các nguồn `translate`, `brief` và `insights` trong `SOURCE_META`
+> Mã nguồn: `lib/ai/{config,provider,taxonomy,translate,brief,brief-shared,insights,insights-shared,macronote,technote,themes,themes-shared}.ts`, `lib/ai/providers/{gemini,anthropic}.ts`, `lib/signals/notable.ts`, `lib/data/themes.ts`, `app/api/brief/route.ts`; các nguồn `translate`, `brief`, `insights`, `macronote`, `technote` và `themes` trong `SOURCE_META`
 
 Phần AI **không gắn với một nhà cung cấp cụ thể**. `translate` và `brief` chỉ gọi một hàm `generateJson()`. Provider (Gemini hoặc Claude), key và model chọn qua biến môi trường. Ngày 2026-10-31 đã **chạy thật với Gemini** bằng một key Google AI Studio gói miễn phí (xem §6). Adapter Claude qua kiểm tra kiểu nhưng **chưa chạy thật** vì chưa có key.
 
@@ -74,8 +74,10 @@ generateJson({ tier: "brief" | "fast", system, user, schema, maxTokens?, db? })
 | Dịch và phân loại tiêu đề | tier `fast` (mặc định `gemini-flash-lite-latest` / `claude-haiku-5-5`) | Nguồn `translate`, mỗi 5 phút | Tiêu đề chưa xử lý | `articles.title_vi`, `title_en`, `region`, `topic`; `events.title_vi`; `items.title_vi` (chỉ `kind` `polymarket`, `who`) |
 | Daily Brief | tier `brief` (mặc định `gemini-flash-latest` / `claude-sonnet-5-5`) | Nguồn `brief`: 06:00 Asia/Ho_Chi_Minh, cộng nút làm mới | Tin 24h + Vital Signs + sự kiện | Bảng `briefs` (2 dòng: `vi`, `en`) |
 | Diễn giải chỉ số | tier `brief` | Nguồn `insights`, mỗi 30 phút, chỉ gọi model khi có ghi chú cần viết | Chỉ số đáng chú ý + 60 tiêu đề 24h | Bảng `insights` (1 dòng mỗi chỉ số) |
+| Nhận định vĩ mô / công nghệ tuần | tier `brief` | Nguồn `macronote`, `technote`: thứ Hai | Số liệu trang Vĩ mô (kèm chủ đề chi phối) / trang Công nghệ | `kv['macro:note']`, `kv['tech:note']` |
+| Ghi chú chủ đề chi phối | tier `brief` (hoặc `fast`, §3d) | Nguồn `themes`: mỗi ngày sau 06:00, viết lại khi trạng thái một chủ đề đổi | Số liệu, kèo và tiêu đề của từng chủ đề | `kv['themes:notes']` |
 
-Cả ba nguồn khai báo `needsAi: true` (§0.4). Chưa cấu hình AI thì runner bỏ qua (skipped) và panel hiện "Cần API key".
+Mọi nguồn AI khai báo `needsAi: true` (§0.4). Chưa cấu hình AI thì runner bỏ qua (skipped) và panel hiện "Cần API key".
 
 ## 2. Dịch và phân loại (`translate`)
 
@@ -210,7 +212,7 @@ Phase 3 của trang Vĩ mô thế giới: mỗi tuần một đoạn nhận đ�
 
 **Khi nào chạy** (`isDue`): tuần ISO theo giờ Việt Nam (`isoWeek`) khác tuần đã kiểm tra gần nhất, model `brief` còn ít nhất 2 lượt trong ngày (một cho nhận định, một chừa cho bản tin), và lần lỗi trước đã qua 6 giờ. Tức là chạy ở lượt đầu tiên của thứ Hai (giờ Việt Nam).
 
-**Đầu vào** (`macroInput`, khoảng 6.000 ký tự ≈ 1,8K token): 8 ô Nhịp kinh tế thế giới, bảng sức khoẻ 16 nền kinh tế dạng chữ gọn (`cellText`: "3.7 Sep '26 [warn]"), pha chu kỳ, 7 tín hiệu suy thoái Mỹ, danh sách thay đổi so với nhận định tuần trước (`changesSince`: số tháng/quý/năm khác đi, lợi suất lệch ≥ 0,25 điểm %, tỷ giá ≥ 2 điểm %) và các quyết định lãi suất, số liệu tác động cao trong 8 ngày tới. Bảng sức khoẻ đọc qua `lib/data/macro.ts` (`scorecardRows`, `cycleRows`), dùng chung với web.
+**Đầu vào** (`macroInput`, khoảng 9.600 ký tự ≈ 2,9K token, trong đó chủ đề khoảng 3.400): 8 ô Nhịp kinh tế thế giới, bảng sức khoẻ 16 nền kinh tế dạng chữ gọn (`cellText`: "3.7 Sep '26 [warn]"), pha chu kỳ, 7 tín hiệu suy thoái Mỹ, danh sách thay đổi so với nhận định tuần trước (`changesSince`: số tháng/quý/năm khác đi, lợi suất lệch ≥ 0,25 điểm %, tỷ giá ≥ 2 điểm %), các quyết định lãi suất, số liệu tác động cao trong 8 ngày tới, và từ 2026-11-11 các **chủ đề chi phối** (`themeForPrompt(…, false)`: trạng thái, điểm, các chỉ số và kênh sang Việt Nam, không kèm tiêu đề). Prompt yêu cầu lồng chủ đề liên quan vào ý tương ứng (cú sốc năng lượng vào lạm phát và NHTW, đô la mạnh vào tiền tệ các nước mới nổi) và không bỏ qua chủ đề đang nóng lên. Lý do: nhận định tuần 46 không có chữ "dầu" giữa cú sốc năng lượng vùng Vịnh, vì model chỉ đọc bảng số của trang Vĩ mô. Chủ đề không vào `hash`, nên một tuần không có số tháng/quý/năm mới vẫn giữ nhận định cũ. Bảng sức khoẻ đọc qua `lib/data/macro.ts` (`scorecardRows`, `cycleRows`), dùng chung với web.
 
 **Tiết kiệm lượt gọi:** một lần gọi mỗi tuần cho cả hai ngôn ngữ; gửi phần thay đổi thay vì cả bảng tuần trước; băm (`hash`) các số tháng/quý/năm và pha chu kỳ, trùng với nhận định trước thì không gọi model, chỉ ghi nhận đã kiểm tra tuần này; chưa đủ 8 nền kinh tế có CPI tháng thì báo lỗi thay vì viết từ dữ liệu thiếu.
 
@@ -231,6 +233,22 @@ Cùng khuôn với `macronote`, cho trang Công nghệ.
 **Đầu ra:** cùng schema với `macronote` (`headline`, 4–6 `bullets`, 2–4 `watch`, bản `en` và `vi`). Prompt yêu cầu chỉ dùng tiêu đề và số được đưa, ghi "theo tin" khi tiêu đề là tin đồn.
 
 **Lưu:** `kv` khoá `tech:note` (`StoredTechNote` trong `technote-shared.ts`). Web đọc qua `getTechNote()` (`lib/queries-tech.ts`) và hiện ở panel "Công nghệ tuần này" (`TechNoteBody` → `WeeklyNote`, dùng chung với `MacroNoteBody`).
+
+## 3d. Ghi chú chủ đề chi phối (`themes`, `lib/ai/themes.ts`)
+
+Panel đầu trang Tổng quan (LLDD 04 §3, Hàng 0) có 2–3 câu do AI viết cho mỗi chủ đề trong `config/themes.ts`.
+
+**Khi nào chạy** (`isDue` → `themesDue`): chưa có ghi chú; hoặc ghi chú của ngày trước và giờ Việt Nam đã qua 06:00; hoặc cùng ngày nhưng đã cũ ít nhất 6 giờ và lần kiểm tra trước cách ít nhất 30 phút. Lần chạy không phải ghi chú đầu ngày so `basis` (trạng thái từng chủ đề, ví dụ `energy:steady,fed:steady,ai:cooling,vnCapital:cooling`) với ghi chú đang lưu: trùng thì không gọi model, chỉ ghi log. Lỗi thì thử lại sau 1 giờ. Cần ít nhất 2 chủ đề có trạng thái, nếu không thì báo lỗi (DB còn đang nạp).
+
+**Model** (`pickTier`): ghi chú đầu ngày dùng model `brief` khi còn ít nhất 2 lượt (chừa một cho bản tin); lần viết lại trong ngày chỉ dùng model `brief` khi còn hơn `BRIEF_RESERVE`, còn lại dùng model `fast`. Không còn lượt nào thì không chạy.
+
+**Đầu vào** (`themeForPrompt`, khoảng 6.000 ký tự ≈ 2,2K token cho 4 chủ đề): mỗi chủ đề có tên, trạng thái, điểm, "nóng lên nghĩa là gì", các chỉ số dạng chữ gọn (`gaugeText`: "Brent crude: $92.41 (2026-11-11), over 1 month -13.4%, heat -0.8"), sự kiện (cách trần tỷ giá, doanh thu TSMC), kênh sang Việt Nam và số liệu Việt Nam, kèo Polymarket, số bài 24 giờ / 7 ngày và tối đa 8 câu chuyện được đưa tin nhiều nhất trong 2 ngày (tiêu đề tiếng Anh, gom bằng `clusterStories`).
+
+**Prompt:** mỗi chủ đề 2–3 câu, dưới 70 từ: đang ở đâu (trạng thái và một hai biến động chính kèm số), vì sao (chỉ khi tiêu đề nói rõ, ghi theo nguồn nào), nghĩa là gì với Việt Nam (khi số liệu Việt Nam cho thấy). Chỉ dùng dữ liệu của chính chủ đề đó, không mượn số hay tin của chủ đề khác; nói rõ khi số liệu đã cũ; kèo viết dạng "thị trường đặt N%"; không khuyến nghị, không dự báo. Song ngữ trong một lần gọi.
+
+**Đầu ra** (zod): `{ themes: [{ id, en, vi }] }`; id lạ hoặc văn bản rỗng bị bỏ. Lưu `kv['themes:notes']` (`StoredThemeNotes` trong `themes-shared.ts`: ngày Việt Nam, thời điểm, model, `basis`, ghi chú theo id). Web đọc qua `getThemes()`.
+
+**Chạy thật (2026-11-11, `gemini-3.8-flash`):** 4/4 chủ đề, 5.816 ký tự vào, 2.234 token vào / 977 token ra, 9 giây. Ghi chú bám số liệu, dẫn nguồn ("Theo VnExpress, vốn hoá Nvidia bốc hơi hơn 400 tỷ USD…") và nói rõ CPI Việt Nam là số tháng 9.
 
 ## 4. Chi phí và hạn mức
 
@@ -257,10 +275,10 @@ Ngày 2026-11-09, `gemini-flash-latest` trỏ tới `gemini-3.8-flash` với h�
 - Mỗi lần gọi qua `generateJson({ …, db })` cộng một vào `kv` khoá `ai:calls:<ngày>:<model>`. Ngày tính theo giờ Thái Bình Dương (`quotaDay`), vì Google reset hạn mức lúc nửa đêm giờ đó. Bộ đếm cũ quá 7 ngày bị xoá.
 - Gặp 429 có "per day" (`isDailyQuotaError`) thì ghi `ai:exhausted:<model>` = ngày đó: model bị khoá đến khi sang ngày mới, các nguồn không gọi thử vô ích nữa.
 - `callsLeft(db, config, tier)` = hạn mức (`dailyLimit`) − số lần đã gọi, bằng 0 khi bị khoá.
-- Chia 20 lượt của model `brief`: bản tin chạy khi còn lượt (`isDue` bỏ qua khi `callsLeft = 0`); nhận định vĩ mô tuần cần còn ≥ 2 lượt, nhận định công nghệ tuần ≥ 3; `insights` chỉ dùng model `brief` khi còn hơn `BRIEF_RESERVE` = 5 lượt (bản tin, một lần bấm "Viết lại", hai nhận định tuần và một lần thử lại), còn lại dùng model `fast`.
+- Chia 20 lượt của model `brief`: bản tin chạy khi còn lượt (`isDue` bỏ qua khi `callsLeft = 0`); nhận định vĩ mô tuần cần còn ≥ 2 lượt, nhận định công nghệ tuần ≥ 3; ghi chú chủ đề đầu ngày ≥ 2 (§3d); `insights` và các lần viết lại ghi chú chủ đề trong ngày chỉ dùng model `brief` khi còn hơn `BRIEF_RESERVE` = 6 lượt (bản tin, một lần bấm "Viết lại", hai nhận định tuần, ghi chú chủ đề đầu ngày và một lần thử lại; 5 trước 2026-11-11), còn lại dùng model `fast`.
 - Bộ đếm chỉ thấy các lần gọi của worker này. Key dùng chung ở nơi khác (AI Studio, máy khác) vẫn tiêu hạn mức thật; khi đó 429 sẽ khoá model như trên.
 
-**Biện pháp giữ chi phí:** gửi theo lô, mỗi tiêu đề chỉ dịch một lần, giới hạn số bản ghi mỗi lần chạy, brief 1 lần/ngày, nhận định vĩ mô và công nghệ mỗi loại 1 lần/tuần, `insights` chỉ gọi model khi có ghi chú mới cần viết (thường vài lần mỗi ngày) và nhường model `brief` khi sắp hết lượt (§4.1). Mỗi lần gọi đều ghi số token vào log qua `ctx.log`.
+**Biện pháp giữ chi phí:** gửi theo lô, mỗi tiêu đề chỉ dịch một lần, giới hạn số bản ghi mỗi lần chạy, brief 1 lần/ngày, ghi chú chủ đề 1 lần/ngày cộng tối đa vài lần khi trạng thái đổi, nhận định vĩ mô và công nghệ mỗi loại 1 lần/tuần, `insights` chỉ gọi model khi có ghi chú mới cần viết (thường vài lần mỗi ngày) và nhường model `brief` khi sắp hết lượt (§4.1). Mỗi lần gọi đều ghi số token vào log qua `ctx.log`.
 
 ## 5. Chưa cấu hình AI
 

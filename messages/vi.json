@@ -82,6 +82,14 @@
     }
   },
   "panels": {
+    "whatsNew": {
+      "title": "Có gì mới từ lần trước",
+      "subtitle": "Kể từ lần bạn xem trước, ghi nhớ trong trình duyệt này"
+    },
+    "themes": {
+      "title": "Chủ đề chi phối",
+      "subtitle": "Những câu chuyện đang dẫn dắt thị trường: nóng lên hay hạ nhiệt, tin mới, kèo và tác động tới Việt Nam"
+    },
     "brief": {
       "title": "Bản tin hôm nay",
       "subtitle": "AI tóm tắt 24 giờ qua"
@@ -593,6 +601,57 @@
       "weekUp": "Tăng mạnh trong tuần",
       "weekDown": "Giảm mạnh trong tuần"
     }
+  },
+  "themes": {
+    "status": {
+      "heating": "Nóng lên",
+      "cooling": "Hạ nhiệt",
+      "steady": "Đi ngang",
+      "unknown": "Chưa đủ dữ liệu"
+    },
+    "heatTip": "{means} Điểm {heat}: biến động khoảng một tháng của các chỉ số, tính bằng bội số của mức biến động tháng thường gặp.",
+    "month": "1 th",
+    "sinceTip": "Thay đổi từ {date}; gấp {heat} lần mức thường gặp, theo hướng {dir}",
+    "toHeat": "nóng lên",
+    "toCool": "hạ nhiệt",
+    "notCounted": "Không tính vào trạng thái (lịch sử còn ngắn hoặc số liệu chậm)",
+    "vietnam": "Việt Nam",
+    "odds": "Kèo",
+    "news": "Tin",
+    "newsCount": "{day} bài trong 24 giờ · {week} bài trong 7 ngày",
+    "noNews": "Không có tiêu đề phù hợp trong hai ngày qua.",
+    "more": "+{n}",
+    "rules": "Trạng thái: trung bình biến động khoảng một tháng của các chỉ số (một tháng với số liệu ngày, kỳ mới nhất với số liệu tháng), mỗi chỉ số chia cho mức biến động tháng thường gặp của chính nó trong hai năm; từ +0,5 là nóng lên, từ −0,5 trở xuống là hạ nhiệt. Số liệu Việt Nam chỉ để xem, không tính vào trạng thái. Danh sách chủ đề khai báo trong config/themes.ts.",
+    "needsKey": "Đặt AI_API_KEY trong .env.local để AI viết vài câu cho từng chủ đề.",
+    "aiAt": "AI viết {time} · {model}",
+    "yes": "Có"
+  },
+  "whatsNew": {
+    "since": "Từ {time}",
+    "firstVisit": "Lần đầu xem ở đây: 24 giờ qua",
+    "nothing": "Không có gì mới kể từ {time}.",
+    "seen": "Đã xem",
+    "more": "+{n} mục",
+    "less": "Thu gọn",
+    "rules": "Worker ghi lại mỗi 15 phút: trạng thái rủi ro và trạng thái chủ đề đổi, chỉ số vừa vượt mức lưu ý hoặc nguy hiểm, biến động bất thường (từ 2 lần mức thường gặp trong phiên hoặc trong tuần), số liệu vừa công bố so với dự báo, và lỗ hổng vừa bị khai thác (CISA KEV) ở các hãng dashboard đang theo dõi. Lần xem trước chỉ lưu trong trình duyệt này.",
+    "regime": "Trạng thái rủi ro: {from} → {to}",
+    "theme": "{name}: {from} → {to}",
+    "above": "{name} vượt {level} ({line}), hiện {value}",
+    "below": "{name} xuống dưới {level} ({line}), hiện {value}",
+    "levels": {
+      "warn": "mức lưu ý",
+      "crit": "mức nguy hiểm"
+    },
+    "dayUp": "{name} tăng mạnh bất thường trong phiên: {change} (gấp {z} lần mức thường gặp)",
+    "dayDown": "{name} giảm mạnh bất thường trong phiên: {change} (gấp {z} lần mức thường gặp)",
+    "weekUp": "{name} tăng mạnh trong tuần: {change} (gấp {z} lần mức thường gặp)",
+    "weekDown": "{name} giảm mạnh trong tuần: {change} (gấp {z} lần mức thường gặp)",
+    "release": "{event} ({country}): thực tế {actual}, dự báo {forecast}",
+    "releaseNoForecast": "{event} ({country}): {actual}",
+    "better": "tốt hơn dự báo",
+    "worse": "xấu hơn dự báo",
+    "kev": "Lỗ hổng bị khai thác: {vendor} {product} ({id})",
+    "ransomware": "đã bị mã độc tống tiền dùng"
   },
   "vn": {
     "fuelAdjusted": "Điều chỉnh gần nhất {t}",
