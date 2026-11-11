@@ -5,6 +5,8 @@ import { z } from "zod";
 import { fetchJson, parseCsv } from "@/lib/sources/http";
 import { unzipFirst } from "@/lib/sources/gdelt";
 import { absoluteUrl, normalizeUrl, pickImage, titleKey } from "@/lib/sources/rss";
+import { parseTraffic } from "@/lib/sources/gtrends";
+import { spikesOnly } from "@/lib/sources/wikipedia";
 
 test("parseCsv: quoted commas, escaped quotes, CRLF, blank lines", () => {
   const csv = 'a,b\r\n"x, y","he said ""hi"""\n\n1,\n2,3';
@@ -96,6 +98,35 @@ test("pickImage: widest media wins, relative paths resolve, http upgrades, non-i
   assert.equal(pickImage({ media: [m("https://v.example/clip.mp4", 1920, "video")], enclosure: { url: "https://i.example/e.jpg", type: "image/jpeg" } }, base), "https://i.example/e.jpg");
   assert.equal(pickImage({ enclosure: { url: "https://a.example/pod.mp3", type: "audio/mpeg" } }, base), null);
   assert.equal(pickImage({}, base), null);
+});
+
+test("parseTraffic: Google Trends' search counts with suffixes and separators", () => {
+  assert.equal(parseTraffic("200+"), 200);
+  assert.equal(parseTraffic("2000+"), 2000);
+  assert.equal(parseTraffic("1,000+"), 1000);
+  assert.equal(parseTraffic("20K+"), 20_000);
+  assert.equal(parseTraffic("2M+"), 2_000_000);
+  assert.throws(() => parseTraffic("many"));
+});
+
+test("spikesOnly: keeps jumps, drops pages read at the same level every day", () => {
+  const today = [
+    { article: "Bot_page", views: 14_500 }, // ~15k every day: automated traffic
+    { article: "Breaking_story", views: 6_000 }, // absent from earlier lists: read less than their last entry
+    { article: "Evergreen", views: 1_700 },
+    { article: "Slow_ramp", views: 1_600 }, // 3x its usual level: below the bar
+  ];
+  const day = (bot: number, evergreen: number, ramp: number) => [
+    { article: "Bot_page", views: bot },
+    { article: "Evergreen", views: evergreen },
+    { article: "Slow_ramp", views: ramp },
+    { article: "Last_entry", views: 60 },
+  ];
+  const earlier = [day(16_000, 2_300, 1_400), day(17_000, 2_100, 500), day(15_500, 1_900, 480)];
+  assert.deepEqual(spikesOnly(today, earlier, 4).map((a) => a.article), ["Breaking_story"]);
+  // A missing day (Wikimedia skips some) is ignored; no earlier day at all is an error, not an empty list.
+  assert.deepEqual(spikesOnly(today, [[], ...earlier], 4).map((a) => a.article), ["Breaking_story"]);
+  assert.throws(() => spikesOnly(today, [[], []], 4));
 });
 
 test("fetchJson: 204 No Content reaches the schema as null", async (t) => {

@@ -6,8 +6,13 @@ import type { Bi } from "@/lib/i18n";
 import { fmtNumber, fmtPeriod, fmtSigned } from "@/lib/format";
 import type { Point } from "@/lib/sources/store";
 import { clusterStories, type Story } from "./news";
-import { getDetailPoints, getTile } from "./series";
+import { getDetailPoints, getPoints, getTile } from "./series";
 import { centralBand } from "./vietnam";
+import { chokepointRow } from "./geopolitics";
+import { CHOKEPOINTS, chokepointId } from "@/config/geopolitics";
+
+/** IMF PortWatch id of the Strait of Hormuz (config/geopolitics.ts). */
+const HORMUZ = "chokepoint6";
 
 // The "Dominant themes" panel's numbers (config/themes.ts), shared by the web
 // (lib/queries.ts) and the worker (the themes AI note and the weekly macro
@@ -213,6 +218,23 @@ function readFact(db: DatabaseSync, id: ThemeFactId): ThemeFact | null {
           l === "vi"
             ? `Vietcombank bán ra ${fmtNumber(b.vcb!, l, 0)} ₫, cách trần biên độ ${fmtNumber(gap, l, 0)} ₫ (${fmtNumber(pct, l, 1)}%)`
             : `Vietcombank sells at ${fmtNumber(b.vcb!, l, 0)} ₫, ${fmtNumber(gap, l, 0)} ₫ (${fmtNumber(pct, l, 1)}%) below the band's ceiling`,
+        ),
+      };
+    }
+    case "hormuz": {
+      const def = CHOKEPOINTS.find((c) => c.id === HORMUZ);
+      if (!def) return null;
+      const r = chokepointRow(def, getPoints(db, chokepointId(HORMUZ)), getPoints(db, chokepointId(HORMUZ, "tanker")));
+      if (r.avg7 === null || r.asOf === null) return null;
+      const day = (l: "en" | "vi") => new Intl.DateTimeFormat(l === "vi" ? "vi-VN" : "en-GB", { timeZone: "UTC", day: "numeric", month: l === "vi" ? "numeric" : "short" }).format(r.asOf!);
+      const vs = r.vsYear;
+      return {
+        id,
+        ts: r.asOf,
+        text: both((l) =>
+          l === "vi"
+            ? `Tàu qua eo Hormuz: ${fmtNumber(r.avg7!, l, 0)} chiếc/ngày (7 ngày đến ${day(l)})${vs === null ? "" : `, ${fmtSigned(vs, l, 0, "%")} so với một năm trước`}`
+            : `Ships through Hormuz: ${fmtNumber(r.avg7!, l, 0)} a day (7 days to ${day(l)})${vs === null ? "" : `, ${fmtSigned(vs, l, 0, "%")} vs a year earlier`}`,
         ),
       };
     }

@@ -19,6 +19,10 @@ export const SOURCE_META = {
   gscpi: { intervalMs: 24 * HOUR },
   // CFTC Commitments of Traders: weekly, Tuesday's positions published Friday afternoon (US time).
   cot: { intervalMs: 12 * HOUR },
+  // Geopolitics: ship transits (PortWatch publishes weekly), risk by country (monthly), US sanctions and trade actions.
+  portwatch: { intervalMs: 12 * HOUR },
+  gprc: { intervalMs: 24 * HOUR },
+  uspolicy: { intervalMs: 3 * HOUR },
   // News & AI
   rss: { intervalMs: 10 * MIN },
   gdelt: { intervalMs: 15 * MIN },
@@ -41,6 +45,8 @@ export const SOURCE_META = {
   hackernews: { intervalMs: 20 * MIN },
   // ForexFactory asks for at most one request an hour; hourly also picks up FRED actuals soon after a release.
   calendar: { intervalMs: HOUR },
+  // US releases against the consensus (Nasdaq's calendar), for the economic surprise indices; every 10 minutes while the history is read.
+  surprise: { intervalMs: 2 * HOUR },
   releases: { intervalMs: 24 * HOUR },
   launches: { intervalMs: 3 * HOUR },
   polymarket: { intervalMs: 15 * MIN },
@@ -60,6 +66,9 @@ export const SOURCE_META = {
   sjc: { intervalMs: 30 * MIN },
   vcb: { intervalMs: HOUR },
   sbv: { intervalMs: 12 * HOUR },
+  // What Vietnam searches and reads: Google Trends' feed holds only ~3 hours, so it runs often enough not to miss a trend.
+  gtrends: { intervalMs: 30 * MIN },
+  vnexpress: { intervalMs: 30 * MIN },
   // Crypto
   coingecko: { intervalMs: 5 * MIN },
   fng: { intervalMs: HOUR },

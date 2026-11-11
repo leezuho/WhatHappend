@@ -52,7 +52,8 @@
     "legacy": "Worker khởi động trước khi có phần tự báo phiên bản.",
     "unknown": "Nguồn worker chưa biết: {list}.",
     "changed": "File đã sửa sau đó: {list}.",
-    "fixOutdated": "Khởi động lại npm run worker (npm run dev:all tự khởi động lại mỗi lần lưu file)."
+    "fixOutdated": "Khởi động lại npm run worker (npm run dev:all tự khởi động lại mỗi lần lưu file).",
+    "dismiss": "Ẩn cho đến khi worker thay đổi"
   },
   "regime": {
     "title": "Trạng thái rủi ro",
@@ -97,6 +98,18 @@
     "map": {
       "title": "Bản đồ thế giới",
       "subtitle": "Động đất, thiên tai và điểm nóng tin tức"
+    },
+    "chokepoints": {
+      "title": "Eo biển và kênh đào",
+      "subtitle": "Số tàu qua mỗi ngày, so với một năm trước"
+    },
+    "gprCountries": {
+      "title": "Rủi ro địa chính trị theo nước",
+      "subtitle": "Theo tháng, so với lịch sử của chính nước đó"
+    },
+    "usPolicy": {
+      "title": "Trừng phạt và thương mại của Mỹ",
+      "subtitle": "OFAC, kiểm soát xuất khẩu, thuế quan, 60 ngày qua"
     },
     "highlights": {
       "title": "Điểm đáng chú ý",
@@ -210,6 +223,10 @@
       "title": "Tin Việt Nam",
       "subtitle": "Tin trong nước theo chủ đề"
     },
+    "vnTrending": {
+      "title": "Người Việt đang tìm và đọc gì",
+      "subtitle": "Google Trends, VnExpress, Wikipedia tiếng Việt"
+    },
     "cryptoVitals": {
       "title": "Chỉ số sống còn của crypto",
       "subtitle": "Đồng lớn, quy mô thị trường, biến động và thanh khoản"
@@ -313,6 +330,10 @@
     "macroCalendar": {
       "title": "Lịch vĩ mô",
       "subtitle": "Số liệu sắp công bố và lịch họp các NHTW"
+    },
+    "surprise": {
+      "title": "Bất ngờ kinh tế Mỹ",
+      "subtitle": "Số liệu so với dự báo đồng thuận, 3 tháng gần nhất"
     },
     "techNote": {
       "title": "Công nghệ tuần này",
@@ -522,6 +543,28 @@
     "fiscalX": "Cân đối ngân sách {year}, % GDP",
     "fiscalY": "Nợ chính phủ {year}, % GDP",
     "fiscalNote": "Hai đường mốc: thâm hụt 3% (trần của EU) và nợ 90% GDP (ngưỡng mà nhiều nghiên cứu thấy tăng trưởng bắt đầu chậm lại). Nợ cao cộng thâm hụt lớn nghĩa là nợ còn tăng tiếp và thị trường trái phiếu có thể phản ứng. Số ước tính năm nay của IMF."
+  },
+  "surprise": {
+    "growth": "Tăng trưởng",
+    "inflation": "Lạm phát",
+    "growthHint": "Việc làm, chi tiêu, sản xuất, khảo sát doanh nghiệp và người tiêu dùng, nhà ở",
+    "inflationHint": "Giá tiêu dùng và giá sản xuất, tiền lương, kỳ vọng lạm phát",
+    "growthAbove": "Số liệu tốt hơn dự báo",
+    "growthBelow": "Số liệu kém hơn dự báo",
+    "inflationAbove": "Giá tăng nóng hơn dự báo",
+    "inflationBelow": "Giá tăng chậm hơn dự báo",
+    "inLine": "Sát dự báo",
+    "monthAgo": "{v} một tháng trước",
+    "drivers": "Tác động lớn nhất",
+    "driversHint": "Số điểm mỗi lần công bố đang cộng vào hoặc trừ khỏi chỉ số",
+    "recent": "Công bố gần đây",
+    "date": "Ngày",
+    "release": "Chỉ số",
+    "actual": "Thực tế",
+    "consensus": "Dự báo",
+    "z": "Bất ngờ",
+    "zHint": "Thực tế trừ dự báo, tính theo mức lệch thường gặp của chỉ số đó. Xanh: tin tốt cho nền kinh tế (tăng trưởng mạnh hơn, giá nguội hơn); đỏ: ngược lại.",
+    "note": "Số thực tế và dự báo đồng thuận lấy từ lịch kinh tế của Nasdaq, {count} chỉ số của Mỹ, lần công bố mới nhất {date}. Mỗi lần công bố, phần lệch so với dự báo được chia cho mức lệch thường gặp của chỉ số đó từ 2023. Chỉ số là trung bình có trọng số trong 3 tháng, trọng số của mỗi lần công bố giảm một nửa sau mỗi 30 ngày, nhân 100: 0 là sát dự báo, +100 là trung bình cao hơn dự báo một mức lệch thường gặp. Tự dựng theo cách Citi tính chỉ số bất ngờ, không phải chỉ số của Citi."
   },
   "map": {
     "quake": "Động đất",
@@ -1014,7 +1057,33 @@
     "vn30fDetail": "Thứ Năm thứ ba của tháng; lùi về phiên liền trước nếu trùng ngày nghỉ.",
     "gso": "Cục Thống kê công bố số liệu kinh tế tháng {month}",
     "gsoDetail": "CPI, sản xuất công nghiệp, bán lẻ, xuất nhập khẩu, FDI",
-    "gsoQuarter": "CPI, xuất nhập khẩu, FDI, kèm GDP quý {q}"
+    "gsoQuarter": "CPI, xuất nhập khẩu, FDI, kèm GDP quý {q}",
+    "election": "Bầu cử",
+    "electionTitle": "{country}: {kind}",
+    "electionExpected": "Hạn chót hoặc ngày dự kiến, chưa chốt"
+  },
+  "geo": {
+    "chokepoint": "Eo biển",
+    "ships": "Tàu/ngày",
+    "shipsHint": "Số tàu trung bình mỗi ngày trong 7 ngày gần nhất có số liệu",
+    "vsYear": "So năm trước",
+    "vsYearHint": "Cùng 7 ngày của 52 tuần trước",
+    "tankers": "Tàu dầu",
+    "history": "Từ 2023",
+    "historyHint": "Số tàu trung bình mỗi ngày theo tuần, từ tháng 1/2023",
+    "disrupted": "Gần như đóng",
+    "disruptedHint": "Lượng tàu chưa bằng một nửa so với một năm trước",
+    "chokeNote": "Đếm tàu từ tín hiệu AIS qua vệ tinh (IMF PortWatch, cập nhật hằng tuần); số đến {date}.",
+    "gprLatest": "Mới nhất",
+    "gprCell": "{country}, {month}: {value}",
+    "gprLegend": "100 = trung bình 1985–2019 của chính nước đó",
+    "gprNote": "Tỷ lệ bài báo về chiến tranh, khủng bố, căng thẳng có nhắc tới nước đó (Caldara & Iacoviello), so với lịch sử của chính nó; xếp theo trung bình 3 tháng gần nhất. Bộ số không có Iran. Nước nhỏ dao động mạnh giữa các tháng vì ít bài nhắc tới.",
+    "gprNoData": "Không có số",
+    "all": "Tất cả",
+    "sanctions": "Trừng phạt",
+    "trade": "Thương mại và xuất khẩu",
+    "policyNote": "Hành động của OFAC ngay trong ngày; Bộ Thương mại, Đại diện Thương mại và Tổng thống theo Công báo liên bang (Federal Register).",
+    "vnTag": "Việt Nam"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",
@@ -1022,7 +1091,14 @@
     "hn": "Hacker News",
     "views": "lượt xem",
     "points": "điểm",
-    "comments": "bình luận"
+    "comments": "bình luận",
+    "searches": "lượt tìm",
+    "vnGoogle": "Tìm trên Google",
+    "vnGoogleNote": "Từ khoá đang tăng ở Việt Nam trong 24 giờ qua, xếp theo số lượt tìm Google công bố (mức tối thiểu).",
+    "vnVne": "Đọc nhiều trên VnExpress",
+    "vnVneNote": "Bài được đọc nhiều nhất trên VnExpress trong 24 giờ qua.",
+    "vnWiki": "Wikipedia tiếng Việt",
+    "vnWikiNote": "Trang đọc nhiều hôm qua, chỉ giữ trang được đọc gấp 4 lần trở lên so với thường ngày: bảng xếp hạng thô phần lớn là lượt xem của bot."
   },
   "prediction": {
     "fed": "Lãi suất Fed sau cuộc họp {date}",

@@ -13,6 +13,7 @@ import { getDict, pick, type Locale } from "@/lib/i18n";
 import { SERIES, type SeriesDef, type SeriesKey } from "@/config/series";
 import { COUNTRIES, policyRateId } from "@/config/countries";
 import { FOMC_MEETINGS } from "@/config/fomc";
+import { ELECTIONS, electionTs } from "@/config/elections";
 import { BANKS, CB_MEETINGS, LPR_DAY } from "@/config/central-banks";
 import { CRYPTO_OUTLETS, DESK_OUTLETS, TECH_OUTLETS } from "@/config/feeds";
 import { freshest, getPoints, getTile, getWatchlistKeys, tileOf, type TileData } from "@/lib/data/series";
@@ -566,7 +567,7 @@ function fmtDayRange(start: string, end: string, lang: Locale): string {
 }
 
 export interface CalendarEntry {
-  kind: "econ" | "fomc" | "cb" | "launch" | "vn";
+  kind: "econ" | "fomc" | "cb" | "launch" | "vn" | "election";
   ts: number;
   title: string;
   detail: string | null;
@@ -592,7 +593,7 @@ function lprFixings(now: number, until: number): number[] {
   }
 }
 
-const DEFAULT_KINDS: CalendarEntry["kind"][] = ["econ", "fomc", "launch"];
+const DEFAULT_KINDS: CalendarEntry["kind"][] = ["econ", "fomc", "election", "launch"];
 
 /** Upcoming entries of the given kinds over `days`; the overview leaves out other central banks, the macro page leaves out launches. */
 export async function getCalendar(lang: Locale, days = 21, kinds: CalendarEntry["kind"][] = DEFAULT_KINDS): Promise<CalendarEntry[]> {
@@ -644,6 +645,14 @@ export async function getCalendar(lang: Locale, days = 21, kinds: CalendarEntry[
       allDay: true,
     })),
     ...lprFixings(now, until).map((ts) => ({ kind: "cb" as const, ts, title: t.lpr, detail: null })),
+    ...ELECTIONS.map((e) => ({
+      kind: "election" as const,
+      ts: electionTs(e),
+      title: t.electionTitle.replace("{country}", pick(e.country, lang)).replace("{kind}", pick(e.kind, lang)),
+      detail: e.expected ? t.electionExpected : null,
+      allDay: true,
+      url: e.source,
+    })),
     // Stamped 17:00 Hanoi so the day's entry stays listed through the session.
     ...vnMarketDates(now, until).map((v) => {
       const month = `${v.month + 1}/${v.year}`;
@@ -668,10 +677,12 @@ export async function getCalendar(lang: Locale, days = 21, kinds: CalendarEntry[
         : [],
     ),
   ];
-  // The next Fed meeting always shows, even beyond the window: it is the event markets plan around.
+  // The next Fed meeting always shows, even beyond the window: it is the event markets plan around. So does the
+  // next election: they are few, and known long before.
   const nextFomc = entries.find((e) => e.kind === "fomc" && e.ts >= now);
+  const nextElection = entries.filter((e) => e.kind === "election" && e.ts >= now - 3 * 3600_000).sort((a, b) => a.ts - b.ts)[0];
   return entries
-    .filter((e) => kinds.includes(e.kind) && ((e.ts >= now - (e.result ? RESULT_SHOWN : 3 * 3600_000) && e.ts <= until) || e === nextFomc))
+    .filter((e) => kinds.includes(e.kind) && ((e.ts >= now - (e.result ? RESULT_SHOWN : 3 * 3600_000) && e.ts <= until) || e === nextFomc || e === nextElection))
     .sort((a, b) => a.ts - b.ts);
 }
 

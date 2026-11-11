@@ -26,7 +26,7 @@ export interface ThemeGauge {
 }
 
 /** Readings computed in lib/data/themes.ts that are not a plain series. */
-export type ThemeFactId = "fxCeiling" | "tsmcRevenue";
+export type ThemeFactId = "fxCeiling" | "tsmcRevenue" | "hormuz";
 
 export interface ThemeNews {
   /** Matched against the English title (the original or the AI translation). */
@@ -128,6 +128,8 @@ export const THEMES: ThemeDef[] = [
       { series: US_CPI_ENERGY, sign: 1, label: { en: "US energy CPI y/y", vi: "CPI năng lượng Mỹ" } },
       { series: "breakeven", sign: 1, label: { en: "5y5y inflation exp.", vi: "Kỳ vọng lạm phát 5y5y" } },
     ],
+    // Ships through Hormuz (IMF PortWatch): shown, not a gauge, since a near-shut strait barely moves month to month.
+    facts: ["hormuz"],
     vietnam: {
       text: {
         en: "Pump prices follow world prices at the weekly adjustment, and energy is Vietnam's main imported inflation.",

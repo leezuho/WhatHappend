@@ -2,6 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { BANKS, CB_MEETINGS } from "@/config/central-banks";
 import { US_RELEASES } from "@/config/calendar";
 import { FOMC_MEETINGS } from "@/config/fomc";
+import { ELECTIONS, electionTs } from "@/config/elections";
 import type { CalendarData } from "@/lib/sources/calendar";
 import { vnMarketDates } from "./vietnam";
 
@@ -70,7 +71,7 @@ interface ItemRow {
 /**
  * High-impact events from now to the end of tomorrow (Vietnam time): ForexFactory's high-impact releases,
  * FRED's scheduled US releases past ForexFactory's week, FOMC and other central-bank decisions, and the
- * Vietnam market dates (VN30 futures expiry, statistics release). Plus every release of the last 24 hours
+ * Vietnam market dates (VN30 futures expiry, statistics release) and national elections (config/elections.ts). Plus every release of the last 24 hours
  * that has an actual.
  */
 export function calendarForBrief(db: DatabaseSync, now: number): { upcoming: BriefEvent[]; released: BriefRelease[] } {
@@ -96,6 +97,10 @@ export function calendarForBrief(db: DatabaseSync, now: number): { upcoming: Bri
     ...CB_MEETINGS.flatMap((m) => {
       const ts = Date.parse(`${m.end}T12:00:00Z`);
       return inWindow(ts) ? [{ when: vnWhen(ts, true), ts, country: BANKS[m.bank].country, event: `${BANKS[m.bank].name.en} rate decision`, impact: "High" as const }] : [];
+    }),
+    ...ELECTIONS.flatMap((e) => {
+      const ts = electionTs(e);
+      return inWindow(ts) ? [{ when: vnWhen(ts, true), ts, country: e.code, event: `${e.country.en} ${e.kind.en}${e.expected ? " (date not fixed)" : ""}`, impact: "High" as const }] : [];
     }),
     ...vnMarketDates(vnDayStart(now) - DAY, until).flatMap((v) => {
       const ts = v.ts + 10 * 3600_000; // 17:00 Hanoi, as the calendar panel stamps it

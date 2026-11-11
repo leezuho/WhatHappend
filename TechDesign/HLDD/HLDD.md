@@ -8,7 +8,7 @@
 Tài liệu này mô tả kiến trúc tổng thể của **WhatHappend**, dashboard cá nhân tổng hợp tình hình thế giới. Yêu cầu nghiệp vụ nằm trong [BRD](../../BRD/README.md); chi tiết thiết kế từng phần nằm trong [LLDD](../LLDD/README.md).
 
 Phạm vi gồm:
-- thu thập dữ liệu từ 64 nguồn đã đăng ký (57 nguồn dữ liệu, trong đó `sbv` đọc từ config và `changes` chỉ đọc DB để ghi nhật ký thay đổi, + 6 bước AI: `translate`, `brief`, `insights`, `macronote`, `technote`, `themes`, + `telegram` gửi cảnh báo, chỉ chạy khi có bot token);
+- thu thập dữ liệu từ 70 nguồn đã đăng ký (63 nguồn dữ liệu, trong đó `sbv` đọc từ config và `changes` chỉ đọc DB để ghi nhật ký thay đổi, + 6 bước AI: `translate`, `brief`, `insights`, `macronote`, `technote`, `themes`, + `telegram` gửi cảnh báo, chỉ chạy khi có bot token);
 - lưu vào SQLite cục bộ;
 - render dashboard song ngữ bằng Next.js;
 - dùng một mô hình AI để dịch, phân loại và tóm tắt. Provider cấu hình được: Google Gemini hoặc Anthropic Claude (ADR-10).

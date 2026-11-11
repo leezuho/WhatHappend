@@ -26,7 +26,7 @@ export async function CalendarBody({ lang, days, kinds }: { lang: Locale; days?:
     const k = dayKey(e.ts);
     groups.set(k, [...(groups.get(k) ?? []), e]);
   }
-  const kindLabel = { econ: d.calendar.econ, fomc: d.calendar.fomc, cb: d.calendar.cb, launch: d.calendar.launch, vn: d.calendar.vn };
+  const kindLabel = { econ: d.calendar.econ, fomc: d.calendar.fomc, cb: d.calendar.cb, launch: d.calendar.launch, vn: d.calendar.vn, election: d.calendar.election };
   return (
     <div className="scroll-thin flex max-h-[560px] flex-col gap-3 overflow-auto pr-1">
       {[...groups.entries()].map(([day, list]) => (
@@ -41,7 +41,13 @@ export async function CalendarBody({ lang, days, kinds }: { lang: Locale; days?:
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start gap-1.5">
                     <span className="mt-px shrink-0 rounded bg-surface-2 px-1 text-[10px] text-ink-2">{kindLabel[e.kind]}</span>
-                    <span className="text-ink">{e.title}</span>
+                    {e.url ? (
+                      <a href={e.url} target="_blank" rel="noreferrer" className="text-ink hover:underline">
+                        {e.title}
+                      </a>
+                    ) : (
+                      <span className="text-ink">{e.title}</span>
+                    )}
                     {e.impact === "High" && (
                       <span className="ml-auto flex shrink-0 items-center gap-1 text-[10px] text-ink-2" title={d.calendar.high}>
                         <span aria-hidden className="inline-block size-1.5 rounded-full bg-critical" />

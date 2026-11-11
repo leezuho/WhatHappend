@@ -21,7 +21,7 @@
 | BR-07 | AI Daily Brief | M | M3 | Done |
 | BR-08 | Tin tức thế giới | M | M3 | Done |
 | BR-09 | Bản đồ sự kiện | S | M4 | Partial |
-| BR-10 | Lịch sắp tới | S | M5 | Partial |
+| BR-10 | Lịch sắp tới | S | M5 | Done |
 | BR-11 | Trending | C | M5 | Done |
 | BR-12 | Prediction markets | S | M5 | Done |
 | BR-13 | Môi trường và sức khỏe | C | M6 | Done |
@@ -38,6 +38,7 @@
 | BR-24 | Chủ đề chi phối | S | — | Done |
 | BR-25 | Có gì mới từ lần trước | S | — | Done |
 | BR-26 | Cảnh báo qua Telegram | S | — | Done (chờ người dùng đặt bot token) |
+| BR-27 | Lớp địa chính trị | S | — | Done |
 
 ---
 
@@ -180,7 +181,7 @@
 
 ## BR-10 — Lịch sắp tới · S · M5
 
-**Trạng thái:** Partial. Có lịch kinh tế (ForexFactory, chỉ tuần hiện tại), họp FOMC, phóng tàu, giờ Việt Nam, mức tác động. **Chưa có bầu cử:** không có nguồn miễn phí đáng tin, file cấu hình chưa được tạo.
+**Trạng thái:** Done (2026-11-11). Có lịch kinh tế (ForexFactory tuần này, lịch FRED các tuần sau), họp FOMC và NHTW khác, phóng tàu, giờ Việt Nam, mức tác động. Bầu cử khai tay trong `config/elections.ts` (không có nguồn miễn phí đáng tin), mỗi mục ghi nguồn đã dùng để kiểm ngày; cuộc bầu cử kế tiếp luôn hiện và bản tin AI cũng thấy bầu cử trong ngày.
 
 **Mô tả:** Danh sách sự kiện sắp diễn ra: công bố số liệu kinh tế (CPI, việc làm, họp FOMC…), bầu cử lớn, phóng tàu vũ trụ.
 
@@ -452,3 +453,25 @@ Ngưỡng, danh sách đám mây và ngôn ngữ tin nhắn khai trong `config/a
 - Sự kiện trong nhật ký cũ hơn 12 giờ (worker hoặc Telegram ngừng lâu) không gửi.
 
 **Ngoài phạm vi:** nhiều người nhận hoặc nhiều chat; giờ im lặng (dùng cài đặt thông báo của Telegram); lệnh hai chiều với bot.
+
+## BR-27 — Lớp địa chính trị · S
+
+**Trạng thái:** Done (2026-11-11). Nguồn ở [LLDD 02 §4b](../TechDesign/LLDD/02-data-sources.md), giao diện ở [LLDD 04 §3 Hàng 1b](../TechDesign/LLDD/04-frontend.md).
+
+**Mô tả:** Ba panel dưới bản đồ trang tổng quan, trả lời "địa chính trị đang chạm vào thị trường ở đâu":
+- **Eo biển và kênh đào:** số tàu qua Hormuz, Bab el-Mandeb, Suez, Mũi Hảo Vọng, Malacca, eo biển Đài Loan và Panama mỗi ngày, so với một năm trước (IMF PortWatch).
+- **Rủi ro địa chính trị theo nước:** heatmap 24 tháng của chỉ số Caldara–Iacoviello theo nước, mỗi nước so với lịch sử của chính nó.
+- **Trừng phạt và thương mại của Mỹ:** hành động của OFAC, quy định kiểm soát xuất khẩu (BIS), điều tra Section 301 (USTR) và văn bản thuế quan, trừng phạt của Tổng thống, đánh dấu mục nhắc tới Việt Nam.
+
+Lịch bầu cử nằm ở BR-10. Số tàu qua Hormuz cũng hiện trên thẻ chủ đề Năng lượng vùng Vịnh (BR-24).
+
+**User story:** Là người đầu tư, tôi muốn thấy tuyến vận tải nào đang bị chặn, căng thẳng đang dồn về nước nào và Washington vừa trừng phạt hay đánh thuế ai, để hiểu cú sốc giá năng lượng và rủi ro cho hàng xuất khẩu Việt Nam mà không phải đọc hết tin.
+
+**Tiêu chí nghiệm thu:**
+- Số tàu là trung bình 7 ngày, có ngày của số liệu (PortWatch cập nhật hằng tuần); eo biển chưa bằng một nửa năm trước được đánh dấu bằng chấm và chữ, không chỉ bằng màu.
+- Chỉ số theo nước có chú giải, tooltip từng ô và cột số của tháng mới nhất; ghi rõ bộ số không có Iran.
+- Văn bản của Mỹ có ngày, cơ quan và link gốc; tiêu đề được dịch ở trang tiếng Việt.
+- Nguồn hỏng (đổi cấu trúc trang OFAC, PortWatch ngừng cập nhật) thì báo lỗi nguồn, không hiện dữ liệu cũ như mới.
+
+**Ngoài phạm vi:** hành động trừng phạt của EU, Anh, Liên Hợp Quốc; lớp mất Internet (IODA, xem `TODO.md`); chỉ số GPR cho Iran (bộ số không có).
+

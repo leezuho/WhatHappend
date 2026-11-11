@@ -37,6 +37,17 @@
   --serious: #ec835a;
   --critical: #d03b3b;
 
+  /* One-hue sequential ramp for heatmaps (overview's geopolitical risk by country):
+     the orange steps of the macro choropleth's inflation ramp, after a neutral step
+     for "at or below normal". Dark mode selects its own steps: low values recede
+     toward the dark surface, high ones come forward. */
+  --seq-0: #e8e7e1;
+  --seq-1: #f5c4b2;
+  --seq-2: #eb9c7f;
+  --seq-3: #df7249;
+  --seq-4: #c94908;
+  --seq-5: #752600;
+
   /* Selected controls (active tab, language, range); themes may tint them. */
   --accent: var(--ink);
   --on-accent: var(--surface);
@@ -69,6 +80,12 @@
     --s6: #008300;
     --s7: #9085e9;
     --s8: #e66767;
+    --seq-0: #2c2c2a;
+    --seq-1: #752600;
+    --seq-2: #9f3600;
+    --seq-3: #c94908;
+    --seq-4: #df7249;
+    --seq-5: #f5c4b2;
     --elev-1: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     --elev-2: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px -6px rgba(0, 0, 0, 0.6);
   }
@@ -95,6 +112,12 @@
   --s6: #008300;
   --s7: #9085e9;
   --s8: #e66767;
+  --seq-0: #2c2c2a;
+  --seq-1: #752600;
+  --seq-2: #9f3600;
+  --seq-3: #c94908;
+  --seq-4: #df7249;
+  --seq-5: #f5c4b2;
   --elev-1: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --elev-2: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px -6px rgba(0, 0, 0, 0.6);
 }

@@ -9,6 +9,7 @@ import { binance } from "./binance";
 import { etfflows } from "./etfflows";
 import { bis } from "./bis";
 import { calendar } from "./calendar";
+import { surprise } from "./surprise";
 import { releases } from "./releases";
 import { cloudstatus } from "./cloudstatus";
 import { changes } from "./changes";
@@ -26,6 +27,9 @@ import { gdacs } from "./gdacs";
 import { gdelt } from "./gdelt";
 import { gistemp } from "./gistemp";
 import { gpr } from "./gpr";
+import { gprc } from "./gprc";
+import { portwatch } from "./portwatch";
+import { uspolicy } from "./uspolicy";
 import { gscpi } from "./gscpi";
 import { hackernews } from "./hackernews";
 import { huggingface } from "./huggingface";
@@ -39,6 +43,8 @@ import { hnhiring } from "./hnhiring";
 import { eol } from "./eol";
 import { arena } from "./arena";
 import { lobsters } from "./lobsters";
+import { gtrends } from "./gtrends";
+import { vnexpress } from "./vnexpress";
 import { spaceweather } from "./spaceweather";
 import { pkgtrends } from "./pkgtrends";
 import { epoch } from "./epoch";
@@ -79,6 +85,10 @@ export const sources: Source[] = [
   gpr,
   gscpi,
   cot,
+  // geopolitics
+  portwatch,
+  gprc,
+  uspolicy,
   // news & AI
   rss,
   translate,
@@ -98,6 +108,7 @@ export const sources: Source[] = [
   wikipedia,
   hackernews,
   calendar,
+  surprise,
   releases,
   launches,
   polymarket,
@@ -117,6 +128,8 @@ export const sources: Source[] = [
   sjc,
   vcb,
   sbv,
+  gtrends,
+  vnexpress,
   // crypto
   coingecko,
   fng,

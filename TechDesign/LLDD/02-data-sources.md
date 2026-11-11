@@ -22,6 +22,9 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `gpr` | Rủi ro địa chính trị | `data_gpr_daily_recent.xls` | 24 giờ | `observations` `gpr:GPRD`, `gpr:GPRD_MA7` |
 | `gscpi` | Chuỗi cung ứng | NY Fed GSCPI CSV | 24 giờ | `observations` `nyfed:GSCPI` |
 | `cot` | Vị thế trên thị trường tương lai | CFTC COT, file năm `fut_disagg_txt_<năm>.zip`, `fut_fin_txt_<năm>.zip` | 12 giờ | `observations` `cot:<KEY>:net`, `cot:<KEY>:oi` |
+| `portwatch` | Địa chính trị | IMF PortWatch `Daily_Chokepoints_Data` (ArcGIS) | 12 giờ | `observations` `portwatch:<portid>`, `portwatch:<portid>:tanker` |
+| `gprc` | Địa chính trị | `data_gpr_export.xls` (GPR theo nước, tháng) | 24 giờ | `observations` `gpr:C:<ISO3>` |
+| `uspolicy` | Địa chính trị | OFAC Recent Actions (HTML), Federal Register API | 3 giờ | `items` `us_policy` |
 | `rss` | Tin tức | 23 feed (`config/feeds.ts`): 5 báo crypto, 5 báo công nghệ | 10 phút | `articles` |
 | `translate` | AI | Gemini hoặc Claude (tier `fast`) | 5 phút | cột `title_*`, `region`, `topic` |
 | `brief` | AI | Gemini hoặc Claude (tier `brief`) | hằng ngày 06:00 VN | `briefs` |
@@ -33,6 +36,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `hackernews` | Xu hướng | HN Algolia `front_page` | 20 phút | `items` `hn` |
 | `calendar` | Lịch | ForexFactory this-week JSON, số thực tế từ FRED | 1 giờ | `items` `calendar` |
 | `releases` | Lịch | Lịch công bố của FRED (HTML) | 24 giờ | `items` `us_releases` |
+| `surprise` | Lịch | Lịch kinh tế Nasdaq `api.nasdaq.com/api/calendar/economicevents` (JSON) | 2 giờ (10 phút khi đang đọc lịch sử) | `observations` `surprise:<key>:actual`, `surprise:<key>:cons` |
 | `launches` | Lịch | Launch Library 2 `2.3.0` | 3 giờ | `items` `launch` |
 | `polymarket` | Dự đoán | Polymarket Gamma `events` | 15 phút | `items` `polymarket`, `polymarket_crypto` |
 | `kalshi` | Dự đoán | Kalshi trade-api v2 (`KXFED`) | 15 phút | `items` `kalshi_fed` |
@@ -49,6 +53,8 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `sjc` | Việt Nam | vang.today (dự phòng: PNJ) | 30 phút | `items` `gold_vn`, `observations` `goldvn:<code>:sell` |
 | `vcb` | Việt Nam | Vietcombank exchange-rates JSON | 1 giờ | `items` `vcb`, `observations` `vcb:USD:sell` |
 | `sbv` | Việt Nam | Không gọi mạng: lãi suất tái cấp vốn khai báo trong `config/policy-rates.ts` | 12 giờ | `observations` `sbv:REFI` |
+| `gtrends` | Việt Nam | Google Trends RSS "Trending now" (geo=VN) | 30 phút | `items` `gtrends_vn` |
+| `vnexpress` | Việt Nam | VnExpress gateway "Xem nhiều" 24 giờ | 30 phút | `items` `vne_top` |
 | `macronote` | AI | Gemini hoặc Claude (tier `brief`), không gọi nguồn ngoài | mỗi tuần (thứ Hai giờ VN) | `kv` `macro:note` |
 | `coingecko` | Crypto | CoinGecko `global`, `coins/markets`, `search/trending` | 5 phút | `quotes`/`observations` `cg:*`, `items` `crypto_global`, `crypto_top`, `crypto_trending` |
 | `fng` | Crypto | alternative.me Fear & Greed | 1 giờ | `observations` `fng:crypto`, `items` `crypto_fng` |
@@ -300,6 +306,32 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
   - DOC API 2.0 luôn trả 429 từ máy này; GEO API 2.0 đã chết (404).
   - Dữ liệu GDELT nhiễu: địa danh có thể bị gán sai, URL có thể là bài không liên quan. Vì vậy UI coi đây là "tín hiệu", không phải sự kiện đã kiểm chứng.
 
+## 4b. Địa chính trị
+
+Lớp địa chính trị dưới bản đồ trang tổng quan (TODO P1, LLDD 04 §3 Hàng 1b). Danh sách eo biển, nước của heatmap và nhãn nước trong `config/geopolitics.ts`. Cả ba nguồn đã thử thật ngày 2026-11-11, không cần key.
+
+### 4b.1 `portwatch` — Tàu qua các eo biển (`lib/sources/portwatch.ts`)
+- **URL:** `https://services9.arcgis.com/weJ1QsnbMYJlCHdG/arcgis/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query` (feature service ArcGIS của IMF PortWatch), `where=portid IN (…) AND date >= DATE 'YYYY-MM-DD'`, `outFields=date,portid,n_total,n_tanker`, `orderByFields=date,portid`, phân trang bằng `resultOffset` (tối đa 1000 dòng một lần, còn trang khi `exceededTransferLimit`). Lỗi của ArcGIS trả HTTP 200 kèm `error.message`, nguồn throw thông điệp đó.
+- **Dữ liệu:** mỗi dòng là một eo biển một ngày: số tàu (`n_total`) và từng loại (`n_tanker`, `n_container`…), đếm từ tín hiệu AIS qua vệ tinh. 28 eo biển, từ 2019, cập nhật hằng tuần, chậm vài ngày (ngày 11/11 có số đến 8/11).
+- **Chọn:** 7 eo biển trong `CHOKEPOINTS`: Hormuz (`chokepoint6`), Bab el-Mandeb (`4`), Suez (`1`), Mũi Hảo Vọng (`7`), Malacca (`5`), eo biển Đài Loan (`11`), Panama (`2`).
+- **Lưu:** từ 2023-01-01 (để sparkline thấy cả Biển Đỏ sụt đầu 2024), `portwatch:<portid>` (tổng số tàu) và `portwatch:<portid>:tanker`. Lần sau đọc lại từ ngày cuối cũ nhất trừ 21 ngày; eo biển mới thêm vào config thì tải lại từ 2023.
+- **Kiểm tra:** throw khi một eo biển không có ngày nào, hoặc ngày mới nhất cũ hơn 21 ngày (PortWatch ngừng cập nhật).
+- **Số ngày 11/11 (trung bình 7 ngày đến 8/11, so với cùng 7 ngày năm trước):** Hormuz 4 tàu/ngày (−95%; năm 2025 khoảng 85, gần như đóng từ tháng 3/2026), Bab el-Mandeb 26 (−35%, giảm từ tháng 8/2026), Suez 44, Mũi Hảo Vọng 78, Malacca 236, Đài Loan 230, Panama 27.
+
+### 4b.2 `gprc` — Rủi ro địa chính trị theo nước (`lib/sources/gprc.ts`)
+- **URL:** `https://www.matteoiacoviello.com/gpr_files/data_gpr_export.xls` (BIFF `.xls`, ~2,7 MB), bản tháng của Caldara–Iacoviello. Nguồn `gpr` (§2.5) đọc bản ngày, chỉ có chỉ số toàn cầu.
+- **Dữ liệu:** cột `month` là số ngày kiểu Excel (46296 = 1/10/2026); `GPRC_<ISO3>` cho 44 nước từ 1985 là tỷ lệ % số bài báo về căng thẳng địa chính trị có nhắc tới nước đó. **Không có Iran.** Số tháng 10/2026 có ngày 11/11.
+- **Chuẩn hoá:** tỷ lệ không so được giữa các nước (Mỹ được nhắc nhiều hơn Việt Nam hàng chục lần), nên mỗi cột chia cho trung bình 1985–2019 của chính nó rồi nhân 100, cùng gốc với chỉ số toàn cầu. Lưu từ 2015 vào `gpr:C:<ISO3>` (`countryIndices`).
+- **Lưu ý:** nước nhỏ dao động rất mạnh giữa các tháng vì ít bài nhắc tới (Việt Nam 60 đến 626 trong 12 tháng tới 10/2026), nên heatmap chỉ giữ 16 nước trong `GPR_COUNTRIES`.
+- **Kiểm tra:** throw khi ít hơn 30 cột `GPRC_`, hoặc tháng mới nhất cũ hơn 100 ngày.
+
+### 4b.3 `uspolicy` — Trừng phạt và thương mại của Mỹ (`lib/sources/uspolicy.ts`)
+- **OFAC:** trang `https://ofac.treasury.gov/recent-actions` và `?page=1` (HTML, 10 hành động mỗi trang, không có feed riêng; `rss.xml` của OFAC là các trang chương trình, không phải hành động). `parseOfacActions` tách theo `views-row`: link đầu `/recent-actions/YYYYMMDD[_n]` là tiêu đề và ngày, các link sau (`/recent-actions/sanctions-list-updates`, `general-licenses`…) là nhóm. Tiêu đề nêu chương trình ("Iran-related Designations"), có ngay trong ngày. Không có hành động nào thì throw (trang đổi cấu trúc).
+- **Federal Register:** `https://www.federalregister.gov/api/v1/documents.json`, 60 ngày gần nhất, hai lần gọi: `conditions[agencies][]` = `industry-and-security-bureau` (BIS, kiểm soát xuất khẩu) và `trade-representative-office-of-united-states` (USTR, Section 301), và `conditions[type][]=PRESDOCU` (văn bản của Tổng thống). `frAgency` bỏ thủ tục của BIS và USTR (thu thập thông tin, gia hạn lệnh cấm xuất khẩu với từng hãng bay Nga, họp, hội đồng…), chỉ giữ văn bản Tổng thống có từ khoá thuế quan, nhập/xuất khẩu, trừng phạt, thương mại, Section 232, và bỏ các "Continuation of the National Emergency" (gia hạn thường niên).
+- **Không dùng:** thông báo OFAC trên Federal Register, vì tiêu đề nào cũng là "Notice of OFAC Sanctions Action"; toàn văn (`raw_text_url`, `body_html_url`) bị chuyển sang trang "Request Access" chống bot.
+- **Lưu:** kind `us_policy`, 40 mục mới nhất (cùng ngày thì OFAC trước), id `ofac:<slug>` hoặc `fr:<document_number>`, `ts` = ngày (UTC), `data = { agency: "ofac" | "bis" | "ustr" | "wh", countries, tags }`. `countries` là mã trong `POLICY_COUNTRIES` mà tiêu đề tiếng Anh nhắc tới (`policyCountries`; "North Korea" không bị tính thành Hàn Quốc). Tiêu đề được AI dịch (`us_policy` nằm trong `TRANSLATED_ITEM_KINDS`, LLDD 05 §2).
+- **Ngày 11/11:** 20 hành động OFAC, 69 văn bản Federal Register, giữ 40 mục từ 14/9; có "Notice of Determination To Extend Section 301 Investigation of Vietnam's Acts, Policies, and Practices…" (USTR, 10/11).
+
 ## 5. Xu hướng, lịch, thị trường dự đoán
 
 ### 5.1 `wikipedia` (`lib/sources/wikipedia.ts`)
@@ -309,8 +341,8 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
 - **Lọc:**
   - Bỏ `Main_Page`/`Trang_Chính` và các tiền tố namespace (`Special:`, `Wikipedia:`, `File:`, `Đặc_biệt:`, `Tập_tin:`, `Thể_loại:`…), chỉ so khớp đầu chuỗi vì tiêu đề thật có thể chứa dấu `:`.
   - Bỏ tiêu đề bắt đầu bằng `.` (nhiễu từ bot).
-- **Lưu:** 15 bài mỗi ngôn ngữ, kind `wiki_en` / `wiki_vi`, `data = { views }`.
-- **Lưu ý:** top của vi.wikipedia có thể lẫn bài bị bot đẩy lượt xem; hiện chưa lọc nội dung.
+- **Chỉ giữ bài tăng đột biến (riêng vi):** top thô của vi.wikipedia phần lớn là trang có lượt xem cao đều mỗi ngày: bot Wikimedia không gắn cờ (thường là chủ đề người lớn, ~15 nghìn lượt/ngày từ điện thoại) và trang lâu năm (`Việt_Nam`, đài truyền hình). `spikesOnly` giữ bài có lượt xem ≥ 4 lần mức thường ngày. Mức thường ngày là trung vị lượt xem trong top của 3 ngày trước đó (lùi 2, 4, 7 ngày so với ngày xếp hạng; bỏ ngày liền trước để tin vừa nổ hôm trước vẫn còn). Bài không có trong top 1000 của một ngày thì lấy lượt xem của bài cuối danh sách hôm đó làm cận trên. Dùng top list thay vì gọi từng bài (`per-article`) vì Wikimedia trả 429 sau khoảng 10 lần gọi liền nhau. Ngày nào Wikimedia không có xếp hạng (404, ví dụ vi ngày 2026-11-06) thì bỏ qua; không còn ngày nào để so thì throw. en giữ nguyên top thô vì không bị bot chiếm.
+- **Lưu:** tối đa 15 bài mỗi ngôn ngữ, kind `wiki_en` / `wiki_vi`, `data = { views }`.
 
 ### 5.2 `calendar` (`lib/sources/calendar.ts`, `config/fomc.ts`)
 - **URL:** `https://nfs.faireconomy.media/ff_calendar_thisweek.json`, gồm các trường `title, country` (mã tiền tệ), `date` (ISO có múi giờ), `impact, forecast, previous`.
@@ -324,6 +356,27 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
 - **Các tuần sau (`releases`, `lib/sources/releases.ts`, `US_RELEASES` trong `config/calendar.ts`):** `https://fred.stlouisfed.org/releases/calendar?rid=<id>&vs=<YYYY-MM-DD>&ve=<YYYY-MM-DD>` là trang HTML không cần key, mỗi mã một lần gọi: hàng ngày in đậm ("Tuesday November 10, 2026") rồi hàng giờ ("7:30 am" + link `/release?rid=`). Giờ theo US Central, đổi sang UTC theo `America/Chicago` (có giờ mùa hè). FRED chỉ có lịch khoảng 1–2 tháng tới. Bảy bản tin: CPI (10), việc làm (50), GDP (53), thu nhập và PCE (54), bán lẻ (9), PPI (46), JOLTS (192). Lưu `items` `us_releases` (`data = { rid }`). `getCalendar` chỉ lấy các ngày sau ngày cuối cùng của ForexFactory nên không trùng; mục này không có dự báo (ghi "Lịch dự kiến (FRED)"). API lịch của FRED cần key và lịch ICS của BLS trả 403, nên dùng trang HTML.
 - **FOMC:** đặt cứng trong `config/fomc.ts` (`FOMC_MEETINGS`), lấy từ federalreserve.gov. Danh sách tính tới hết 2027; cần cập nhật khi Fed công bố năm mới. UI tự gộp FOMC vào lịch.
 - **NHTW khác** (chỉ hiện ở lịch của trang Vĩ mô): đặt cứng trong `config/central-banks.ts` (`CB_MEETINGS`): ECB, BoE, BoJ, BoC, RBA, BoK, RBI, BI, Copom, Banxico, mỗi ngân hàng kèm link nguồn chính thức, đọc ngày 2026-11-09. Ngày 2027 của BI, Banxico và RBI (từ 4/2027) chưa công bố lúc đó. PBoC không họp định kỳ: LPR công bố ngày 20 hằng tháng lúc 9:15 Bắc Kinh, rơi vào cuối tuần thì lùi sang thứ Hai (`LPR_DAY`; ngày lễ Trung Quốc chưa tính). `getCalendar(lang, days, kinds)` chọn loại mục: trang tổng quan `econ`, `fomc`, `launch`; trang Vĩ mô `econ`, `fomc`, `cb`.
+
+### 5.2b `surprise` — Số liệu Mỹ so với dự báo đồng thuận (`lib/sources/surprise.ts`, `config/surprise.ts`)
+Đầu vào cho hai chỉ số bất ngờ kinh tế Mỹ ở trang Vĩ mô (LLDD 04 §3b, Hàng 10b). ForexFactory chỉ có tuần hiện tại nên không dựng được lịch sử; lịch kinh tế của Nasdaq có số thực tế và dự báo đồng thuận của từng lần công bố, lùi ít nhất tới 2023.
+- **URL:** `https://api.nasdaq.com/api/calendar/economicevents?date=<YYYY-MM-DD>`, không cần key, chạy được với User-Agent mặc định của dự án. Mỗi lần gọi mất 2–5 giây. Trả `{ data: { rows: [{ gmt, country, eventName, actual, consensus, previous, description }] }, status: { rCode } }`. Ô trống là `" "` hoặc `"&nbsp;"`. Số in kiểu `"1,718K"`, `"-0.7%"`, `"51.4"`, `"1.221M"`.
+- **Hai điểm lạ (kiểm chứng 2026-11-11):**
+  - `?date=D` trả các lần công bố của ngày D−1. Ví dụ `date=2026-11-07` (thứ Bảy) trả báo cáo việc làm thứ Sáu 6/11, còn `date=2023-10-07` trả 336K của ngày 6/10/2023.
+  - Giờ in theo UTC−5 quanh năm: mùa hè bản tin 8:30 sáng giờ New York in là "07:30". `releaseTs` cộng 5 giờ; "All Day" và "Tentative" lấy 12:00.
+  - Mỗi lượt đọc, `checkClaimsDays` kiểm tra rằng ít nhất một nửa số ngày có đơn trợ cấp thất nghiệp là thứ Năm (tuần có lễ thì công bố thứ Tư). Nếu không, độ lệch ngày đã đổi và nguồn throw. Kiểm tra theo tỷ lệ chứ không theo từng ngày, vì lịch sử có ngày bất thường: sau đợt đóng cửa chính phủ 2025, số tồn đọng được công bố lúc 03:10 thứ Ba 18/11/2025.
+- **Chọn dòng (`pickReleases`):** chỉ lấy dòng có `country = "United States"`, tên khớp `SurpriseDef.name` (không phân biệt hoa thường, vì "PCE price index" có hai cách viết) và dự báo đúng loại số (`kind`: %, số lượng K/M/B, hay điểm). Nhờ điều kiện loại số, "Housing Starts" chỉ lấy dòng số căn ("1.221M") mà bỏ dòng % đi kèm. Dòng lặp nguyên văn chỉ tính một lần.
+  - **Cặp tháng/năm** (`pair`: CPI, CPI lõi, PPI, PPI lõi, PCE, PCE lõi): hai dòng cùng tên, cùng đơn vị %, không có nhãn, và thứ tự đổi qua các năm. Dòng theo tháng là dòng có "previous" lệch không quá 0,2 so với số thực tế đã lưu của lần trước. Nếu chưa có số đã lưu thì lấy dòng có dự báo nhỏ hơn về trị tuyệt đối. Ngày 10/11/2026 chỉ có dòng CPI theo tháng (không có dòng theo năm); dòng đó được nhận nhờ "previous" 0,6% khớp số tháng trước.
+  - **Hai tháng công bố cùng lúc** (giấy phép xây dựng 5/5/2026, sau đợt đóng cửa chính phủ): lấy tháng mới hơn, tức dòng có "actual" không phải là "previous" của dòng kia.
+  - Trường hợp còn lại thì bỏ, và ghi vào log ("left out").
+  - Giá nhập khẩu không đưa vào: tháng 4/2026 dự báo theo tháng (2,3%) lớn hơn dự báo theo năm (2,0%), nên không chọn dòng bằng độ lớn được.
+- **Lịch sử:** mỗi lần chạy đọc lại 10 ngày gần nhất (ngày làm việc), vì số thực tế có trong ngày công bố. Sau đó đọc tiếp 120 ngày làm việc cũ hơn, từ mới về cũ, tới `SURPRISE_SINCE` (2/1/2023). Con trỏ nằm ở `kv` `surprise:backfill`. Mỗi lượt đọc 3 ngày một lúc và dừng ở lỗi đầu tiên; con trỏ chỉ lùi tới ngày cũ nhất đã đọc liền mạch. Trong các ngày đã tải, ngày cũ được xử lý trước, để cặp tháng/năm tìm được số tháng trước. Một dòng của cặp đứng một mình ở mép một lượt đọc (số tháng trước nằm ở lượt sau, chưa tải) thì bị bỏ. Ví dụ CPI ngày 18/12/2025, một trong vài điểm như vậy trên toàn bộ lịch sử. Khi chưa đọc xong lịch sử, `isDue` cho chạy lại sau 10 phút; đọc xong thì 2 giờ một lần. Lần đầu mất khoảng 8 lượt × 1,5–2 phút.
+- **Lưu:** hai series cho mỗi chỉ số, `surprise:<key>:actual` và `surprise:<key>:cons`, ts = giờ công bố. Số lượng lưu theo đơn vị gốc ("189K" → 189 000).
+- **Throw khi:**
+  - `rCode` khác 200 hoặc sai schema;
+  - độ lệch ngày đổi (xem trên);
+  - 10 ngày gần nhất không có số liệu Mỹ nào có cả thực tế lẫn dự báo;
+  - sau khi đọc xong lịch sử, có chỉ số không xuất hiện trong 150 ngày (nhiều khả năng Nasdaq đã đổi tên).
+- **Cách tính chỉ số:** ở `lib/data/surprise.ts`, xem LLDD 04 §3b.
 
 ### 5.3 `launches` (`lib/sources/launches.ts`)
 - **URL:** `https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=12`. **Giới hạn 15 request/giờ**, nên chu kỳ là 3 giờ.
@@ -431,6 +484,16 @@ Xem chi tiết ở [LLDD 05](05-ai-pipeline.md). Tóm tắt:
 - **Lưu ý:**
   - Bản XML cũ (`portal.vietcombank.com.vn/…/pXML.aspx`) vẫn chạy nhưng yêu cầu tối đa 1 request mỗi 5 phút.
   - Chu kỳ 1 giờ là đủ an toàn.
+
+### 7.3b `gtrends` — Người Việt tìm gì trên Google (`lib/sources/gtrends.ts`)
+- **URL:** `https://trends.google.com/trending/rss?geo=VN` (RSS công khai, không key, không có tài liệu chính thức).
+- **Định dạng:** mỗi `item` là một từ khoá: `title`, `pubDate` (lúc bắt đầu tăng), `ht:approx_traffic` (`"200+"`, `"2000+"`, có thể `"20K+"`; `parseTraffic` đổi sang số), và vài `ht:news_item` (`ht:news_item_title`, `_url`, `_source`).
+- **Cộng dồn:** feed chỉ có 10 từ khoá mới nhất (khoảng 3 giờ), nên mỗi lần chạy gộp với các dòng `gtrends_vn` cũ còn trong 24 giờ (khoá là từ khoá viết thường, lần sau ghi đè số liệu), xếp theo lượt tìm giảm dần rồi mới nhất, giữ 30.
+- **Lưu:** kind `gtrends_vn`, `title` = từ khoá, `url` = bài báo đầu tiên (không có thì Google Search), `ts` = `pubDate`, `data = { traffic, news: [{ title, url, source }] }` (tối đa 2 bài).
+
+### 7.3c `vnexpress` — Đọc nhiều trên VnExpress (`lib/sources/vnexpress.ts`)
+- **URL:** `https://gw.vnexpress.net/mv?site_id=1000000&category_id=1000000&type=1&limit=20&data_select=article_id,title,share_url,publish_time,article_category`, gateway nội bộ của trang `vnexpress.net/tin-xem-nhieu`, không có tài liệu. `type=1` là 24 giờ qua; `type=2` là danh sách đứng yên từ 2021, đừng dùng. RSS `tin-xem-nhieu.rss` cũng đứng yên từ 2021.
+- **Lưu:** 15 bài, kind `vne_top`, `id` = `article_id`, `ts` = `publish_time` × 1000, `data = { category }` (`article_category.cate_name`).
 
 ## 8. Crypto
 
@@ -559,6 +622,7 @@ Trang `/[lang]/tech` (BR-23) đọc các nguồn dưới đây cùng `yahoo` (§
 | Nguồn | Lý do | Thay bằng |
 |---|---|---|
 | Frankfurter | v1 chỉ có dữ liệu ECB (không có VND); Yahoo đã có tỷ giá | Yahoo `USDVND=X`, Vietcombank |
+| Thông báo OFAC trên Federal Register | Tiêu đề nào cũng là "Notice of OFAC Sanctions Action"; toàn văn bị chặn bot (thử 2026-11-11) | Trang Recent Actions của OFAC (`uspolicy`) |
 | World Bank WDI (số năm) | Rất chậm khi chưa có cache (11–72 giây); IMF đã đủ lạm phát và tăng trưởng, có cả dự báo. Bộ GEM (`source=15`) thì nhanh và vẫn dùng cho GDP quý của Việt Nam (§2.9) | IMF DataMapper |
 | Reddit | `www.reddit.com` bị chặn ở tầng DNS; `api.reddit.com` 403; `old.reddit.com` bắt đăng nhập; cần OAuth | Wikipedia + Hacker News |
 | GDELT DOC 2.0 / GEO 2.0 | DOC luôn trả 429 *"one every 5 seconds"*; GEO trả 404 | GDELT events export |

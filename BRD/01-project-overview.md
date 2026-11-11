@@ -50,8 +50,8 @@ Cách làm này có các vấn đề sau:
 3. **Risk Regime:** badge risk-on / neutral / risk-off kèm giải thích.
 4. **AI Daily Brief:** song ngữ, tạo lúc 06:00 giờ Việt Nam, có nút làm mới.
 5. **Tin tức:** từ RSS của 11 báo (GDELT dùng cho điểm nóng trên bản đồ), loại trùng, phân loại theo khu vực/chủ đề, dịch tiêu đề.
-6. **Bản đồ sự kiện:** động đất, thiên tai, cháy rừng, điểm nóng tin tức.
-7. **Lịch sắp tới:** lịch kinh tế, họp FOMC, phóng tàu vũ trụ (bầu cử: chưa làm, xem BR-10).
+6. **Bản đồ sự kiện:** động đất, thiên tai, cháy rừng, điểm nóng tin tức. Dưới bản đồ là lớp địa chính trị (BR-27): tàu qua các eo biển, rủi ro địa chính trị theo nước, trừng phạt và thương mại của Mỹ.
+7. **Lịch sắp tới:** lịch kinh tế, họp FOMC, bầu cử, phóng tàu vũ trụ.
 8. **Trending:** Wikipedia (EN/VI), Hacker News (Reddit đã loại vì bị chặn).
 9. **Prediction markets:** Polymarket, Kalshi.
 10. **Môi trường và sức khỏe:** CO₂, nhiệt độ toàn cầu, chất lượng không khí, cảnh báo dịch bệnh của WHO.

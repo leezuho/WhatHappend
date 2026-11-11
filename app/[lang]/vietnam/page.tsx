@@ -7,7 +7,7 @@ import { TopBar } from "@/components/TopBar";
 import { AutoRefresh } from "@/components/ui/AutoRefresh";
 import { Panel } from "@/components/ui/Panel";
 import { RegimeBadge, Ticker } from "@/components/panels/MarketPanels";
-import { Vn30Map, VnBank, VnEconomy, VnForeign, VnFuel, VnGold, VnHazards, VnMarkets, VnNews, VnRates, VnRegion } from "@/components/panels/VietnamPanels";
+import { Vn30Map, VnBank, VnEconomy, VnForeign, VnFuel, VnGold, VnHazards, VnMarkets, VnNews, VnRates, VnRegion, VnTrending } from "@/components/panels/VietnamPanels";
 import { CalendarBody } from "@/components/panels/WorldPanels";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/vietnam">): Promise<Metadata> {
@@ -99,6 +99,11 @@ export default async function VietnamPage({ params }: PageProps<"/[lang]/vietnam
             <VnHazards lang={lang} />
           </Panel>
         </div>
+
+        {/* Row 5: what people in Vietnam search and read, beside the news written for them */}
+        <Panel lang={lang} title={p.vnTrending.title} subtitle={p.vnTrending.subtitle} sources={["gtrends", "vnexpress", "wikipedia"]} className="md:col-span-2 xl:col-span-12">
+          <VnTrending lang={lang} />
+        </Panel>
       </main>
       <AutoRefresh />
     </>

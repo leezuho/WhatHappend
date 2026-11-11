@@ -61,11 +61,18 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
   Mỗi thẻ có trạng thái leo thang hay hạ nhiệt (tính từ số liệu), 3 tin mới nhất và xác suất trên Polymarket. AI viết 2–3 câu cho mỗi chủ đề, chỉ từ dữ liệu gắn với chủ đề đó, dùng chung ngân sách lượt gọi với `macronote`. Đưa luôn các chủ đề vào đầu vào của `macronote`: nhận định tuần 46 không có chữ "dầu" vì AI chỉ đọc bảng số của trang Vĩ mô.
 
   Xong 2026-11-11 (BR-24, LLDD 04 §3 Hàng 0, LLDD 05 §3d): `config/themes.ts` khai 4 chủ đề như bảng trên, panel đầu trang Tổng quan giữ thứ tự khai báo. Trạng thái tính từ số liệu: biến động khoảng một tháng của mỗi chỉ số chia cho mức thường gặp trong 2 năm (khối ngoại dùng tổng 20 phiên), trung bình các chỉ số, ±0,5 là nóng lên/hạ nhiệt. Ngày 11/11: Năng lượng đi ngang (−0,4: Brent −13% trong tháng nhưng CPI năng lượng Mỹ +4,3 điểm %), Fed đi ngang (−0,4), AI hạ nhiệt (−2,0: Nvidia −26%, SOX −20%), Vốn ngoại hạ nhiệt (−0,9: USD/VND −1,1%). Kênh sang Việt Nam chỉ để xem (xăng RON 95, CPI, USD/VND, liên ngân hàng, FPT, Vietcombank cách trần). Tin khớp theo từ khoá trên tiêu đề tiếng Anh, 3 câu chuyện mới nhất trong 2 ngày; kèo Polymarket bỏ kèo ≥ 97% hoặc ≤ 3%. Nguồn AI `themes` viết 2–3 câu mỗi chủ đề mỗi ngày sau 06:00 và khi trạng thái đổi (tối đa 6 giờ một lần); chạy thật với `gemini-3.8-flash`: 4/4 chủ đề, 2,2K token vào. `BRIEF_RESERVE` lên 6. Chưa lưu lịch sử trạng thái theo ngày (cần cho mục dưới).
-- [ ] **Lớp địa chính trị.** Hiện chỉ có chấm GDELT trên bản đồ (482 điểm ngày 2026-11-10, phần lớn là nhiễu) và một con số GPR toàn cầu. Cần thêm (chưa thử endpoint nào):
+- [x] **Lớp địa chính trị.** Hiện chỉ có chấm GDELT trên bản đồ (482 điểm ngày 2026-11-10, phần lớn là nhiễu) và một con số GPR toàn cầu. Cần thêm (chưa thử endpoint nào):
   - lưu lượng tàu qua Hormuz, Bab el-Mandeb, Suez, Malacca và eo biển Đài Loan: IMF PortWatch;
   - trừng phạt, kiểm soát xuất khẩu, thuế quan: Federal Register API (`federalregister.gov/api/v1`, không cần key);
   - GPR theo quốc gia: bản tháng của Caldara–Iacoviello (nguồn `gpr` đang đọc bản ngày, chỉ có chỉ số toàn cầu);
   - lịch bầu cử khai báo tay trong `config/` (BR-10 còn thiếu).
+
+  Xong 2026-11-11 (BR-27, BR-10, LLDD 02 §4b, LLDD 04 §3 Hàng 1b): ba panel dưới bản đồ, cấu hình trong `config/geopolitics.ts`.
+  - **Eo biển và kênh đào** (nguồn `portwatch`, ArcGIS của IMF PortWatch, cập nhật hằng tuần): 7 eo biển, thêm Mũi Hảo Vọng (đường vòng khi tránh Biển Đỏ) và Panama. Trung bình 7 ngày, so với cùng tuần năm trước, sparkline từ 2023. Ngày 11/11 (số đến 8/11): Hormuz 4 tàu/ngày, −95% (2025 khoảng 85, gần như đóng từ 3/2026), Bab el-Mandeb 26 (−35%, giảm từ 8/2026), Malacca ít tàu dầu hơn từ 3/2026. Số tàu qua Hormuz cũng là một dòng "sự kiện" trên thẻ chủ đề Năng lượng vùng Vịnh, nên ghi chú AI của chủ đề đọc được.
+  - **Rủi ro địa chính trị theo nước** (nguồn `gprc`): heatmap 16 nước × 24 tháng, mỗi nước chia cho trung bình 1985–2019 của chính nó. Bộ số không có Iran; nước nhỏ dao động mạnh (Việt Nam 60–626). Cột 3/2026 đậm ở gần như mọi nước.
+  - **Trừng phạt và thương mại của Mỹ** (nguồn `uspolicy`): trang Recent Actions của OFAC (tiêu đề trên Federal Register chỉ là "Notice of OFAC Sanctions Action", toàn văn bị chặn bot) cùng Federal Register cho BIS, USTR và văn bản thuế quan, trừng phạt của Tổng thống, đã lọc thủ tục. Tiêu đề được AI dịch; mục nhắc Việt Nam được đánh dấu (10/11: USTR gia hạn điều tra Section 301 với Việt Nam).
+  - **Bầu cử** (`config/elections.ts`, khai tay, mỗi mục có nguồn): Đài Loan 28/11, Tây Ban Nha bầu sớm 29/11/2026, Nigeria 16/1, Pháp 18/4 và 2/5, Mexico 6/6, Kenya 10/8, Argentina 24/10 (vòng 2 dự kiến 21/11), Ý chậm nhất 22/12/2027. Hiện trong lịch trang Tổng quan và Vĩ mô (cuộc bầu cử kế tiếp luôn hiện) và trong lịch của bản tin AI. **Thêm cuộc bầu cử khi có ngày** (Ba Lan, Hy Lạp 2027 chưa có).
+  - Chưa làm: lớp mất Internet (IODA, xem mục Công nghệ Phase 3); trừng phạt của EU, Anh.
 - [x] **"Có gì mới từ lần trước"**: một dải ở đầu trang Tổng quan, phục vụ KPI-1 (nắm tình hình dưới 2 phút). Liệt kê:
   - regime đổi trạng thái;
   - ngưỡng mới vượt;
@@ -103,7 +110,7 @@ Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lầ
 
 ### P3: bố cục
 
-- [ ] **Sắp lại trang Tổng quan.** Trang dài khoảng 7.000px với 17 panel, và màn hình đầu là quả địa cầu, ít thông tin cho người đọc buổi sáng. Thứ tự đề xuất:
+- [ ] **Sắp lại trang Tổng quan.** Trang dài khoảng 7.000px với 17 panel (23 panel từ 2026-11-11: thêm hai dải đầu trang, hàng địa chính trị dưới bản đồ và panel vị thế COT), và màn hình đầu là quả địa cầu, ít thông tin cho người đọc buổi sáng. Thứ tự đề xuất:
   - đầu trang: regime, "Có gì mới từ lần trước", Chủ đề chi phối, sự kiện hôm nay;
   - kế tiếp: bản tin;
   - bản đồ chuyển xuống dưới.

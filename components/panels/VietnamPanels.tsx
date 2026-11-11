@@ -1,10 +1,13 @@
+import type { ReactNode } from "react";
 import clsx from "clsx";
 import { VIETNAM_ECONOMY, VIETNAM_MARKETS, type SeriesKey } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtAxisPct, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtSigned } from "@/lib/format";
+import { fmtAxisPct, fmtCompact, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtRelative, fmtSigned } from "@/lib/format";
 import { getInsightNotes, getItems, getTiles, getVietnam, getVietnamNews, getWatchlist, getWorldMarkets, requestNow } from "@/lib/queries";
 import type { Vn30Stock } from "@/lib/sources/vnstocks";
 import type { FuelPrice } from "@/lib/sources/petrolimex";
+import type { GtrendsItem } from "@/lib/sources/gtrends";
+import type { VnExpressItem } from "@/lib/sources/vnexpress";
 import { getCentralBand, getDollarHistory, getForeignFlows, getGoldPremium, getVietnamOutlook, getVnHazards, getVnRates } from "@/lib/queries-vietnam";
 import { EmptyState } from "@/components/ui/Panel";
 import { BarList } from "@/components/charts/BarList";
@@ -212,6 +215,96 @@ export async function VnNews({ lang }: { lang: Locale }) {
   const [items, now] = await Promise.all([getVietnamNews(lang), requestNow()]);
   if (!items.length) return <EmptyState lang={lang} />;
   return <NewsList items={items} now={now} labels={getDict(lang).news} locale={lang} />;
+}
+
+// ---------------------------------------------------------------- what Vietnam searches and reads
+
+const ROW = "flex gap-2 border-t border-line py-1.5 text-xs first:border-t-0";
+const RANK = "tabular w-4 shrink-0 text-right text-muted";
+
+function TrendColumn({ title, note, empty, children }: { title: string; note: string; empty: boolean; children: ReactNode }) {
+  return (
+    <section className="flex min-w-0 flex-col gap-1">
+      <h3 className="text-[11px] font-semibold text-ink-2">{title}</h3>
+      {empty ? null : <ol className="flex flex-col">{children}</ol>}
+      <p className="mt-auto pt-1 text-[11px] text-muted">{note}</p>
+    </section>
+  );
+}
+
+/**
+ * Three views of Vietnamese attention side by side: what people search (Google
+ * Trends), what they open on the most-read news site (VnExpress), and the pages
+ * that jumped on Vietnamese Wikipedia (lib/sources/wikipedia.ts filters out the
+ * bot traffic that tops its raw ranking).
+ */
+export async function VnTrending({ lang }: { lang: Locale }) {
+  const t = getDict(lang).trending;
+  const [google, vne, wiki, now] = await Promise.all([
+    getItems<GtrendsItem>("gtrends_vn", lang, 12),
+    getItems<VnExpressItem>("vne_top", lang, 12),
+    getItems<{ views: number }>("wiki_vi", lang, 12),
+    requestNow(),
+  ]);
+  if (!google.length && !vne.length && !wiki.length) return <EmptyState lang={lang} />;
+  return (
+    <div className="grid gap-x-6 gap-y-4 md:grid-cols-3">
+      <TrendColumn title={t.vnGoogle} note={t.vnGoogleNote} empty={!google.length}>
+        {google.map((it, i) => {
+          const news = it.data.news[0];
+          return (
+            <li key={it.id} className={ROW}>
+              <span className={RANK}>{i + 1}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                  <a href={it.url ?? undefined} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate font-medium text-ink hover:underline">
+                    {it.title}
+                  </a>
+                  <span className="tabular shrink-0 text-muted">
+                    {fmtNumber(it.data.traffic, lang, 0)}+ {t.searches}
+                  </span>
+                </div>
+                {news && (
+                  <div className="truncate text-[11px] text-muted" title={news.title}>
+                    {news.title}
+                    {news.source ? ` · ${news.source}` : ""}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </TrendColumn>
+      <TrendColumn title={t.vnVne} note={t.vnVneNote} empty={!vne.length}>
+        {vne.map((it, i) => (
+          <li key={it.id} className={ROW}>
+            <span className={RANK}>{i + 1}</span>
+            <div className="min-w-0 flex-1">
+              <a href={it.url ?? undefined} target="_blank" rel="noreferrer" className="line-clamp-2 text-ink hover:underline">
+                {it.title}
+              </a>
+              <div className="text-[11px] text-muted">
+                {[it.data.category, it.ts ? fmtRelative(it.ts, now, lang) : null].filter(Boolean).join(" · ")}
+              </div>
+            </div>
+          </li>
+        ))}
+      </TrendColumn>
+      <TrendColumn title={t.vnWiki} note={t.vnWikiNote} empty={!wiki.length}>
+        {wiki.map((it, i) => (
+          <li key={it.id} className={clsx(ROW, "items-baseline")}>
+            <span className={RANK}>{i + 1}</span>
+            <a href={it.url ?? undefined} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-ink hover:underline">
+              {it.title}
+            </a>
+            <span className="tabular shrink-0 text-muted">
+              {fmtCompact(it.data.views, lang)} {t.views}
+            </span>
+          </li>
+        ))}
+      </TrendColumn>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------- VN30 map, foreign investors

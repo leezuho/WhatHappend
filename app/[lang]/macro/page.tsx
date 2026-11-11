@@ -22,6 +22,7 @@ import {
   WorldPulse,
 } from "@/components/panels/MacroPanels";
 import { CalendarBody } from "@/components/panels/WorldPanels";
+import { SurpriseBody } from "@/components/panels/SurprisePanel";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/macro">): Promise<Metadata> {
   const { lang } = await params;
@@ -101,12 +102,17 @@ export default async function MacroPage({ params }: PageProps<"/[lang]/macro">) 
           <DebtPanel lang={lang} />
         </Panel>
 
+        {/* Row 10b: is US data coming in above or below forecasts, for growth and for inflation */}
+        <Panel lang={lang} title={p.surprise.title} subtitle={p.surprise.subtitle} sources={["surprise"]} className="md:col-span-2 xl:col-span-12">
+          <SurpriseBody lang={lang} />
+        </Panel>
+
         {/* Row 11: how close a recession is, and what is coming */}
         <Panel lang={lang} title={p.recession.title} subtitle={p.recession.subtitle} sources={["fred", "oecd"]} className="md:col-span-2 xl:col-span-7">
           <RecessionPanel lang={lang} />
         </Panel>
         <Panel lang={lang} title={p.macroCalendar.title} subtitle={p.macroCalendar.subtitle} sources={["calendar", "releases"]} className="md:col-span-2 xl:col-span-5">
-          <CalendarBody lang={lang} days={28} kinds={["econ", "fomc", "cb"]} />
+          <CalendarBody lang={lang} days={28} kinds={["econ", "fomc", "cb", "election"]} />
         </Panel>
       </main>
       <AutoRefresh />

@@ -17,6 +17,7 @@ import { callsLeft } from "./budget";
 import { aiStatus } from "./config";
 import { generateJson } from "./provider";
 import { MACRO_NOTE_KEY, type SnapCell, type StoredMacroNote } from "./macronote-shared";
+import { figureText, surpriseView, type SurpriseLine } from "@/lib/data/surprise";
 
 // The weekly macro note (Phase 3 of the macro page): once per ISO week the
 // "brief" model reads the macro page's own numbers and writes a short bilingual
@@ -48,7 +49,7 @@ const Out = z.object({ en: NoteText, vi: NoteText });
 
 const SYSTEM = `You write a weekly world-economy note for one reader's personal dashboard. The reader lives in Vietnam, follows the news, but has no finance training.
 
-You get this week's numbers from the dashboard's macro page: world indicators, a scorecard of economies (Vietnam last), each economy's business-cycle phase from the OECD leading indicator, US recession signals, what changed since last week's note, and the next week's central-bank decisions and major data releases. You also get the dashboard's dominant market themes (themes): each with its status over about a month (heating, cooling or steady; heatMeans says what heating means), its gauges with their latest values and changes, and how it reaches Vietnam.
+You get this week's numbers from the dashboard's macro page: world indicators, a scorecard of economies (Vietnam last), each economy's business-cycle phase from the OECD leading indicator, US recession signals, what changed since last week's note, and the next week's central-bank decisions and major data releases. You also get the page's US economic surprise indices (usSurprise), built the way Citi builds its index: each US release's actual minus the forecasters' consensus, in the indicator's typical misses, averaged over the last three months with recent releases weighing more, × 100. 0 = data in line with forecasts, +100 = one typical miss above them on average; growth above 0 = activity stronger than expected, inflation above 0 = prices hotter than expected. monthAgo is the reading a month earlier; drivers are the releases pulling the index most today, with their points. You also get the dashboard's dominant market themes (themes): each with its status over about a month (heating, cooling or steady; heatMeans says what heating means), its gauges with their latest values and changes, and how it reaches Vietnam.
 Scorecard keys: gdp = real GDP vs a year earlier, latest quarter; cpi = consumer inflation vs a year earlier, latest month (cpiTarget = the central bank's target); unemp = unemployment rate; policy = central-bank rate; real = policy rate minus inflation (positive = money is tight); y10 = 10-year government bond yield; fxYtd = currency vs the US dollar since 31 Dec, % (positive = stronger; for the US, the dollar index); cli = OECD leading indicator (100 = trend growth) and its 3-month direction; debt = government debt, % of GDP; ca = current account, % of GDP. The period of each reading follows its number; "IMF est" marks an IMF yearly estimate standing in for missing monthly or quarterly data. [warn] and [crit] are the dashboard's watch and alarm levels; [good] = inflation near its target.
 
 Write:
@@ -147,6 +148,21 @@ function upcoming(db: DatabaseSync, now: number): string[] {
   return [...banks, ...releases].sort().slice(0, 15);
 }
 
+/** The macro page's surprise indices, compact: the reading, a month earlier, the three biggest pulls. */
+function surpriseForPrompt(db: DatabaseSync, now: number) {
+  const v = surpriseView(db, now, 0);
+  const day = (ts: number) => new Date(ts).toISOString().slice(0, 10);
+  const one = (l: SurpriseLine) =>
+    l.value === null
+      ? null
+      : {
+          index: Math.round(l.value),
+          monthAgo: l.monthAgo === null ? null : Math.round(l.monthAgo),
+          drivers: l.drivers.slice(0, 3).map((d) => `${d.def.label.en}, ${day(d.ts)}: ${figureText(d.def, d.actual, "en")} vs ${figureText(d.def, d.cons, "en")} forecast (${d.pull > 0 ? "+" : ""}${Math.round(d.pull)})`),
+        };
+  return { growth: one(v.growth), inflation: one(v.inflation) };
+}
+
 /** The model's input (compact text, English) and the snapshot kept for next week. */
 export function macroInput(db: DatabaseSync, now: number, prev?: StoredMacroNote) {
   const phases = new Map(cycleRows(db, "en", now).map((r) => [r.short, r.phase]));
@@ -174,6 +190,7 @@ export function macroInput(db: DatabaseSync, now: number, prev?: StoredMacroNote
     economies,
     usRecessionSignals: RECESSION_SIGNALS.flatMap((k) => tileLine(db, k, now) ?? []),
     changesSinceLastNote: prev ? changesSince(prev.snapshot, snapshot) : "no earlier note",
+    usSurprise: surpriseForPrompt(db, now),
     upcoming: upcoming(db, now),
     // Before 2026-11-11 the note read only the macro page's table: week 46's note never said "oil" during a Gulf energy shock.
     themes: themeStates(db, now).map((t) => themeForPrompt(t, false)),

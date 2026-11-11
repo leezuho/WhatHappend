@@ -52,7 +52,8 @@
     "legacy": "It started before workers reported their version.",
     "unknown": "Sources it does not know: {list}.",
     "changed": "Files edited since: {list}.",
-    "fixOutdated": "Restart npm run worker (npm run dev:all restarts it on every save)."
+    "fixOutdated": "Restart npm run worker (npm run dev:all restarts it on every save).",
+    "dismiss": "Hide until the worker changes"
   },
   "regime": {
     "title": "Risk regime",
@@ -97,6 +98,18 @@
     "map": {
       "title": "World map",
       "subtitle": "Earthquakes, disasters and news hotspots"
+    },
+    "chokepoints": {
+      "title": "Sea chokepoints",
+      "subtitle": "Ships through each strait a day, vs a year earlier"
+    },
+    "gprCountries": {
+      "title": "Geopolitical risk by country",
+      "subtitle": "Monthly, against each country's own history"
+    },
+    "usPolicy": {
+      "title": "US sanctions and trade actions",
+      "subtitle": "OFAC, export controls, tariffs, last 60 days"
     },
     "highlights": {
       "title": "What stands out",
@@ -210,6 +223,10 @@
       "title": "Vietnam news",
       "subtitle": "Domestic headlines by topic"
     },
+    "vnTrending": {
+      "title": "What Vietnam is searching and reading",
+      "subtitle": "Google Trends, VnExpress, Vietnamese Wikipedia"
+    },
     "cryptoVitals": {
       "title": "Crypto vital signs",
       "subtitle": "Majors, market size, volatility and liquidity"
@@ -313,6 +330,10 @@
     "macroCalendar": {
       "title": "Macro calendar",
       "subtitle": "Data releases and central-bank decisions ahead"
+    },
+    "surprise": {
+      "title": "US economic surprises",
+      "subtitle": "Data against the forecasters' consensus, last three months"
     },
     "techNote": {
       "title": "Technology this week",
@@ -522,6 +543,28 @@
     "fiscalX": "Budget balance {year}, % GDP",
     "fiscalY": "Government debt {year}, % GDP",
     "fiscalNote": "Lines at a 3% deficit (the EU's limit) and 90% of GDP debt (past which studies find growth tends to slow). High debt with a big deficit means debt keeps rising and bond markets can push back. IMF estimates for this year."
+  },
+  "surprise": {
+    "growth": "Growth",
+    "inflation": "Inflation",
+    "growthHint": "Jobs, spending, output, business and consumer surveys, housing",
+    "inflationHint": "Consumer and producer prices, wages, inflation expectations",
+    "growthAbove": "Data beating forecasts",
+    "growthBelow": "Data falling short of forecasts",
+    "inflationAbove": "Prices hotter than forecast",
+    "inflationBelow": "Prices cooler than forecast",
+    "inLine": "In line with forecasts",
+    "monthAgo": "{v} a month ago",
+    "drivers": "Biggest pull",
+    "driversHint": "Points each release adds to or takes from the index today",
+    "recent": "Latest releases",
+    "date": "Date",
+    "release": "Release",
+    "actual": "Actual",
+    "consensus": "Forecast",
+    "z": "Surprise",
+    "zHint": "Actual minus forecast, in the indicator's typical misses. Green: good news for the economy (stronger growth, cooler prices); red: the opposite.",
+    "note": "Actuals and consensus forecasts from Nasdaq's economic calendar, {count} US indicators, latest release {date}. Each release's miss is divided by the indicator's typical miss since 2023; the index is the weighted mean over the last three months, a release counting half as much every 30 days, × 100: 0 = in line with forecasts, +100 = one typical miss above them on average. Built the way Citi builds its surprise index; it is not Citi's index."
   },
   "map": {
     "quake": "Earthquakes",
@@ -1014,7 +1057,33 @@
     "vn30fDetail": "Third Thursday of the month; the trading day before when that is a holiday.",
     "gso": "Statistics Office: economic data for {month}",
     "gsoDetail": "CPI, industrial output, retail sales, trade, FDI",
-    "gsoQuarter": "CPI, trade, FDI, plus GDP for quarter {q}"
+    "gsoQuarter": "CPI, trade, FDI, plus GDP for quarter {q}",
+    "election": "Election",
+    "electionTitle": "{country}: {kind}",
+    "electionExpected": "Deadline or likely date, not yet fixed"
+  },
+  "geo": {
+    "chokepoint": "Chokepoint",
+    "ships": "Ships/day",
+    "shipsHint": "Average ships a day over the last 7 days of data",
+    "vsYear": "vs year ago",
+    "vsYearHint": "The same 7 days 52 weeks earlier",
+    "tankers": "Tankers",
+    "history": "Since 2023",
+    "historyHint": "Weekly average ships a day since January 2023",
+    "disrupted": "All but shut",
+    "disruptedHint": "Under half the traffic of a year earlier",
+    "chokeNote": "Ships counted from satellite AIS positions by the IMF's PortWatch, updated weekly; data to {date}.",
+    "gprLatest": "Latest",
+    "gprCell": "{country}, {month}: {value}",
+    "gprLegend": "100 = the country's own 1985–2019 average",
+    "gprNote": "Share of newspaper articles on war, terrorism and tension that name the country (Caldara & Iacoviello), against its own history; sorted by the last three months. Iran is not covered. Small countries swing a lot from month to month because few articles name them.",
+    "gprNoData": "No data",
+    "all": "All",
+    "sanctions": "Sanctions",
+    "trade": "Trade and export controls",
+    "policyNote": "OFAC's recent actions the day they happen; Commerce, the Trade Representative and the President as published in the Federal Register.",
+    "vnTag": "Vietnam"
   },
   "trending": {
     "wikiEn": "Wikipedia EN",
@@ -1022,7 +1091,14 @@
     "hn": "Hacker News",
     "views": "views",
     "points": "points",
-    "comments": "comments"
+    "comments": "comments",
+    "searches": "searches",
+    "vnGoogle": "Google searches",
+    "vnGoogleNote": "Rising searches in Vietnam over the last 24 hours, by Google's search count (a lower bound).",
+    "vnVne": "Most read on VnExpress",
+    "vnVneNote": "VnExpress's most-read articles of the last 24 hours.",
+    "vnWiki": "Vietnamese Wikipedia",
+    "vnWikiNote": "Yesterday's most-read pages, keeping only those read at least 4 times more than usual: the plain ranking is mostly bot traffic."
   },
   "prediction": {
     "fed": "Fed funds rate after the {date} meeting",

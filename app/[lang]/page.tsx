@@ -22,6 +22,7 @@ import { BriefBody, MapBody, NewsBody, VietnamBody } from "@/components/panels/C
 import { CalendarBody, EnvBody, PredictionBody, TrendingBody } from "@/components/panels/WorldPanels";
 import { ThemesBody } from "@/components/panels/ThemePanels";
 import { WhatsNewBody } from "@/components/panels/WhatsNew";
+import { ChokepointsBody, GprCountriesBody, UsPolicyBody } from "@/components/panels/GeoPanels";
 import { CotBody } from "@/components/panels/CotPanel";
 
 export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
@@ -58,6 +59,17 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
         {/* Row 1: the world at a glance */}
         <Panel lang={lang} title={p.map.title} subtitle={p.map.subtitle} sources={["usgs", "gdacs", "eonet", "gdelt"]} className="md:col-span-2 xl:col-span-12">
           <MapBody lang={lang} />
+        </Panel>
+
+        {/* Row 1b: the geopolitical layer under the map: shipping lanes, risk by country, Washington's actions */}
+        <Panel lang={lang} title={p.chokepoints.title} subtitle={p.chokepoints.subtitle} sources={["portwatch"]} className="md:col-span-2 xl:col-span-4">
+          <ChokepointsBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.gprCountries.title} subtitle={p.gprCountries.subtitle} sources={["gprc"]} className="xl:col-span-4">
+          <GprCountriesBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.usPolicy.title} subtitle={p.usPolicy.subtitle} sources={["uspolicy"]} className="xl:col-span-4">
+          <UsPolicyBody lang={lang} />
         </Panel>
 
         {/* Row 2: the story of the day */}

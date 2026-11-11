@@ -103,7 +103,7 @@ Index: `events_ts (ts DESC)`.
 ### 3.6 `items` — danh sách snapshot
 | Cột | Kiểu | Ý nghĩa |
 |---|---|---|
-| `kind` | TEXT | PK (1). Loại danh sách: `wiki_en`, `wiki_vi`, `hn`, `polymarket`, `kalshi_fed`, `launch`, `calendar`, `airquality`, `who`, `gold_vn`, `vcb`, `vn_breadth`, và của trang Công nghệ: `status`, `ai_models`, `hf_papers`, `hf_models`, `kev`, `kev_vendors`, `tech_caps` (dạng `data` xem [LLDD 02](02-data-sources.md)) |
+| `kind` | TEXT | PK (1). Loại danh sách: `wiki_en`, `wiki_vi`, `hn`, `polymarket`, `kalshi_fed`, `launch`, `calendar`, `airquality`, `who`, `gold_vn`, `vcb`, `vn_breadth`, `gtrends_vn`, `vne_top`, `us_policy`, và của trang Công nghệ: `status`, `ai_models`, `hf_papers`, `hf_models`, `kev`, `kev_vendors`, `tech_caps` (dạng `data` xem [LLDD 02](02-data-sources.md)) |
 | `id` | TEXT | PK (2). Id trong nguồn |
 | `rank` | INTEGER NOT NULL | Thứ tự trong snapshot (0 là đầu tiên) |
 | `title`, `title_vi` | TEXT | Tiêu đề và bản dịch |
@@ -186,7 +186,7 @@ Chỉ mục `changes_at (at DESC)` và `changes_key (kind, key, at)`. Ghi bởi 
 |---|---|---|
 | Series từ Yahoo | `yahoo:<symbol>` | `yahoo:^GSPC`, `yahoo:DX-Y.NYB` |
 | Series từ FRED | `fred:<series id>` | `fred:DGS10`, `fred:T10Y2Y` |
-| Series từ nguồn khác | `<prefix>:<mã>` | `vn:VNINDEX`, `bis:US`, `imf:PCPIPCH:VNM`, `imf:CPI_M:JPN`, `sbv:REFI`, `wb:GDP:VNM`, `cnbc:ID10Y-ID`, `ibge:UNE:BRA`, `gpr:GPRD`, `nyfed:GSCPI`, `noaa:co2`, `giss:global`, `goldvn:SJL1L10:sell`, `vcb:USD:sell` |
+| Series từ nguồn khác | `<prefix>:<mã>` | `vn:VNINDEX`, `bis:US`, `imf:PCPIPCH:VNM`, `imf:CPI_M:JPN`, `sbv:REFI`, `wb:GDP:VNM`, `cnbc:ID10Y-ID`, `ibge:UNE:BRA`, `gpr:GPRD`, `gpr:C:ISR` (GPR theo nước), `portwatch:chokepoint6` (`:tanker`), `nyfed:GSCPI`, `noaa:co2`, `giss:global`, `goldvn:SJL1L10:sell`, `vcb:USD:sell` |
 | Series theo chỉ số × quốc gia | `<nguồn>:<chỉ số>:<mã vùng>` | `oecd:CLI:USA`, `oecd:CPI:EA20`, `oecd:BCI:DEU`, `imf:LUR:JPN`, `imf:NGDP_RPCH:WEOWORLD` (nhóm IMF), `bis:REER:DE`, `bis:GAP:XM`. Tháng và quý lưu ở ngày đầu kỳ; năm ở 1/1 |
 | Series dẫn xuất | `calc:<tên>` | `calc:GLOBAL_LIQ`, `calc:NETLIQ_US`, `calc:RECPROB_US` (ghi bởi `fred`, xem LLDD 02 §2.2) |
 | Event | `<source>:<id gốc>` | `usgs:us7000abcd` |

@@ -20,6 +20,7 @@ import {
   type ScoreCell,
   type ScoreRow,
 } from "@/lib/data/macro";
+import { surpriseView, type SurpriseView } from "@/lib/data/surprise";
 import { aiStatus } from "@/lib/ai/config";
 import { MACRO_NOTE_KEY, type NoteView, type StoredMacroNote } from "@/lib/ai/macronote-shared";
 import { pick, type Locale } from "@/lib/i18n";
@@ -37,6 +38,13 @@ import {
 } from "@/lib/signals/macro";
 
 export type { ClockRow, GrowthInflationPoint, ScoreCell, ScoreRow } from "@/lib/data/macro";
+export type { ScoredRelease, SurpriseLine, SurpriseView } from "@/lib/data/surprise";
+
+/** US data against the consensus forecast: the home-made growth and inflation surprise indices (lib/data/surprise.ts). */
+export async function getSurprise(): Promise<SurpriseView> {
+  await connection();
+  return surpriseView(getDb());
+}
 
 // Read side of the world-macro page (app/[lang]/macro). Same rules as
 // lib/queries.ts: synchronous SQLite reads behind connection(). The scorecard
