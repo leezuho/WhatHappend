@@ -1,8 +1,8 @@
 # LLDD 06 — Risk Regime
 
-> Phiên bản 0.2 · Ngày 2026-10-31 · Trạng thái: Đã triển khai
+> Phiên bản 0.3 · Ngày 2026-11-11 · Trạng thái: Đã triển khai
 > Liên quan: [BRD-06](../../BRD/02-business-requirements.md) · [04 Danh mục chỉ số](../../BRD/04-indicator-catalog.md) · [04 Frontend](04-frontend.md)
-> Mã nguồn: `lib/signals/risk-regime.ts` (`computeRegime`), đọc qua `getRegime()` trong `lib/queries.ts`, hiển thị bằng `RegimeBadge` trên TopBar
+> Mã nguồn: `lib/signals/risk-regime.ts` (`computeRegime`, `mergeDaily`), đọc DB qua `regimeFromDb` (`lib/data/regime.ts`, dùng được cả ở web lẫn worker), web gọi qua `getRegime()` trong `lib/queries.ts`, hiển thị bằng `RegimeBadge` trên TopBar
 
 ## 1. Mục tiêu
 
@@ -15,96 +15,103 @@ Gộp vài chỉ báo căng thẳng thị trường thành **một trạng thái
 | `risk-off` | Thị trường né rủi ro, căng thẳng cao |
 | `unknown` | Không đủ dữ liệu |
 
-Quy tắc phải đơn giản, minh bạch và giải thích được. Tooltip hiện đóng góp của từng thành phần.
+Quy tắc phải đơn giản, minh bạch và giải thích được. Popover hiện giá trị gốc, ngày và z của từng thành phần.
 
-## 2. Thành phần (đúng như `computeRegime`)
+### 1.1 Vì sao có v2 (2026-11-11)
 
-Mọi thành phần được đổi dấu sao cho **z dương = căng thẳng hơn bình thường**.
+Ngày 2026-11-10 bản v0.2 báo "Né rủi ro" (điểm 0,88) trong khi 20/20 thị trường tăng, S&P +2,3%, VIX 20. Hai nguyên nhân:
 
-| `key` | Series | Biến đo | Dấu | Lý do |
-|---|---|---|---|---|
-| `vix` | `yahoo:^VIX` | Mức đóng cửa | `+` | VIX cao = sợ hãi |
-| `hy` | `fred:BAMLH0A0HYM2` | Mức (%) | `+` | Spread rộng = tín dụng căng thẳng |
-| `dxy` | `yahoo:DX-Y.NYB` | % thay đổi 21 quan sát (≈ 1 tháng) | `+` | USD tăng nhanh = thanh khoản toàn cầu thắt |
-| `curve` | `fred:T10Y2Y` | Mức 2s10s (điểm %) | `−` | Đường cong phẳng/đảo ngược hơn bình thường = căng thẳng hơn |
-| `fsi` | `fred:STLFSI4` | Mức (series tuần) | `+` | 0 = mức căng thẳng trung bình |
+- **Cửa sổ 1 năm quá ngắn.** HY OAS 3,42% là mức thấp so với lịch sử (căng thẳng thật thường từ 5% trở lên), nhưng so với một năm spread hẹp bất thường (trung bình 2,90%, độ lệch chuẩn 0,21) thì thành z +2,5. 2s10s 0,25 cũng thành z +1,9 so với một năm quanh 0,5, trong khi panel Đường cong lợi suất ghi "Bình thường".
+- **Gộp mức với tốc độ.** HY tăng từ 2,60% (28/8) lên 3,42% là tín hiệu thật, nhưng là tín hiệu về hướng đi chứ không phải mức căng thẳng hiện tại.
 
-## 3. Chuẩn hóa
+v2 đo mỗi thành phần so với tối đa 10 năm, thay HY bằng chênh lệch Baa trong điểm (FRED chỉ cho 3 năm HY, xem §2), đưa tốc độ giãn của HY ra thành cảnh báo phân kỳ riêng, thêm xu hướng và độ rộng của cổ phiếu, giảm trọng số cho số liệu cũ và chỉ đổi trạng thái khi tín hiệu giữ đủ 2 phiên.
 
-- Lấy các điểm trong **1 năm tính từ điểm mới nhất** của series (query đọc 400 ngày gần nhất).
-- `z = (x_latest − mean(x)) / sd(x)` trên cửa sổ đó (độ lệch chuẩn tổng thể), rồi nhân với dấu ở §2.
-- Bỏ thành phần nếu có **ít hơn 30 giá trị** hoặc `sd = 0`.
-- Không clamp z và không kiểm tra độ tươi của điểm cuối (staleness đã hiện ở badge panel).
+## 2. Thành phần
 
-## 4. Tổng hợp và ngưỡng
+Mọi thành phần được đổi dấu sao cho **z dương = căng thẳng hơn bình thường**, rồi kẹp về [−3, +3].
+
+| `key` | Series | Biến đo | Cách chuẩn hoá | Dấu | Tuổi tối đa (đủ trọng số) |
+|---|---|---|---|---|---|
+| `vix` | `fred:VIXCLS` (lịch sử) ghép `yahoo:^VIX` (mới nhất) | Mức đóng cửa | z, ≤ 10 năm | `+` | 4 ngày |
+| `credit` | `fred:BAA10Y` | Lợi suất trái phiếu doanh nghiệp Baa (Moody's) trừ lợi suất 10 năm, % | z, ≤ 10 năm | `+` | 5 ngày |
+| `dxy` | `yahoo:DX-Y.NYB` | % thay đổi 21 phiên | z, ≤ 10 năm (thực tế khoảng 1 năm vì Yahoo chỉ lưu 14 tháng) | `+` | 4 ngày |
+| `curve` | `fred:T10Y2Y` | Mức 2s10s (điểm %) | z, ≤ 10 năm | `−` | 5 ngày |
+| `fsi` | `fred:STLFSI4` | Mức (series tuần) | Dùng thẳng: chỉ số đã chuẩn hoá, 0 = trung bình | `+` | 14 ngày |
+| `trend` | `fred:SP500` (lịch sử) ghép `yahoo:^GSPC` (mới nhất) | % cao hơn trung bình 200 phiên | z, ≤ 10 năm | `−` | 4 ngày |
+| `breadth` | 20 chỉ số trong `WORLD_INDICES` | Tỷ lệ chỉ số đóng cửa trên trung bình 50 phiên | Thang cố định: `2 × (0,5 − tỷ lệ)`, tức tất cả trên MA50 → −1, một nửa → 0, không chỉ số nào → +1 | | Bỏ chỉ số không có giá trong 7 ngày; cần ≥ 5 chỉ số |
+
+- **Vì sao Baa thay cho HY.** Từ năm 2026 FRED chỉ phục vụ 3 năm gần nhất của các series ICE BofA (`BAMLH0A0HYM2` bắt đầu từ 2023-11-13, kiểm tra 2026-11-11), nên không có 10 năm để chuẩn hoá. `BAA10Y` của Moody's có từ 1986. Hai series đi cùng nhau ở các đợt căng thẳng (3/2020, 2022); ngày 2026-11-10 Baa ở 1,51% (z 10 năm −1,24) trong khi HY tăng nhanh, đúng tình huống §5 tách riêng.
+- **Lịch sử dài.** `fred` lấy 10 năm cho `FRED_LONG_CODES` (`VIXCLS`, `SP500`, `BAA10Y`, `T10Y2Y`, `STLFSI4`; `config/series.ts`), các series khác 3 năm. `SP500` trên FRED chỉ có 10 năm do giấy phép của S&P. `mergeDaily` ghép theo ngày UTC, nguồn Yahoo thắng khi trùng ngày.
+- `years` của mỗi thành phần là số năm lịch sử thực có trong cửa sổ (popover hiện khi rê chuột). Cần ít nhất 250 giá trị (khoảng 1 năm ngày) để tính z.
+
+## 3. Chuẩn hoá và trọng số
+
+- Với thành phần kiểu z: lấy điểm mới nhất tại thời điểm xét và mọi điểm trong 10 năm trước nó; `z = (x − mean) / sd` (độ lệch chuẩn tổng thể), nhân dấu, kẹp ±3. Bỏ thành phần nếu có ít hơn 250 giá trị hoặc `sd = 0`.
+- **Trọng số theo tuổi:** tuổi = thời điểm xét − ngày của điểm mới nhất. Tuổi ≤ ngưỡng ở §2 → trọng số 1; ≤ 3 lần ngưỡng → 0,5 (popover ghi nghiêng, rê chuột hiện "Số liệu cũ, nửa trọng số"); lâu hơn → bỏ thành phần.
+- `score = Σ(w·z) / Σw`.
+
+## 4. Trạng thái
 
 ```
-if số thành phần hợp lệ < 2          → "unknown" (score = null)
-score = trung bình z (trọng số bằng nhau)
-VIX mới nhất > 35                     → "risk-off", override = "VIX > 35"
-score ≥ +0.75                         → "risk-off"
-score ≤ −0.50                         → "risk-on"
-còn lại                               → "neutral"
+if số thành phần hợp lệ < 2           → "unknown" (score = null)
+VIX (giá trị của thành phần vix) > 35  → "risk-off", override = "VIX > 35"
+score ≥ +0.75                          → "risk-off"
+score ≤ −0.50                          → "risk-on"
+còn lại                                → "neutral"
 ```
 
 Ngưỡng hai phía không đối xứng có chủ đích: chỉ báo căng thẳng thường lệch phải, nên cần bằng chứng mạnh hơn mới kết luận risk-off.
 
-## 5. Kết quả trả về và hiển thị
+**Giữ 2 phiên.** Phiên là các ngày có giá VIX (hoặc S&P nếu thiếu VIX). Hàm đọc 15 phiên gần nhất: các phiên trước đọc tại cuối ngày của phiên đó, phiên mới nhất đọc tại `now` (nên số liệu ngừng cập nhật bị giảm trọng số). Trạng thái ban đầu là kết quả của phiên đầu tiên có dữ liệu; sau đó chỉ đổi khi kết quả mới giữ **2 phiên liên tiếp**. Ghi đè VIX > 35 đổi ngay, không chờ. Kết quả trả thêm:
+
+- `since`: phiên đầu của trạng thái hiện tại; `sinceAtLeast = true` khi trạng thái đã có từ đầu 15 phiên xét (popover ghi "từ … hoặc sớm hơn").
+- `pending`: kết quả của phiên mới nhất khi nó khác trạng thái đang hiện ("Phiên gần nhất nghiêng về …").
+
+## 5. Cảnh báo phân kỳ tín dụng
+
+Không tính vào điểm. Bật khi **cả hai**:
+
+- HY OAS (`fred:BAMLH0A0HYM2`, điểm mới nhất trong 10 ngày) cao hơn mức thấp nhất của 63 quan sát trước đó (khoảng 3 tháng) **ít nhất 50 bp** (làm tròn tới bp);
+- S&P 500 vẫn cao hơn trung bình 200 phiên.
+
+Trên 3 năm dữ liệu HY, luật này bật ở 8/2024 (carry trade yên), 25/3/2025 (hai tuần trước cú giảm tháng 4), vài đợt ngắn năm 2025–2026 và liên tục từ 30/9/2026. Khi bật, badge có dấu "!" và popover mở đầu bằng "Tín dụng xấu đi trong khi cổ phiếu tăng" kèm HY hiện tại, đáy và ngày, khoảng cách S&P tới MA200.
+
+## 6. Kết quả trả về và hiển thị
 
 ```ts
 interface RegimeResult {
   regime: "risk-on" | "neutral" | "risk-off" | "unknown";
-  score: number | null;
-  components: { key: "vix" | "hy" | "dxy" | "curve" | "fsi"; latest: number; z: number }[];
-  override?: string;               // "VIX > 35"
+  score: number | null;          // của phiên mới nhất
+  components: {
+    key: "vix" | "credit" | "dxy" | "curve" | "fsi" | "trend" | "breadth";
+    value: number;               // giá trị gốc (breadth: tỷ lệ 0–1)
+    ts: number;                  // ngày của điểm mới nhất
+    z: number;                   // đã nhân dấu, kẹp ±3
+    weight: number;              // 1 hoặc 0.5
+    years?: number;              // số năm lịch sử của z
+    count?: { above: number; total: number }; // breadth
+  }[];
+  override?: string;             // "VIX > 35"
+  since: number | null;
+  sinceAtLeast: boolean;
+  pending: Regime | null;
+  divergence: { hy; hyTs; low; lowTs; spxGap } | null;
 }
 ```
 
-- `RegimeBadge` (server, `<details>` trên TopBar): chấm trạng thái (`--good` risk-on, `--axis` neutral, `--critical` risk-off) **luôn kèm nhãn chữ**.
-- Mở ra: câu giải thích, điểm `score`, z từng thành phần (tên song ngữ; z > 0,5 tô `--down`, z < −0,5 tô `--up`) và nhắc lại ngưỡng.
+- `RegimeBadge` (server, `<details>` trên TopBar): chấm trạng thái (`--good` risk-on, `--axis` neutral, `--critical` risk-off) **luôn kèm nhãn chữ**; thêm dấu "!" nền `warning` khi có cảnh báo phân kỳ.
+- Mở ra (rộng 22rem, không quá màn hình trừ 2rem): khối cảnh báo phân kỳ (nếu có), câu giải thích, điểm và "từ ngày", dòng `pending` (nếu có), bảng thành phần (tên · giá trị gốc · ngày · z; z > 0,5 tô `--down`, z < −0,5 tô `--up`), dòng quy tắc.
+- Giá trị gốc theo đơn vị riêng: VIX và STLFSI là số, tín dụng là %, USD và S&P là % có dấu, 2s10s theo `fmtValue` của series, độ rộng là "10/20".
 
-## 6. Pseudo-code
+## 7. Kiểm thử
 
-```ts
-function computeRegime({ vix, hy, dxy, curve, fsi }): RegimeResult {
-  const parts = [];
-  add("vix", vix, level, +1);
-  add("hy", hy, level, +1);
-  add("dxy", dxy, pctChange21, +1);
-  add("curve", curve, level, −1);
-  add("fsi", fsi, level, +1);
-  // add(): cửa sổ 1 năm → transform → z của giá trị cuối (cần ≥ 30 giá trị, sd > 0) → nhân dấu
-  if (parts.length < 2) return { regime: "unknown", score: null, components: parts };
-  const score = mean(parts.map(p => p.z));
-  if (last(vix) > 35) return { regime: "risk-off", score, components: parts, override: "VIX > 35" };
-  return { regime: score <= −0.5 ? "risk-on" : score >= 0.75 ? "risk-off" : "neutral", score, components: parts };
-}
-```
+`test/signals.test.ts`:
 
-### 6.1 Khác biệt so với thiết kế v0.1 (có thể cải tiến sau)
+- cần ít nhất 2 thành phần; ramp về mức cực trị đọc ra risk-on/risk-off; VIX > 35 ghi đè ngay;
+- một phiên căng thẳng chỉ thành `pending`, hai phiên mới đổi trạng thái, một phiên dịu lại không đổi ngược;
+- mức được so với 10 năm (chín năm quanh 5%, một năm quanh 2,6%, hiện 3,4% → z âm);
+- số liệu trễ 8 ngày nửa trọng số, trễ 20 ngày bị bỏ; z kẹp ở 3;
+- phân kỳ bật khi HY +60 bp và S&P trên MA200, tắt khi S&P giảm hoặc HY chỉ +40 bp;
+- độ rộng 15/20 → z −0,5; `mergeDaily`.
 
-| Thiết kế v0.1 | Cài đặt hiện tại |
-|---|---|
-| 2s10s dùng thay đổi 21 phiên, chỉ tính sau khi từng đảo ngược | Dùng mức 2s10s, đảo dấu, luôn tính |
-| STLFSI dùng thẳng giá trị (đã chuẩn hóa) | STLFSI cũng lấy z 1 năm như các thành phần khác |
-| Clamp z về [−3, 3], kiểm tra độ tươi 7/14 ngày, tối thiểu 60/26 điểm | Không clamp, không kiểm tra độ tươi, tối thiểu 30 giá trị |
-| Trả thêm `asOf`, `contribution`, sắp xếp theo đóng góp | Chỉ `latest` và `z`, giữ thứ tự cố định |
-
-## 7. Ví dụ tính
-
-| Thành phần | Giá trị mới nhất | Mean 1Y | SD 1Y | z (đã nhân dấu) |
-|---|---|---|---|---|
-| VIX | 24,0 | 17,0 | 4,0 | +1,75 |
-| HY OAS | 3,9% | 3,4% | 0,4 | +1,25 |
-| DXY Δ21 | +2,1% | +0,1% | 1,2 | +1,67 |
-| 2s10s | 0,20 | 0,40 | 0,20 | +1,00 (mức thấp hơn bình thường → căng hơn) |
-| STLFSI | −0,2 | −0,5 | 0,3 | +1,00 |
-
-- `score = (1,75 + 1,25 + 1,67 + 1,00 + 1,00) / 5 = 1,33` → **risk-off**. Không có ghi đè vì VIX = 24 < 35.
-- Ví dụ ngược lại: VIX z = −1,0, HY z = −1,0, DXY z = −0,5 (chỉ 3 thành phần đủ dữ liệu) → `score = −0,83` → **risk-on**.
-
-## 8. Kiểm thử
-
-- Chưa có unit test tự động. Đề xuất: dữ liệu tổng hợp cho các trường hợp đủ/thiếu thành phần, `sd = 0`, ghi đè VIX, giá trị biên đúng tại ngưỡng −0,5 và +0,75.
-- Đã kiểm tra thủ công với dữ liệu thật ngày 2026-10-31: badge trên TopBar hiện "Trung tính" (ảnh chụp giao diện).
-- Kiểm tra lại với các giai đoạn lịch sử: 03/2020 phải ra risk-off, giữa 2021 phải ra risk-on hoặc neutral.
+Kiểm tra lại trên lịch sử (FRED, 2026-11-11, chưa gồm DXY và độ rộng vì thiếu lịch sử dài): 24/12/2018 +1,58, 16/3/2020 +2,41, 16/6/2022 +1,18, 12/10/2022 +1,31, 8/4/2025 +1,04 (risk-off); 15/6/2021 −0,68, 11/11/2024 −0,60 (risk-on); 5/8/2024 VIX 38 ghi đè; 10/11/2026 −0,18 (neutral, kèm cảnh báo phân kỳ).

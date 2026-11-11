@@ -141,10 +141,15 @@ z.object({ items: z.array(z.object({
 
 Nút "Viết lại" (`BriefRefresh`) gọi `POST /api/brief`. Route này chỉ ghi cờ `kv['brief:force']` (không xóa sau khi chạy; so sánh theo thời gian với `briefs.created_at`). Web server không gọi API AI nào (giữ nguyên tắc của ADR-04). Kiểu `StoredBrief` và `FORCE_KEY` nằm ở `lib/ai/brief-shared.ts` để web không import SDK.
 
-**Đầu vào** (gom từ DB, không gọi API ngoài):
+**Đầu vào** (`briefInput(db, now)`, gom từ DB, không gọi API ngoài):
 1. Tối đa 90 tiêu đề trong 24 giờ qua (tiếng Anh nếu có), gộp theo `title_key`, bỏ `topic = sports` và bỏ các báo chuyên mục crypto và công nghệ (`DESK_OUTLETS` = `CRYPTO_OUTLETS` + `TECH_OUTLETS`). Mỗi tiêu đề được đánh số `n` kèm `source`, `region`, `topic`.
-2. Snapshot 12 Vital Signs: tên, giá trị, % thay đổi.
-3. Thiên tai đáng chú ý trong 48 giờ: sự kiện mức orange/red và động đất M ≥ 6 (tối đa 15).
+2. `markets`: snapshot 12 Vital Signs: tên, giá trị, thay đổi theo cách tile in (`fmtDelta`: % cho giá, bp hoặc điểm % cho lợi suất và chênh lệch; trước 2026-11-11 là % tương đối nên lợi suất 10 năm thành "+2,45%").
+3. `moves` (`biggestMoves`, `lib/data/markets.ts`): 8 biến động lớn nhất (theo trị tuyệt đối) của phiên gần nhất và 8 của 7 ngày qua, trong 20 chỉ số chứng khoán, 11 hàng hoá, DXY và Bitcoin; mỗi dòng có % phiên, tuần, từ đầu năm. `bigMoves`: những dòng ≥ 3% trong phiên hoặc ≥ 5% trong tuần, prompt buộc phải nhắc hết (khi để model tự áp ngưỡng, lần chạy thử 2026-11-11 bỏ qua khí Henry Hub +11,8%, Bitcoin −8,3%, KOSPI −6,5% trong tuần).
+4. `regime` (`regimeForPrompt(regimeFromDb(db))`, LLDD 06): trạng thái, điểm, "từ ngày", phiên gần nhất nghiêng về đâu, ghi đè VIX, cảnh báo phân kỳ tín dụng viết thành câu, và giá trị · ngày · z của từng thành phần. `null` khi chưa đủ dữ liệu.
+5. `calendar` (`calendarForBrief`, `lib/data/calendar.ts`): `upcoming` là sự kiện từ bây giờ đến hết ngày mai theo giờ Việt Nam, gồm tin ForexFactory tác động cao chưa có số, bản tin Mỹ theo lịch FRED sau tuần của ForexFactory, quyết định FOMC (14:00 New York đổi sang giờ Hà Nội, tính cả giờ mùa hè), quyết định các NHTW khác (chỉ ngày), ngày đáo hạn VN30F và ngày Cục Thống kê công bố; mỗi mục có `when` dạng "Thu 12 Nov 20:30" theo giờ Việt Nam. `released` là tin có số thực tế trong 24 giờ qua, kèm dự báo, độ lệch và tốt hay xấu.
+6. Thiên tai đáng chú ý trong 48 giờ: sự kiện mức orange/red và động đất M ≥ 6 (tối đa 15).
+
+Lý do (review 2026-11-10): bản tin ngày đó gồm G7, vụ xả súng ở Krakow và chính sách nhập cư, mục "Cần theo dõi" không có CPI Mỹ lúc 20:30, và không nhắc Brent −13% trong tuần, vì model chỉ thấy tiêu đề và snapshot.
 
 **Đầu ra (JSON, kiểm tra bằng zod), sinh cho cả `vi` và `en`:**
 Một lần gọi sinh cả hai ngôn ngữ: `{ vi: BriefLang, en: BriefLang }`, với
@@ -154,17 +159,21 @@ Một lần gọi sinh cả hai ngôn ngữ: `{ vi: BriefLang, en: BriefLang }`,
   "bullets": [
     { "title": "Ngắn gọn", "body": "1–3 câu: chuyện gì và vì sao quan trọng", "refs": [3, 17] }
   ],
-  "watch": ["2–4 điều cần theo dõi 1–2 ngày tới"]
+  "watch": ["2–5 điều cần theo dõi 1–2 ngày tới, sự kiện tác động cao của lịch đứng trước, kèm giờ Việt Nam"]
 }
 ```
-- 5–7 bullet, quan trọng nhất trước. `refs` là số thứ tự tiêu đề đầu vào. Khi lưu, ref không hợp lệ bị bỏ, và mỗi báo chỉ giữ **một** chip: tiêu đề đầu tiên được dẫn từ báo đó. Tối đa 4 chip `{ title, url, source }`.
+- 5–7 bullet, quan trọng nhất trước. `refs` là số thứ tự tiêu đề đầu vào; để trống khi ý chỉ dựa trên số liệu thị trường hay lịch (UI khi đó không hiện chip). Khi lưu, ref không hợp lệ bị bỏ, và mỗi báo chỉ giữ **một** chip: tiêu đề đầu tiên được dẫn từ báo đó. Tối đa 4 chip `{ title, url, source }`.
 - Lưu `StoredBrief` (`headline`, `bullets[].sources`, `watch`, `model`, `headlineCount`) vào `briefs (date, lang, content, created_at)`, upsert theo `(date, lang)`. `model` là tên model thật mà provider trả về (ví dụ `gemini-3.8-flash`). Log provider, model và số token vào/ra.
 - `data = null` thì lần chạy lỗi (`brief not produced by <model> (stop_reason=…)`).
 
 **Guardrails trong prompt:**
 - Chỉ tóm tắt **thông tin có trong đầu vào**. Không bổ sung sự kiện hay số liệu ngoài.
+- **Xếp theo hệ quả, không theo độ "nóng":** thứ tự theo mức ảnh hưởng tới thị trường, kinh tế và địa chính trị (năng lượng và tuyến cung ứng, NHTW và lạm phát, thương mại và trừng phạt, chiến tranh) và tới đời sống nhiều người, không theo số báo đưa tin hay mức gây sốc. Tin hình sự, tai nạn, người nổi tiếng xếp sau một biến động thị trường lớn hay một thay đổi chính sách, trừ khi có hệ quả rộng hơn.
+- Mọi mục trong `bigMoves` phải xuất hiện, trong câu chuyện liên quan nếu tiêu đề nêu nguyên nhân, nếu không thì gom vào một bullet thị trường. Không tự đặt nguyên nhân.
+- Số thực tế lệch dự báo (`calendar.released`) được nêu dạng thực tế so với dự báo. Regime được nhắc một mệnh đề khi là risk-off, đang nghiêng sang trạng thái khác, hoặc có cảnh báo phân kỳ.
+- Bản `vi` viết giờ dạng "20:30 thứ Tư 12/11".
 - Không tự thêm chức danh, vai trò hay mô tả cho người và tổ chức (ví dụ "cựu", "quyền") nếu tiêu đề không ghi. Chỉ dẫn này được thêm sau khi lần chạy Gemini đầu tiên viết "cựu Tổng thống Trump" dù tiêu đề không có chữ "cựu".
-- Mỗi ý phải dựa trên các tiêu đề được đánh số (`refs`); UI hiện nguồn thành chip link cạnh từng ý.
+- Ý dựa trên tin phải dẫn các tiêu đề được đánh số (`refs`); UI hiện nguồn thành chip link cạnh từng ý.
 - Không đưa khuyến nghị đầu tư, không dự báo giá.
 - Giọng văn trung lập. Với chủ đề nhạy cảm, nêu theo nguồn ("theo BBC…").
 - Chân panel ghi "Dựa trên N tin · thời điểm · model" để người đọc biết đây là tóm tắt tự động.
@@ -175,20 +184,23 @@ Một lần gọi sinh cả hai ngôn ngữ: `{ vi: BriefLang, en: BriefLang }`,
 
 Người không chuyên nhìn con số không hiểu nó nói gì, nên chỉ số nào nổi bật thì có thêm 2–3 câu giải thích bằng lời thường.
 
-**Chọn chỉ số** (`lib/signals/notable.ts`, quy tắc thuần, web và worker dùng chung): duyệt mọi khóa trong `SERIES` (CPI tính theo y/y), gắn lý do:
-- `crit` / `warn`: vượt ngưỡng trong `config/series.ts` (cùng `alertOf` mà tile dùng);
+**Chọn chỉ số** (`lib/signals/notable.ts`, quy tắc thuần, web và worker dùng chung): duyệt mọi khóa trong `SERIES` (CPI tính theo y/y), gắn lý do. Ưu tiên cái mới (từ 2026-11-11; trước đó CPI và PCE lõi Mỹ, vượt mức lưu ý từ tháng 4, ngày nào cũng nằm trên panel, còn Brent −13% trong tuần thì không lên):
+- `crit` / `warn`: vượt ngưỡng trong `config/series.ts` (cùng `alertOf` mà tile dùng), kèm `since` = quan sát đầu tiên của chuỗi liên tục đang ở mức đó (tính cả giá live mới hơn điểm đóng cửa cuối) và `fresh` = chuỗi còn mới: tối đa 5 phiên với series ngày, đúng kỳ mới nhất với series tuần/tháng/quý; chuỗi kéo dài tới điểm đầu tiên đang lưu thì không bao giờ mới;
 - `move`: thay đổi mới nhất ≥ 2 lần độ lệch chuẩn của các thay đổi trong ~400 ngày (cần > 30 điểm);
+- `week` (chỉ series ngày): thay đổi so với điểm cuối cùng cách ít nhất 7 ngày lịch (khớp cột "1 tuần"; hợp đồng tương lai và crypto có cả điểm cuối tuần nên không đếm theo phiên) ≥ 2 lần độ lệch chuẩn của các thay đổi 7 ngày trong ~400 ngày. Bỏ khi đã có `move` cùng chiều chiếm từ một nửa thay đổi của tuần trở lên;
 - `high` / `low`: cao hoặc thấp nhất 1 năm (cần ≥ 120 điểm, nên chỉ áp dụng chuỗi theo ngày).
 
-Điểm xếp hạng: `crit` 3, `warn` 2, `high`/`low` 1,5, `move` 0,6 × |z| (tối đa z = 5). Lấy 8 chỉ số đầu.
+Điểm xếp hạng (`scoreOf`): ngưỡng mới vượt `crit` 4, `warn` 3; ngưỡng vượt đã lâu `crit` 2, `warn` 1,5, giảm một nửa sau mỗi 30 ngày tính từ `since` (`crit` cũ không xuống dưới 0,75 nên vẫn hiện, xếp sau cái mới; `warn` cũ mờ dần rồi rời panel). `high`/`low` 1,5. Giữa `move` và `week` chỉ tính cái lớn hơn: 0,6 × |z| (tối đa z = 5). Bỏ chỉ số có điểm dưới 0,5; lấy 8 chỉ số đầu. Ngày 2026-11-11: CPI, PCE lõi, GSCPI, CPI Việt Nam rời panel; lợi suất thực 10 năm (nguy hiểm từ 10/9) xếp cuối; USD/VND vào với "Giảm mạnh trong tuần". Với Brent, quy tắc bật ngày 4–6/11 (7 ngày −18% đến −16%, z −2,6 đến −2,3); đến 10/11 tuần còn −10,8% nhưng biến động 7 ngày của Brent năm nay rất lớn (độ lệch chuẩn khoảng 7%) nên chỉ −1,5σ. Bản tin vẫn nhắc nó qua `bigMoves` (§3).
+
+"Đã nằm trên panel nhiều ngày" được suy từ dữ liệu, không lưu trạng thái: với ngưỡng là tuổi của `since`; `move`, `week`, `high`/`low` tự hết khi biến động qua đi.
 
 **Khi nào viết lại** (`needsNote`): chỉ số chưa có ghi chú, có lý do mới chưa nằm trong `basis` đã lưu, hoặc ghi chú cũ hơn 12 giờ. Lý do chỉ mất đi (dao động mạnh nhạt dần trong phiên, `crit` lùi về `warn`) không kích hoạt viết lại, vì z-score lơ lửng quanh ngưỡng sẽ làm `basis` đổi qua lại và tốn một lần gọi model mỗi lượt. Mọi chỉ số cần viết gộp vào **một** lần gọi model.
 
-**Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief); nếu có chỉ số crypto trong danh sách thì thêm 25 tiêu đề từ báo crypto (`recentHeadlines(…, "crypto")`), có Nasdaq hoặc SOX (`TECH_SIGNS`) thì thêm 25 tiêu đề từ báo công nghệ (`recentHeadlines(…, "tech")`).
+**Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Lý do ngưỡng ghi rõ "vừa vượt … tính đến <ngày>" hay "ở trên … từ <ngày>"; lý do `week` ghi thay đổi trong tuần. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief); nếu có chỉ số crypto trong danh sách thì thêm 25 tiêu đề từ báo crypto (`recentHeadlines(…, "crypto")`), có Nasdaq hoặc SOX (`TECH_SIGNS`) thì thêm 25 tiêu đề từ báo công nghệ (`recentHeadlines(…, "tech")`).
 
 **Prompt** yêu cầu: (1) giải nghĩa mức hiện tại bằng lời thường, (2) nêu nguyên nhân **chỉ khi** tiêu đề nói rõ và ghi số tiêu đề vào `refs`, (3) có thể nêu tác động thường gặp tới người dân (giá xăng, lãi vay, Việt Nam), không dự báo, không khuyến nghị đầu tư. Số liệu tuần/tháng có `asOf` cũ hơn tin nên không được gán cho tin 24 giờ. Mỗi ghi chú dưới 60 từ, viết song ngữ.
 
-**Hiển thị:** panel "Điểm đáng chú ý" dưới bản đồ, cùng ghi chú trong hộp thoại chi tiết của tile. Chip nguồn lấy từ `refs`, tối đa 2, mỗi báo một chip. Chưa có ghi chú (chưa cấu hình AI hoặc worker chưa chạy) thì hiện mô tả tĩnh `explain`.
+**Hiển thị:** panel "Điểm đáng chú ý" dưới bản đồ, cùng ghi chú trong hộp thoại chi tiết của tile. Chip lý do: "Vừa vượt mức lưu ý/nguy hiểm" khi `fresh`, nếu không thì "Lưu ý"/"Nguy hiểm" với tooltip "Ở mức này từ <ngày hoặc kỳ>"; "Tăng/Giảm mạnh trong tuần" với tooltip thay đổi và bội số z. Chip nguồn lấy từ `refs`, tối đa 2, mỗi báo một chip. Chưa có ghi chú (chưa cấu hình AI hoặc worker chưa chạy) thì hiện mô tả tĩnh `explain`.
 
 **Chạy thật (2026-10-31, `gemini-3.8-flash`):** 8 chỉ số, khoảng 2,7K token vào và 4K token ra, 77 giây (một lần khác mất 5,5 phút vì Gemini quá tải phải thử lại).
 

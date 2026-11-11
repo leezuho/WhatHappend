@@ -55,9 +55,9 @@ Dùng `node:test` có sẵn trong Node, chạy qua `tsx` nên đọc được al
 | File | Phủ |
 |---|---|
 | `test/parsers.test.ts` | `parseCsv` (ngoặc kép, CRLF, dòng trống), `unzipFirst` (ZIP stored/deflate, extra field, comment), `normalizeUrl`, `titleKey` |
-| `test/signals.test.ts` | `alertOf`, `computeRegime` (thiếu dữ liệu, risk-on/off, VIX > 35), `findNotables` trên DB `:memory:` |
-| `test/ai-scheduling.test.ts` | `needsNote` của insights, `brief.isDue` (khoảng cách 10 phút, lỗi gần đây, thiếu tin) |
-| `test/web-and-worker.test.ts` | `isCrossOrigin`, khóa worker (`worker/lock.ts`), các hàm định dạng |
+| `test/signals.test.ts` | `alertOf`, `computeRegime` v2 (thiếu dữ liệu, risk-on/off, VIX > 35 đổi ngay, giữ 2 phiên, cửa sổ 10 năm, nửa trọng số khi trễ, phân kỳ tín dụng, độ rộng), `mergeDaily`, `findNotables` trên DB `:memory:` (ngưỡng mới vượt, cũ mờ dần, `crit` cũ giữ sàn, biến động 1 tuần), `scoreOf` |
+| `test/ai-scheduling.test.ts` | `needsNote` của insights, `brief.isDue` (khoảng cách 10 phút, lỗi gần đây, thiếu tin), đầu vào của bản tin: `nyTime`, `calendarForBrief`, `biggestMoves`, `bigMoves`, `regimeForPrompt` |
+| `test/web-and-worker.test.ts` | `isCrossOrigin`, khóa worker (`worker/lock.ts`), worker tự báo phiên bản (`importGraph`, `changedSince`, `workerHealth`, mọi id của `SOURCE_META` đều được đăng ký), các hàm định dạng |
 | `test/tech.test.ts` | Trang Công nghệ: `statuspageStatus`, `decodeUtf16` + `awsStatus` (UTF-16 BE có BOM), `gcpStatus`, `pickNewModels`, `topPapers`/`trendingModels`, `recentKev`, `replaceItems` giữ bản dịch, `recentHeadlines` tách báo công nghệ, `changeSince`/`thin`, `techStockRows` (đổi vốn hoá ra USD) trên DB `:memory:` |
 
 Chưa phủ: các fetcher gọi mạng (kiểm bằng `npm run fetch -- <id>`) và lớp gọi AI (`translate`, `brief.run`, `insights.run`).
@@ -133,7 +133,7 @@ Muốn buộc một nguồn chạy lại ngay khi worker đang chạy: `DELETE F
 
 | Triệu chứng | Nguyên nhân có thể | Cách xử lý |
 |---|---|---|
-| Panel "Dữ liệu cũ" nhưng không lỗi | Worker không chạy | Kiểm tra terminal worker, chạy `npm run worker` |
+| Panel "Dữ liệu cũ" nhưng không lỗi | Worker không chạy, hoặc chạy code cũ (nguồn mới chưa được lên lịch) | Dải cảnh báo dưới TopBar nêu nguyên nhân. Chạy hoặc khởi động lại `npm run worker`; khi phát triển dùng `npm run dev:all` để worker tự nạp lại |
 | Panel "Lỗi nguồn" với `Unexpected response shape` | API đổi định dạng | Chạy `npm run fetch -- <id>` để xem lỗi, cập nhật zod schema và mapping trong `lib/sources/<id>.ts` |
 | `HTTP 403` / `HTTP 401` | Thiếu hoặc sai key, hoặc bị chặn UA | Kiểm tra `.env.local`; thử `browserUA: true` cho host đó |
 | `HTTP 429` lặp lại | Gọi quá nhiều | Tăng `intervalMs` trong `config/sources.ts` |

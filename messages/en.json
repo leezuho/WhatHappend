@@ -43,6 +43,17 @@
     "navMacro": "Macro",
     "navVietnam": "Vietnam"
   },
+  "worker": {
+    "down": "The worker is not running, so no data is being updated.",
+    "lastSeen": "Last run {time}.",
+    "fixDown": "Start it with npm run worker.",
+    "outdated": "The worker is running old code.",
+    "startedAt": "Started {time}.",
+    "legacy": "It started before workers reported their version.",
+    "unknown": "Sources it does not know: {list}.",
+    "changed": "Files edited since: {list}.",
+    "fixOutdated": "Restart npm run worker (npm run dev:all restarts it on every save)."
+  },
   "regime": {
     "title": "Risk regime",
     "riskOn": "Risk-on",
@@ -50,13 +61,24 @@
     "riskOff": "Risk-off",
     "unknown": "Not enough data",
     "score": "Stress score",
-    "explain": "Average 1-year z-score of market stress gauges. Positive = more stress than usual.",
+    "explain": "Weighted mean of market stress gauges, each a z-score against up to ten years of its own history (the St. Louis index is already standardised; breadth uses a fixed scale). Positive = more stress than usual. Late readings count half.",
+    "since": "since {date}",
+    "sinceAtLeast": "since {date} or earlier",
+    "pending": "The latest session leans {regime}; the badge changes once that holds for 2 sessions.",
+    "halfWeight": "Late reading, half weight",
+    "years": "z against {n} years",
+    "divergenceTitle": "Credit worsening while stocks rise.",
+    "divergence": "High-yield spread {hy} on {date}, up {bp} bp from its low of {low} on {lowDate}, while the S&P 500 is still {gap} above its 200-day average. Not part of the score.",
+    "divergenceShort": "Credit divergence warning",
+    "rules": "≤ −0.5 → {on} · ≥ +0.75 → {off}. Changes after 2 sessions; VIX above 35 switches at once.",
     "components": {
       "vix": "VIX",
-      "hy": "HY spread",
-      "dxy": "Dollar 1-month change",
-      "curve": "Yield curve (inverted = +)",
-      "fsi": "Financial stress index"
+      "credit": "Credit spread (Baa)",
+      "dxy": "Dollar, 1 month",
+      "curve": "2s10s (inverted = +)",
+      "fsi": "Financial stress",
+      "trend": "S&P vs 200-day avg",
+      "breadth": "Markets > 50-day avg"
     }
   },
   "panels": {
@@ -555,15 +577,21 @@
   "highlights": {
     "empty": "Nothing unusual in the indicators right now.",
     "needsKey": "Add AI_API_KEY to .env.local to get an AI explanation for each one.",
-    "rules": "Picked when a reading passes a warning level, moves at least twice its usual amount, or hits a 1-year high or low. Click for history.",
+    "rules": "Picked when an indicator has just crossed its watch or danger level, moved at least twice its usual size in a session or over a week, or hit a 1-year high or low. A level crossed long ago counts less as time passes. Click for the history.",
     "moveTip": "{z}× its usual move",
+    "weekTip": "1-week change {change}, {z} times the usual",
+    "sinceTip": "Beyond this level since {date}",
     "reasons": {
       "crit": "Danger",
       "warn": "Watch",
       "high": "1-year high",
       "low": "1-year low",
       "moveUp": "Unusual jump",
-      "moveDown": "Unusual drop"
+      "moveDown": "Unusual drop",
+      "warnNew": "Just crossed watch level",
+      "critNew": "Just crossed danger level",
+      "weekUp": "Big rise this week",
+      "weekDown": "Big fall this week"
     }
   },
   "vn": {

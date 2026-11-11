@@ -6,8 +6,9 @@ import { replaceItems, upsertQuotes, upsertSeries, type QuoteRow } from "./store
 import type { Source } from "./types";
 
 // Quotes for every Yahoo symbol each run (one batched call); daily history at
-// most hourly. A symbol with little stored history gets a ~14-month backfill
-// so the risk-regime z-scores have a full year to work with.
+// most hourly. A symbol with little stored history gets a ~14-month backfill:
+// a year of 1-year charts, and the 21-session dollar change and 200-session S&P
+// average the risk regime reads (its ten-year VIX and S&P history come from FRED).
 
 const yf = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 const HISTORY_EVERY = 60 * 60_000;

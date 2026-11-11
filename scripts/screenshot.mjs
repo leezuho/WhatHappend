@@ -1,6 +1,9 @@
 // Screenshot a page (or one panel of it) after the client charts have drawn.
 //
-//   node scripts/screenshot.mjs <url> <out.png> [--panel "text in the panel"] [--dark] [--size 1440x1100] [--wait 12000]
+//   node scripts/screenshot.mjs <url> <out.png> [--panel "text in the panel"] [--dark] [--size 1440x1100] [--wait 12000] [--eval "js"]
+//
+// --eval runs in the page before the capture, e.g. to open a popover:
+//   --eval 'document.querySelector("header details").open = true'
 //
 // Chrome's own --screenshot fires before Recharts and MapLibre render, and its
 // default headless mode has no WebGL, so the macro page's cycle clock and world
@@ -21,11 +24,12 @@ const flag = (name) => {
 };
 const dark = args.includes("--dark") ? (args.splice(args.indexOf("--dark"), 1), true) : false;
 const panel = flag("--panel");
+const evalJs = flag("--eval");
 const [w, h] = (flag("--size") ?? "1440x1100").split("x");
 const wait = Number(flag("--wait") ?? 12000);
 const [url, out] = args;
 if (!url || !out) {
-  console.error('usage: node scripts/screenshot.mjs <url> <out.png> [--panel "text"] [--dark] [--size 1440x1100] [--wait 12000]');
+  console.error('usage: node scripts/screenshot.mjs <url> <out.png> [--panel "text"] [--dark] [--size 1440x1100] [--wait 12000] [--eval "js"]');
   process.exit(2);
 }
 
@@ -66,6 +70,11 @@ try {
   if (dark) await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: "dark" }] });
   await send("Page.navigate", { url });
   await sleep(wait);
+  if (evalJs) {
+    const r = await send("Runtime.evaluate", { expression: evalJs });
+    if (r.result?.exceptionDetails) throw new Error(`--eval failed: ${r.result.exceptionDetails.exception?.description ?? r.result.exceptionDetails.text}`);
+    await sleep(500);
+  }
 
   let clip;
   if (panel) {

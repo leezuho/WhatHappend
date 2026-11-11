@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { SOURCE_META } from "@/config/sources";
-import { FRED_CODES, SERIES } from "@/config/series";
+import { FRED_CODES, FRED_LONG_CODES, SERIES } from "@/config/series";
 import { getPoints } from "@/lib/data/series";
 import { globalLiquidity, netLiquidity, recessionSeries, spreadBp } from "@/lib/signals/macro";
 import { fetchText, parseCsv } from "./http";
@@ -27,6 +27,8 @@ export function writeDerived(db: DatabaseSync): number {
 }
 
 const YEARS_BACK = 3;
+/** The regime's gauges (FRED_LONG_CODES); SP500 stops at ten years anyway (S&P's licence). */
+const YEARS_BACK_LONG = 10;
 
 /** One FRED series from the keyless graph CSV, observations since `since` (YYYY-MM-DD); missing values ('.') are dropped. */
 export async function fetchFredPoints(code: string, since: string): Promise<Point[]> {
@@ -44,11 +46,12 @@ export const fred: Source = {
   id: "fred",
   ...SOURCE_META.fred,
   async run({ db, log }) {
-    const since = new Date(Date.now() - YEARS_BACK * 365 * 24 * 3600_000).toISOString().slice(0, 10);
+    const sinceYears = (years: number) => new Date(Date.now() - years * 365.25 * 24 * 3600_000).toISOString().slice(0, 10);
     let written = 0;
     const failed: string[] = [];
     for (const code of [...new Set(FRED_CODES)]) {
       try {
+        const since = sinceYears(FRED_LONG_CODES.includes(code) ? YEARS_BACK_LONG : YEARS_BACK);
         written += upsertSeries(db, `fred:${code}`, "fred", await fetchFredPoints(code, since));
       } catch (err) {
         failed.push(`${code}: ${err instanceof Error ? err.message : err}`);

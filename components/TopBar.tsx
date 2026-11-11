@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { getDict, type Locale } from "@/lib/i18n";
 import { MarketClocks } from "@/components/ui/MarketClocks";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LangSwitch } from "@/components/ui/LangSwitch";
+import { WorkerNotice } from "@/components/ui/WorkerNotice";
 
 export type Section = "overview" | "macro" | "vietnam" | "crypto" | "tech";
 
@@ -61,6 +62,9 @@ export function TopBar({ lang, section, regime, ticker }: { lang: Locale; sectio
         </div>
       </div>
       {ticker}
+      <Suspense fallback={null}>
+        <WorkerNotice lang={lang} />
+      </Suspense>
     </header>
   );
 }

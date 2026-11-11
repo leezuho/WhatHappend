@@ -2,6 +2,8 @@ import { getDb } from "@/lib/db";
 import { aiStatus } from "@/lib/ai/config";
 import { sources } from "@/lib/sources";
 import { isDue, missingEnv, runSource } from "@/lib/sources/runner";
+import { WORKER_INFO_KEY, type WorkerInfo } from "@/lib/worker-info";
+import { changedSince, importGraph } from "./code-watch";
 import { acquireWorkerLock, refreshWorkerLock, releaseWorkerLock } from "./lock";
 
 // Long-running scheduler: every tick, start each source that is due and not
@@ -36,11 +38,43 @@ for (const s of sources) {
   if (missing.length) console.log(`${stamp()} skip ${s.id}: ${missing.join("; ")}`);
 }
 
+// Report what this process loaded, so the web can tell when it runs old code
+// (see lib/worker-info.ts). The process start time is earlier than any module
+// load, so an edit made while the worker was starting still counts as unseen.
+const root = process.cwd();
+const startedAt = Math.floor(performance.timeOrigin);
+let codeFiles: string[] = [];
+try {
+  codeFiles = importGraph("worker/index.ts", root);
+} catch (err) {
+  console.error(`${stamp()} could not list the worker's code files: ${errText(err)}`);
+}
+const info: WorkerInfo = { pid: process.pid, startedAt, sources: sources.map((s) => s.id), files: codeFiles.length, changed: [], changedAt: null };
+
+function writeInfo() {
+  db.prepare("INSERT OR REPLACE INTO kv (key, value, updated_at) VALUES (?, ?, ?)").run(WORKER_INFO_KEY, JSON.stringify(info), Date.now());
+}
+
+function checkCode() {
+  const { changed, changedAt } = changedSince(codeFiles, root, startedAt);
+  if (changed.join() === info.changed.join()) return;
+  const fresh = changed.filter((f) => !info.changed.includes(f));
+  if (fresh.length) console.log(`${stamp()} code changed since start (${fresh.join(", ")}); restart the worker to load it`);
+  Object.assign(info, { changed, changedAt });
+  writeInfo();
+}
+writeInfo();
+
 function tick() {
   if (!refreshWorkerLock(db)) {
     console.error(`${stamp()} another worker took over the lock; exiting`);
     shutdown(1);
     return;
+  }
+  try {
+    checkCode();
+  } catch (err) {
+    console.error(`${stamp()} code check failed: ${errText(err)}`);
   }
   for (const source of sources) {
     if (running.has(source.id) || missingEnv(source).length) continue;
@@ -91,5 +125,5 @@ process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
 const ai = aiStatus();
-console.log(`${stamp()} worker started with ${sources.length} sources; AI: ${ai.ok ? `${ai.config.provider} (brief ${ai.config.models.brief}, fast ${ai.config.models.fast})` : "off"}`);
+console.log(`${stamp()} worker started with ${sources.length} sources, watching ${codeFiles.length} code files; AI: ${ai.ok ? `${ai.config.provider} (brief ${ai.config.models.brief}, fast ${ai.config.models.fast})` : "off"}`);
 safeTick();

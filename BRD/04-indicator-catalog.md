@@ -47,7 +47,7 @@ Danh mục giải thích **ý nghĩa, cách đọc và ngưỡng cảnh báo** c
 | **HY OAS** | T2 | Chênh lệch lợi suất trái phiếu doanh nghiệp rủi ro cao so với trái phiếu chính phủ | Thị trường tín dụng thường "đánh hơi" khủng hoảng **trước** cổ phiếu | Xấu | ⚠️ > 5%; 🛑 > 7% | FRED `BAMLH0A0HYM2` · ngày |
 | **STLFSI** | T2 | Chỉ số căng thẳng tài chính của Fed St. Louis (0 = trung bình lịch sử) | Gộp 18 chỉ báo thị trường thành 1 con số | Xấu | ⚠️ > 0 (trên trung bình); 🛑 > 2 | FRED `STLFSI4` · tuần |
 | **BTC** | T1 | Giá Bitcoin | Khẩu vị rủi ro đầu cơ và thanh khoản; giao dịch 24/7 nên phản ứng trước khi các sàn mở cửa | Tốt (với khẩu vị rủi ro) | ⚠️ biến động > 8% trong ngày | Yahoo `BTC-USD` · 3 phút |
-| **Risk Regime** | T1 | Chỉ báo tổng hợp từ VIX, HY OAS, DXY, 2s10s | Một tín hiệu duy nhất: risk-on / neutral / risk-off | — | Xem [LLDD 06](../TechDesign/LLDD/06-risk-regime.md) | Tính từ DB |
+| **Risk Regime** | T1 | Chỉ báo tổng hợp từ VIX, chênh lệch tín dụng Baa, DXY, 2s10s, STLFSI, xu hướng S&P 500 và độ rộng thị trường; HY OAS dùng cho cảnh báo phân kỳ | Một tín hiệu duy nhất: risk-on / neutral / risk-off | — | Xem [LLDD 06](../TechDesign/LLDD/06-risk-regime.md) | Tính từ DB |
 
 ## Câu hỏi 4 — Kinh tế đang tăng tốc hay chậm lại?
 

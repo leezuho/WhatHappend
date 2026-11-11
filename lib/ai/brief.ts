@@ -4,6 +4,11 @@ import { SOURCE_META } from "@/config/sources";
 import { SERIES, VITAL_SIGNS } from "@/config/series";
 import { CRYPTO_OUTLETS, DESK_OUTLETS, TECH_OUTLETS } from "@/config/feeds";
 import { getTile } from "@/lib/data/series";
+import { fmtDelta } from "@/lib/format";
+import { calendarForBrief } from "@/lib/data/calendar";
+import { biggestMoves, type MoveRow } from "@/lib/data/markets";
+import { regimeFromDb } from "@/lib/data/regime";
+import type { RegimeResult } from "@/lib/signals/risk-regime";
 import type { Source } from "@/lib/sources/types";
 import { callsLeft } from "./budget";
 import { aiStatus } from "./config";
@@ -11,8 +16,12 @@ import { generateJson } from "./provider";
 import { FORCE_KEY, type StoredBrief } from "./brief-shared";
 
 // The daily brief: once a day after 06:00 Vietnam time (or on demand from the
-// UI), the "brief" model reads the last 24h of deduplicated headlines plus the market
-// snapshot and writes a short bilingual summary that cites its headlines.
+// UI), the "brief" model reads the last 24h of deduplicated headlines, the market
+// snapshot, the day's and week's biggest moves, the risk regime and the calendar
+// for today and tomorrow, and writes a short bilingual summary that cites its
+// headlines. Before 2026-11-11 it saw only headlines and the snapshot, so the
+// brief of 2026-11-10 led with a shooting and missed US CPI that evening and
+// Brent's 13% fall on the week.
 
 const TZ = "Asia/Ho_Chi_Minh";
 const BRIEF_HOUR = 6;
@@ -28,17 +37,22 @@ const BriefLang = z.object({
 });
 const BriefOut = z.object({ vi: BriefLang, en: BriefLang });
 
-const SYSTEM = `You write the morning world brief for one reader's personal dashboard. The reader wants to understand, in under two minutes, what happened in the world in the last 24 hours and why it matters.
+const SYSTEM = `You write the morning world brief for one reader's personal dashboard. The reader invests and follows macro and geopolitics, and wants to understand, in under two minutes, what happened in the last 24 hours, why it matters, and what is coming.
 
-Work only from the numbered headlines and the market snapshot you are given. Do not add facts, numbers or events that are not in them; if something is unclear from a headline, say less rather than guess. Do not add titles, roles or descriptors for people or organisations (e.g. "former", "acting") unless the headline states them.
+Work only from the inputs: the numbered headlines, the market snapshot (markets), the biggest moves of the latest session and of the past week (moves), the dashboard's risk regime (regime), the economic calendar (calendar) and recent disasters. Do not add facts, numbers or events that are not in them; if something is unclear from a headline, say less rather than guess. Do not add titles, roles or descriptors for people or organisations (e.g. "former", "acting") unless the headline states them.
+
+Rank by consequence, not by noise: order stories by how much they matter for markets, the economy and geopolitics (energy and supply routes, central banks and inflation, trade and sanctions, wars) and for many people's lives, not by how many outlets covered them or how shocking they are. A crime, accident or celebrity story ranks below a large market move or a policy shift unless it has wider consequences.
 
 Write:
 - headline: one sentence capturing the day.
-- bullets: the 5 to 7 most consequential stories, most important first. Merge headlines about the same story. Each has a short title and a 1–3 sentence body saying what happened and why it matters. refs lists the numbers of the headlines it is based on.
-- watch: 2 to 4 short items worth watching in the next day or two, grounded in the inputs.
-Weigh geopolitics, macro/markets, and large human impact over celebrity and sports. Mention a market move only if the snapshot shows it. No investment advice.
+- bullets: the 5 to 7 most consequential stories, most important first. Merge headlines about the same story. Each has a short title and a 1–3 sentence body saying what happened and why it matters. refs lists the numbers of the headlines it is based on (empty when it rests only on market or calendar data).
+  - Every item in bigMoves (a session move of 3% or more, or 5% or more over the week) must appear, with the numbers given: inside the related story when a headline states its cause, otherwise together in one markets bullet. Do not invent causes. The rest of moves is context.
+  - When calendar.released has a number with a forecast, report actual against forecast where it fits.
+  - When regime.state is "risk-off", regime.leaningTo is set, or regime.creditDivergence is present, say so in one clause.
+- watch: 2 to 5 short items for the next day or two. First every calendar.upcoming event with impact "High", each with its Vietnam time as given (e.g. "US CPI, Wed 12 Nov 20:30"); then other items grounded in the inputs.
+Mention a market move only if markets or moves show it. No investment advice.
 
-Produce the same brief twice: "en" in English and "vi" in natural Vietnamese (standard Vietnamese names for countries, e.g. Mỹ, Trung Quốc, Nga). Both versions cover the same stories with the same refs.`;
+Produce the same brief twice: "en" in English and "vi" in natural Vietnamese (standard Vietnamese names for countries, e.g. Mỹ, Trung Quốc, Nga; times as "20:30 thứ Tư 12/11"). Both versions cover the same stories with the same refs.`;
 
 export function vnDate(now: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(now);
@@ -72,9 +86,64 @@ export function recentHeadlines(db: DatabaseSync, now: number, limit = MAX_HEADL
     .all(now - 24 * 3600_000, ...names, limit) as unknown as HeadlineRow[];
 }
 
+/** Moves the brief must cover: a session of 3% or more, or a week of 5% or more. The model skipped them when left to judge. */
+export function bigMoves(m: { day: MoveRow[]; week: MoveRow[] }): MoveRow[] {
+  const out = new Map<string, MoveRow>();
+  for (const r of m.day) if (Math.abs(r.day ?? 0) >= 3) out.set(r.name, r);
+  for (const r of m.week) if (Math.abs(r.week ?? 0) >= 5) out.set(r.name, r);
+  return [...out.values()];
+}
+
+const isoDay = (ts: number) => new Date(ts).toISOString().slice(0, 10);
+const r2 = (x: number) => Math.round(x * 100) / 100;
+
+/** The badge's state in a form the model can quote: state, since when, which way the latest session leans, the gauges. */
+export function regimeForPrompt(r: RegimeResult) {
+  if (r.regime === "unknown") return null;
+  const d = r.divergence;
+  return {
+    state: r.regime,
+    score: r.score === null ? null : r2(r.score),
+    since: r.since === null ? null : `${r.sinceAtLeast ? "at least since" : "since"} ${isoDay(r.since)}`,
+    leaningTo: r.pending,
+    override: r.override ?? null,
+    creditDivergence: d
+      ? `US high-yield spread ${r2(d.hy)}% on ${isoDay(d.hyTs)}, up ${Math.round((d.hy - d.low) * 100)} bp from ${r2(d.low)}% on ${isoDay(d.lowTs)}, while the S&P 500 is still ${r2(d.spxGap)}% above its 200-day average`
+      : null,
+    gauges: r.components.map((c) => ({ name: c.key, value: r2(c.value), asOf: isoDay(c.ts), z: r2(c.z) })),
+  };
+}
+
 function forcedAt(db: DatabaseSync): number {
   const row = db.prepare("SELECT updated_at FROM kv WHERE key = ?").get(FORCE_KEY) as { updated_at: number } | undefined;
   return row?.updated_at ?? 0;
+}
+
+/** Everything the brief model reads, with the headlines its refs point into. */
+export function briefInput(db: DatabaseSync, now: number) {
+  const headlines = recentHeadlines(db, now);
+  // The change as the tiles print it: % for prices, bp or pp for yields and spreads (a yield "up 2.45%" misleads).
+  const markets = VITAL_SIGNS.flatMap((k) => {
+    const t = getTile(db, SERIES[k]);
+    if (!t) return [];
+    return [{ name: SERIES[k].name.en, value: Number(t.value.toFixed(SERIES[k].digits)), change: fmtDelta(SERIES[k], t, "en") }];
+  });
+  const events = db
+    .prepare("SELECT title, type, level FROM events WHERE ts >= ? AND (level IN ('orange','red') OR (type = 'earthquake' AND severity >= 6)) ORDER BY ts DESC LIMIT 15")
+    .all(now - 48 * 3600_000);
+  const calendar = calendarForBrief(db, now);
+  const moves = biggestMoves(db, now);
+  const input = {
+    date: vnDate(now),
+    headlines: headlines.map((h, i) => ({ n: i + 1, source: h.source, region: h.region, topic: h.topic, title: h.title })),
+    markets,
+    moves,
+    bigMoves: bigMoves(moves),
+    regime: regimeForPrompt(regimeFromDb(db, now)),
+    calendar: { upcoming: calendar.upcoming.map((e) => ({ when: e.when, country: e.country, event: e.event, impact: e.impact, forecast: e.forecast, previous: e.previous })), released: calendar.released },
+    disasters: events,
+  };
+  return { input, headlines };
 }
 
 export const brief: Source = {
@@ -95,22 +164,7 @@ export const brief: Source = {
   },
   async run({ db, log }) {
     const now = Date.now();
-    const headlines = recentHeadlines(db, now);
-    const markets = VITAL_SIGNS.flatMap((k) => {
-      const t = getTile(db, SERIES[k]);
-      if (!t) return [];
-      return [{ name: SERIES[k].name.en, value: Number(t.value.toFixed(SERIES[k].digits)), changePct: t.changePct === null ? null : Number(t.changePct.toFixed(2)) }];
-    });
-    const events = db
-      .prepare("SELECT title, type, level FROM events WHERE ts >= ? AND (level IN ('orange','red') OR (type = 'earthquake' AND severity >= 6)) ORDER BY ts DESC LIMIT 15")
-      .all(now - 48 * 3600_000);
-
-    const input = {
-      date: vnDate(now),
-      headlines: headlines.map((h, i) => ({ n: i + 1, source: h.source, region: h.region, topic: h.topic, title: h.title })),
-      markets,
-      disasters: events,
-    };
+    const { input, headlines } = briefInput(db, now);
 
     const res = await generateJson({ tier: "brief", system: SYSTEM, user: JSON.stringify(input), schema: BriefOut, db });
     if (!res.data) throw new Error(`brief not produced by ${res.model} (stop_reason=${res.stopReason})`);

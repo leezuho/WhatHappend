@@ -2,7 +2,7 @@
 
 > Phiên bản 0.3 · Ngày 2026-10-31 · Trạng thái: Đã triển khai
 > Liên quan: [HLDD](../HLDD/HLDD.md) · [01 Database schema](01-database-schema.md) · [LLDD 02 Data sources](02-data-sources.md) · [07 Kiểm thử và vận hành](07-testing-and-operations.md)
-> Mã nguồn: `config/sources.ts`, `lib/sources/{types,http,store,runner,index}.ts`, `worker/index.ts`, `scripts/fetch.ts`
+> Mã nguồn: `config/sources.ts`, `lib/sources/{types,http,store,runner,index}.ts`, `worker/{index,lock,code-watch}.ts`, `lib/worker-info.ts`, `scripts/fetch.ts`
 
 ## 1. Interface
 
@@ -56,6 +56,11 @@ runSource
 - Khi khởi động, giành khóa `kv['worker:lock']` (`worker/lock.ts`, giá trị `{ pid, host }`). Nếu khóa còn heartbeat trong 60 giây gần nhất và tiến trình giữ khóa vẫn sống thì worker mới in `another worker is already running…` và thoát với mã 1. Khóa của worker đã chết (heartbeat cũ, hoặc cùng máy mà pid không còn) thì được giành lại ngay.
 - Mỗi tick làm mới heartbeat của khóa; nếu khóa đã bị worker khác giành (ví dụ sau khi máy ngủ lâu) thì worker thoát.
 - Khi khởi động, in danh sách nguồn bị bỏ qua vì thiếu env.
+- **Tự báo phiên bản** (từ 2026-11-11). Worker chỉ nạp code và danh sách nguồn một lần lúc khởi động, nên worker khởi động trước một thay đổi vẫn chạy code cũ: nguồn mới không bao giờ được lên lịch, bản sửa không có hiệu lực. Ngày 2026-11-10 worker chạy từ 08:54, sau đó có 3 commit, nên `technote` chưa chạy lần nào và `vnstocks`, `vnflows` báo "Dữ liệu cũ". Để thấy được chuyện này:
+  - Lúc khởi động, `importGraph` (`worker/code-watch.ts`) đi theo các import lúc chạy (bỏ `import type`, bỏ package) từ `worker/index.ts` để lấy danh sách file code của worker (102 file ngày 2026-11-11; không gồm file chỉ của web như `lib/queries.ts`). Worker ghi `kv['worker:info']` = `{ pid, startedAt, sources, files, changed, changedAt }`, với `startedAt` là giờ tiến trình bắt đầu (`performance.timeOrigin`).
+  - Mỗi tick, `changedSince` so mtime của các file đó với `startedAt`. File sửa (hoặc xoá) sau lúc khởi động vào `changed`; worker ghi lại `worker:info` khi danh sách đổi và in `code changed since start (…); restart the worker to load it`.
+  - Web (`getWorkerHealth` → `workerHealth` trong `lib/worker-info.ts`) đọc khóa và `worker:info`. Khóa không có heartbeat trong 2 phút → `down`. `worker:info` thiếu hoặc khác pid với khóa → `outdated` (worker khởi động trước khi có phần tự báo, hoặc báo cáo của worker trước). Có id trong `SOURCE_META` mà worker không có, hoặc `changed` khác rỗng → `outdated`. `WorkerNotice` hiện dải cảnh báo dưới TopBar ở mọi trang, nêu nguồn chưa biết và file đã sửa.
+  - Không so git hash: với `dev:all` worker tự khởi động lại mỗi lần lưu file, nên sau mỗi commit hash sẽ lệch dù code đã nạp mới; còn sửa chưa commit thì hash không bắt được. Mtime bắt được cả hai mà không báo nhầm khi commit.
 - Gọi `tick()` ngay, sau đó lặp lại mỗi **`TICK_MS = 20 000`**.
 - `tick()` duyệt từng nguồn, bỏ qua nếu nguồn đang chạy (`running: Set`), thiếu env, hoặc chưa đến hạn. Ngược lại thì gọi `runSource` **không chờ**: các nguồn chạy song song, mỗi nguồn tối đa 1 lần chạy cùng lúc.
 - Log có dạng `HH:MM:SS ok <id> (<n> rows, <ms>ms)` hoặc `HH:MM:SS FAIL <id>: <error>`.
@@ -79,7 +84,7 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 - Id không tồn tại thì báo lỗi và exit 1.
 - Mỗi nguồn in ra `ok`, `skip` hoặc `FAIL`. Exit code là 1 nếu có ít nhất một nguồn FAIL.
 - CLI đi qua `runSource`, nên vẫn cập nhật `source_status` và `fetch_log` như worker.
-- Script npm khai báo trong `package.json`: `worker` = `node --env-file-if-exists=.env.local --import tsx worker/index.ts`, `fetch` = `node --env-file-if-exists=.env.local --import tsx scripts/fetch.ts`. Cả hai **nạp `.env.local`** (thiếu file chỉ in cảnh báo). Ngoài ra có `typecheck` (`tsc --noEmit`) và `dev:all` (worker + `npm run dev`). `dev` và `start` chạy Next với `-H 127.0.0.1`, chỉ nghe trên loopback.
+- Script npm khai báo trong `package.json`: `worker` = `node --env-file-if-exists=.env.local --import tsx worker/index.ts`, `fetch` = `node --env-file-if-exists=.env.local --import tsx scripts/fetch.ts`. Cả hai **nạp `.env.local`** (thiếu file chỉ in cảnh báo). Ngoài ra có `typecheck` (`tsc --noEmit`), `worker:watch` (`tsx watch --clear-screen=false --env-file-if-exists=.env.local worker/index.ts`: khởi động lại worker mỗi khi một file nó import đổi; tsx gửi SIGTERM nên worker nhả khóa trước khi tiến trình mới giành lại) và `dev:all` (`worker:watch` + `npm run dev`). `dev` và `start` chạy Next với `-H 127.0.0.1`, chỉ nghe trên loopback.
 
 ## 5. HTTP helpers (`lib/sources/http.ts`)
 

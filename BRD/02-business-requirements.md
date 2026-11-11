@@ -17,7 +17,7 @@
 | BR-03 | Yield curve | M | M2 | Partial |
 | BR-04 | Lạm phát so với lãi suất điều hành | S | M2 | Partial |
 | BR-05 | Stress panel và chỉ báo chu kỳ | S | M2 | Partial |
-| BR-06 | Risk Regime | M | M2 | Partial |
+| BR-06 | Risk Regime | M | M2 | Done |
 | BR-07 | AI Daily Brief | M | M3 | Done |
 | BR-08 | Tin tức thế giới | M | M3 | Done |
 | BR-09 | Bản đồ sự kiện | S | M4 | Partial |
@@ -117,16 +117,17 @@
 
 ## BR-06 — Risk Regime · M · M2
 
-**Trạng thái:** Partial. Đủ 3 trạng thái + "Chưa đủ dữ liệu" và ghi đè VIX > 35. Popover hiện z-score từng thành phần nhưng chưa hiện giá trị gốc.
+**Trạng thái:** Done (v2, 2026-11-11). Đủ 3 trạng thái + "Chưa đủ dữ liệu" và ghi đè VIX > 35. Popover hiện giá trị gốc, ngày và z-score từng thành phần, ngày bắt đầu trạng thái và cảnh báo phân kỳ tín dụng.
 
-**Mô tả:** Badge tổng hợp có 3 trạng thái risk-on / neutral / risk-off, kèm trạng thái "không đủ dữ liệu". Badge được tính từ VIX, HY OAS, DXY, 2s10s (và có thể thêm STLFSI). Thuật toán nằm trong [LLDD 06](../TechDesign/LLDD/06-risk-regime.md).
+**Mô tả:** Badge tổng hợp có 3 trạng thái risk-on / neutral / risk-off, kèm trạng thái "không đủ dữ liệu". Badge được tính từ VIX, chênh lệch tín dụng Baa, DXY, 2s10s, STLFSI, xu hướng S&P 500 và độ rộng thị trường thế giới, mỗi thành phần so với tối đa 10 năm lịch sử. Tốc độ giãn của HY OAS không vào điểm mà thành cảnh báo phân kỳ riêng. Thuật toán nằm trong [LLDD 06](../TechDesign/LLDD/06-risk-regime.md).
 
 **User story:** Là người dùng, tôi muốn một tín hiệu duy nhất cho biết thị trường đang ưa hay né rủi ro, kèm lý do, để không phải tự tổng hợp nhiều chỉ số.
 
 **Tiêu chí nghiệm thu:**
-- Tooltip liệt kê đóng góp của từng thành phần (z-score và giá trị gốc).
+- Tooltip liệt kê đóng góp của từng thành phần (z-score, giá trị gốc và ngày của số liệu).
 - Có dưới 2 thành phần có dữ liệu thì badge hiện "Không đủ dữ liệu".
-- VIX > 35 thì luôn là risk-off.
+- VIX > 35 thì luôn là risk-off, ngay lập tức.
+- Ngoài trường hợp trên, trạng thái chỉ đổi khi tín hiệu mới giữ đủ 2 phiên.
 
 ## BR-07 — AI Daily Brief · M · M3
 

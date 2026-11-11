@@ -12,8 +12,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "worker": "node --env-file-if-exists=.env.local --import tsx worker/index.ts",
+    "worker:watch": "tsx watch --clear-screen=false --env-file-if-exists=.env.local worker/index.ts",
     "fetch": "node --env-file-if-exists=.env.local --import tsx scripts/fetch.ts",
-    "dev:all": "npm run worker & npm run dev"
+    "dev:all": "npm run worker:watch & npm run dev"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

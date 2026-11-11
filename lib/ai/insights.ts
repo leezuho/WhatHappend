@@ -61,11 +61,15 @@ export function needsNote(reasons: Reason[], existing: { basis: string; created_
 function describe(n: Notable, r: Reason): string {
   const t = n.def.threshold;
   const side = t?.dir === "below" ? "below" : "above";
+  const when = (ts: number) => new Date(ts).toISOString().slice(0, n.def.freq && n.def.freq !== "w" ? 7 : 10);
   switch (r.kind) {
     case "crit":
-      return `${side} its danger level (${t?.crit})`;
-    case "warn":
-      return `${side} its watch level (${t?.warn})`;
+    case "warn": {
+      const level = r.kind === "crit" ? `danger level (${t?.crit})` : `watch level (${t?.warn})`;
+      return r.fresh ? `just moved ${side} its ${level}, as of ${when(r.since)}` : `${side} its ${level} since ${when(r.since)}`;
+    }
+    case "week":
+      return `change over the past week (${fmtDelta(n.def, { ...n.data, change: r.change, changePct: r.change }, "en")}) is ${Math.abs(r.z).toFixed(1)}x its typical size`;
     case "high":
       return "highest reading in a year";
     case "low":

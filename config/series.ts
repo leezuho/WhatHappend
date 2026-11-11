@@ -986,6 +986,16 @@ export const YAHOO_SYMBOLS = [
  */
 export const FRED_CALC_CODES = ["ECBASSETSW", "JPNASSETS", "DEXUSEU", "DEXJPUS", "T10Y3M", "RRPONTSYD", "WTREGEN", "DFF"];
 
+/**
+ * Long-history inputs of the risk regime (LLDD 06) that no tile shows: the VIX and S&P 500 closes back ten
+ * years (Yahoo keeps about one), and Moody's Baa spread as the credit gauge, because FRED serves ICE BofA's
+ * high-yield spread for the last three years only.
+ */
+export const REGIME_IDS = { vixHistory: "fred:VIXCLS", spxHistory: "fred:SP500", credit: "fred:BAA10Y" } as const;
+
+/** FRED codes kept for ten years rather than three: the regime measures each gauge against a decade. */
+export const FRED_LONG_CODES = ["VIXCLS", "SP500", "BAA10Y", "T10Y2Y", "STLFSI4"];
+
 /** FRED series codes to pull. */
 export const FRED_CODES = [
   ...Object.values(SERIES)
@@ -1004,6 +1014,7 @@ export const FRED_CODES = [
   "DGS20",
   "DGS30",
   ...FRED_CALC_CODES,
+  ...FRED_LONG_CODES,
   // all-industry postings, the yardstick for software postings (tech page)
   "IHLIDXUS",
   // US CPI by group (macro page, inflation panel)

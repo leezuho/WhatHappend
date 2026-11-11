@@ -10,14 +10,15 @@ Cần Node ≥ 22.13 (dùng `node:sqlite` có sẵn trong Node).
 npm install
 cp .env.example .env.local      # tuỳ chọn: điền AI_API_KEY (Gemini hoặc Claude) để có bản tin AI, dịch tiêu đề và diễn giải chỉ số
 npm run fetch -- all            # lấy dữ liệu lần đầu (khoảng 1 phút)
-npm run dev:all                 # worker + web; mở http://localhost:3000
+npm run dev:all                 # worker (tự khởi động lại khi sửa code) + web; mở http://localhost:3000
 ```
 
 Hai tiến trình chạy độc lập:
 
 | Lệnh | Việc |
 |---|---|
-| `npm run worker` | Bộ lập lịch: gọi các nguồn khi đến hạn, ghi vào `data/whathappend.db` |
+| `npm run worker` | Bộ lập lịch: gọi các nguồn khi đến hạn, ghi vào `data/whathappend.db`. Không tự nạp code mới: sửa code thì khởi động lại, web hiện dải cảnh báo khi worker chạy code cũ hoặc đã dừng |
+| `npm run worker:watch` | Như trên, nhưng tự khởi động lại mỗi khi một file worker dùng thay đổi (`dev:all` chạy cách này) |
 | `npm run dev` / `npm run build && npm start` | Web Next.js, chỉ đọc từ SQLite và không gọi API bên ngoài |
 | `npm run fetch -- <id…>` / `npm run fetch -- all` | Chạy một hoặc nhiều nguồn một lần (gõ `npm run fetch` để xem danh sách id) |
 | `npm run typecheck` / `npm run lint` | Kiểm tra kiểu và lint |

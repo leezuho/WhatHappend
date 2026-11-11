@@ -69,8 +69,8 @@ flowchart LR
 | AI config | `lib/ai/config.ts` | Đọc `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL_BRIEF`, `AI_MODEL_FAST` (không import SDK, web cũng dùng): `aiStatus()`, `isAiConfigured()` |
 | AI provider | `lib/ai/provider.ts`, `lib/ai/providers/{gemini,anthropic}.ts` | `generateJson({ tier, system, user, schema })`, kết quả kiểm bằng zod; adapter Gemini (`@google/genai`) và Claude (`@anthropic-ai/sdk`) |
 | AI pipeline | `lib/ai/{translate,brief,brief-shared,taxonomy}.ts` | Nguồn `translate`: dịch và phân loại tiêu đề (tier `fast`). Nguồn `brief`: Daily Brief (tier `brief`) |
-| Signals | `lib/signals/risk-regime.ts` | Tính Risk Regime từ các series (xem [LLDD 06](../LLDD/06-risk-regime.md)) |
-| UI | `app/[lang]/*`, `components/panels/{MarketPanels,ContentPanels,WorldPanels}.tsx` (+ client `MapView`, `NewsList`, `BriefRefresh`), `components/ui/{Panel,Tabs,MarketClocks,ThemeToggle,LangSwitch,AutoRefresh}.tsx`, `components/charts/{KpiTile,Sparkline,LineChart,DumbbellChart,TileDetail}.tsx` | Layout, Panel, các panel nghiệp vụ, biểu đồ, bản đồ, hộp thoại chi tiết + watchlist |
+| Signals | `lib/signals/risk-regime.ts`, `lib/data/regime.ts` | Tính Risk Regime từ các series (xem [LLDD 06](../LLDD/06-risk-regime.md)) |
+| UI | `app/[lang]/*`, `components/panels/{MarketPanels,ContentPanels,WorldPanels}.tsx` (+ client `MapView`, `NewsList`, `BriefRefresh`), `components/ui/{Panel,Tabs,MarketClocks,ThemeToggle,LangSwitch,AutoRefresh,WorkerNotice}.tsx`, `components/charts/{KpiTile,Sparkline,LineChart,DumbbellChart,TileDetail}.tsx` | Layout, Panel, các panel nghiệp vụ, biểu đồ, bản đồ, hộp thoại chi tiết + watchlist |
 | Theme hook | `lib/use-theme.ts` | `useSyncExternalStore` trên `<html data-theme>` |
 | Build helper | `scripts/copy-maplibre-worker.mjs` | Chép worker MapLibre vào `public/vendor/` (hook `predev`/`prebuild`, xem ADR-09) |
 | i18n | `lib/i18n.ts`, `messages/{vi,en}.json` | Từ điển, `hasLocale`, `getDict`, `intlLocale` |
@@ -113,7 +113,7 @@ flowchart LR
 - **Một máy, hai tiến trình:**
   1. Web: `npm run dev` khi phát triển, hoặc `npm run build && npm run start`.
   2. Worker: `npm run worker` = `node --env-file-if-exists=.env.local --import tsx worker/index.ts` (có nạp `.env.local`).
-  3. Hoặc chạy cả hai: `npm run dev:all`. Các script khác: `npm run fetch -- <id…|all>`, `npm run typecheck`.
+  3. Hoặc chạy cả hai: `npm run dev:all` (worker chạy qua `tsx watch`, tự khởi động lại khi sửa code của nó). Worker chạy code cũ hoặc không chạy thì mọi trang hiện dải cảnh báo dưới TopBar (LLDD 03 §3). Các script khác: `npm run fetch -- <id…|all>`, `npm run typecheck`.
 - **Dữ liệu:** file `./data/whathappend.db` (đổi được qua `DB_PATH`), chế độ WAL nên hai tiến trình đọc/ghi song song được.
 - **Cấu hình:** `.env.local` (theo mẫu `.env.example`; gitignore, quyền 600). Biến AI cho `translate` và `brief`:
   - `AI_PROVIDER` (`gemini` | `anthropic`, tùy chọn) và `AI_API_KEY`. Cũng nhận `GEMINI_API_KEY`/`GOOGLE_API_KEY`/`ANTHROPIC_API_KEY`.

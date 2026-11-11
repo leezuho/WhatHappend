@@ -1,7 +1,9 @@
 import clsx from "clsx";
-import { SERIES, VITAL_SIGNS, type SeriesKey } from "@/config/series";
-import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtAxisPct, fmtDate, fmtDelta, fmtNumber, fmtPct, fmtTime, fmtValue } from "@/lib/format";
+import { SERIES, VITAL_SIGNS, type SeriesDef, type SeriesKey } from "@/config/series";
+import { getDict, pick, type Dict, type Locale } from "@/lib/i18n";
+import { fmtAxisPct, fmtDate, fmtDelta, fmtNumber, fmtPct, fmtPeriod, fmtSigned, fmtTime, fmtValue } from "@/lib/format";
+import type { TileData } from "@/lib/data/series";
+import type { Component as RegimeComponent, RegimeResult } from "@/lib/signals/risk-regime";
 import {
   getAssetClasses,
   getCommodities,
@@ -23,7 +25,7 @@ import { BarList } from "@/components/charts/BarList";
 import { MarketTable, MoveSummary } from "@/components/panels/MarketTable";
 import { TileDetail } from "@/components/charts/TileDetail";
 import { KpiTile } from "@/components/charts/KpiTile";
-import { alertOf } from "@/lib/signals/notable";
+import { alertOf, type Reason } from "@/lib/signals/notable";
 import { LineChart } from "@/components/charts/LineChart";
 import { DumbbellChart } from "@/components/charts/DumbbellChart";
 import { EmptyState } from "@/components/ui/Panel";
@@ -99,6 +101,35 @@ export async function EconomyPulse({ lang }: { lang: Locale }) {
 
 // ---------------------------------------------------------------- what stands out
 
+function reasonLabel(r: Reason, t: Dict["highlights"]): string {
+  switch (r.kind) {
+    case "move":
+      return r.z > 0 ? t.reasons.moveUp : t.reasons.moveDown;
+    case "week":
+      return r.z > 0 ? t.reasons.weekUp : t.reasons.weekDown;
+    case "crit":
+      return r.fresh ? t.reasons.critNew : t.reasons.crit;
+    case "warn":
+      return r.fresh ? t.reasons.warnNew : t.reasons.warn;
+    default:
+      return t.reasons[r.kind];
+  }
+}
+
+function reasonTip(r: Reason, def: SeriesDef, data: TileData, t: Dict["highlights"], lang: Locale): string | undefined {
+  switch (r.kind) {
+    case "move":
+      return t.moveTip.replace("{z}", fmtNumber(Math.abs(r.z), lang, 1));
+    case "week":
+      return t.weekTip.replace("{change}", fmtDelta(def, { ...data, change: r.change, changePct: r.change }, lang) ?? "").replace("{z}", fmtNumber(Math.abs(r.z), lang, 1));
+    case "crit":
+    case "warn":
+      return t.sinceTip.replace("{date}", def.freq ? fmtPeriod(r.since, def.freq, lang) : fmtDate(r.since, lang, { day: "numeric", month: "short", year: "numeric" }));
+    default:
+      return undefined;
+  }
+}
+
 export async function HighlightsBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);
   const t = d.highlights;
@@ -147,12 +178,12 @@ export async function HighlightsBody({ lang }: { lang: Locale }) {
                       <span
                         key={r.kind}
                         className="flex items-center gap-1 rounded-full bg-surface px-1.5 py-px text-[10px] text-ink-2"
-                        title={r.kind === "move" ? t.moveTip.replace("{z}", fmtNumber(Math.abs(r.z), lang, 1)) : undefined}
+                        title={reasonTip(r, it.def, it.data, t, lang)}
                       >
                         {(r.kind === "crit" || r.kind === "warn") && (
                           <span aria-hidden className={clsx("inline-block size-1.5 rounded-full", r.kind === "crit" ? "bg-critical" : "bg-warning")} />
                         )}
-                        {r.kind === "move" ? (r.z > 0 ? t.reasons.moveUp : t.reasons.moveDown) : t.reasons[r.kind]}
+                        {reasonLabel(r, t)}
                       </span>
                     ))}
                   </div>
@@ -411,40 +442,89 @@ const REGIME_STYLE = {
   unknown: "bg-surface-2",
 } as const;
 
+function regimeLabel(r: RegimeResult["regime"], t: Dict["regime"]): string {
+  return r === "risk-on" ? t.riskOn : r === "risk-off" ? t.riskOff : r === "neutral" ? t.neutral : t.unknown;
+}
+
+/** A component's reading in its own unit. */
+function regimeValue(c: RegimeComponent, lang: Locale): string {
+  switch (c.key) {
+    case "credit":
+      return `${fmtNumber(c.value, lang, 2)}%`;
+    case "dxy":
+    case "trend":
+      return fmtPct(c.value, lang, 1);
+    case "curve":
+      return fmtValue(SERIES.curve, c.value, lang);
+    case "breadth":
+      return c.count ? `${c.count.above}/${c.count.total}` : fmtNumber(c.value * 100, lang, 0) + "%";
+    default:
+      return fmtNumber(c.value, lang, 2);
+  }
+}
+
 export async function RegimeBadge({ lang }: { lang: Locale }) {
   const t = getDict(lang).regime;
   const r = await getRegime();
-  const label = r.regime === "risk-on" ? t.riskOn : r.regime === "risk-off" ? t.riskOff : r.regime === "neutral" ? t.neutral : t.unknown;
+  const label = regimeLabel(r.regime, t);
+  const div = r.divergence;
   return (
     <details className="relative">
       <summary
-        title={`${t.title}: ${label}`}
+        title={`${t.title}: ${label}${div ? ` · ${t.divergenceShort}` : ""}`}
         className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 text-xs text-ink-2 shadow-card transition-colors hover:bg-surface-2"
       >
         <span aria-hidden className={clsx("inline-block size-2 rounded-full", REGIME_STYLE[r.regime])} />
         <span className="sr-only 2xl:not-sr-only">{t.title}:</span>
         <span className="font-semibold text-ink">{label}</span>
+        {div && (
+          <span className="grid size-4 place-items-center rounded-full bg-warning/20 text-[10px] leading-none font-bold text-ink">
+            <span aria-hidden>!</span>
+            <span className="sr-only">{t.divergenceShort}</span>
+          </span>
+        )}
       </summary>
-      <div className="absolute right-0 z-40 mt-2 w-72 rounded-xl border border-line bg-surface p-3 text-xs shadow-lift">
+      <div className="absolute right-0 z-40 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] rounded-xl border border-line bg-surface p-3 text-xs shadow-lift">
+        {div && (
+          <p className="mb-2.5 rounded-lg bg-warning/10 px-2.5 py-2 text-ink-2">
+            <span className="font-semibold text-ink">{t.divergenceTitle}</span>{" "}
+            {t.divergence
+              .replace("{hy}", `${fmtNumber(div.hy, lang, 2)}%`)
+              .replace("{date}", fmtDate(div.hyTs, lang))
+              .replace("{bp}", fmtNumber((div.hy - div.low) * 100, lang, 0))
+              .replace("{low}", `${fmtNumber(div.low, lang, 2)}%`)
+              .replace("{lowDate}", fmtDate(div.lowTs, lang))
+              .replace("{gap}", `${fmtNumber(div.spxGap, lang, 1)}%`)}
+          </p>
+        )}
         <p className="mb-2 text-ink-2">{t.explain}</p>
         {r.score !== null && (
-          <p className="mb-2">
+          <p className="mb-1">
             {t.score}: <span className="tabular font-semibold text-ink">{fmtNumber(r.score, lang, 2)}</span>
+            {r.since !== null && <span className="text-muted"> · {(r.sinceAtLeast ? t.sinceAtLeast : t.since).replace("{date}", fmtDate(r.since, lang))}</span>}
             {r.override && <span className="ml-1 text-down">({r.override})</span>}
           </p>
         )}
-        <ul className="flex flex-col gap-1">
+        {r.pending && <p className="mb-1 text-ink-2">{t.pending.replace("{regime}", regimeLabel(r.pending, t))}</p>}
+        <ul className="mt-2 flex flex-col gap-1">
           {r.components.map((c) => (
-            <li key={c.key} className="flex items-center justify-between gap-2">
-              <span className="text-ink-2">{t.components[c.key]}</span>
-              <span className={clsx("tabular font-medium", c.z > 0.5 ? "text-down" : c.z < -0.5 ? "text-up" : "text-ink")}>
-                z {c.z > 0 ? "+" : ""}
-                {fmtNumber(c.z, lang, 2)}
+            <li
+              key={c.key}
+              className="grid grid-cols-[minmax(0,1fr)_auto_3.25rem] items-baseline gap-x-2"
+              title={[c.years ? t.years.replace("{n}", String(c.years)) : null, c.weight < 1 ? t.halfWeight : null].filter(Boolean).join(" · ") || undefined}
+            >
+              <span className="truncate text-ink-2">{t.components[c.key]}</span>
+              <span className={clsx("tabular", c.weight < 1 ? "text-muted italic" : "text-ink-2")}>
+                {regimeValue(c, lang)} <span className="text-muted">· {fmtDate(c.ts, lang)}</span>
+                {c.weight < 1 && <span className="sr-only"> ({t.halfWeight})</span>}
+              </span>
+              <span className={clsx("tabular text-right font-medium", c.z > 0.5 ? "text-down" : c.z < -0.5 ? "text-up" : "text-ink")}>
+                {fmtSigned(c.z, lang, 2)}
               </span>
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-[11px] text-muted">≤ −0.5 → {t.riskOn} · ≥ +0.75 → {t.riskOff}</p>
+        <p className="mt-2 text-[11px] text-muted">{t.rules.replace("{on}", t.riskOn).replace("{off}", t.riskOff)}</p>
       </div>
     </details>
   );

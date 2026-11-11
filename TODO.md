@@ -2,6 +2,109 @@
 
 Việc đã chốt nhưng để làm sau. Thiết kế chung của trang Vĩ mô ở BRD-21 (`BRD/02-business-requirements.md`) và LLDD 04 §3b.
 
+## Review sản phẩm (2026-11-10)
+
+Đọc cả 5 trang trên dữ liệu thật ngày 2026-11-10, dưới góc nhìn đầu tư, vĩ mô và địa chính trị. Dữ liệu đã đủ rộng (60 nguồn). Chỗ hở là phần tổng hợp: dashboard có đủ mảnh ghép nhưng chưa nói ra câu chuyện chính, đúng vấn đề số 2 mà BRD 01 §1 đặt ra. Ngày hôm đó câu chuyện lớn nhất là cú sốc năng lượng vùng Vịnh: Brent +48% từ đầu năm nhưng −13% trong tuần, khí TTF +192%, CPI năng lượng Mỹ +20,4%, Fed được định giá tăng 45 bp, lợi suất thực 10 năm 2,63%. Bản tin AI, nhận định vĩ mô tuần và "Điểm đáng chú ý" đều không nhắc tới.
+
+Thứ tự làm: P0, rồi "Chủ đề chi phối" và "Có gì mới từ lần trước", rồi cảnh báo Telegram. Chưa thêm nguồn hay panel theo chiều rộng trước khi xong P0 và P1.
+
+### P0: độ tin cậy
+
+- [x] **Worker tự báo khi chạy code cũ.** Worker không có chế độ watch và chỉ nạp danh sách nguồn lúc khởi động. Ngày 2026-11-10 worker chạy từ 08:54, trước 3 commit trong ngày, nên:
+  - `technote` chưa chạy lần nào, panel "Công nghệ tuần này" trống;
+  - `vnstocks` và `vnflows` không được lên lịch, trang Việt Nam báo "Dữ liệu cũ";
+  - bộ lọc token neo giá trong `coingecko.ts` chưa có hiệu lực, Figure Heloc vẫn đứng #9 top coin.
+
+  Hướng làm: lúc khởi động, worker ghi git hash, giờ khởi động và danh sách id nguồn vào `kv`. Web so với `SOURCE_META` của bản đang chạy và hiện dải cảnh báo khi lệch (có nguồn worker không biết, hoặc hash khác). `dev:all` chạy worker bằng `tsx watch`. Việc trước mắt: khởi động lại worker.
+
+  Xong 2026-11-11 (LLDD 03 §3): worker ghi `kv['worker:info']` (pid, giờ khởi động, id nguồn, danh sách file code lấy theo import từ `worker/index.ts`) và mỗi tick tự so mtime các file đó; web hiện dải cảnh báo dưới TopBar khi worker dừng quá 2 phút, khởi động trước khi có phần tự báo, thiếu nguồn so với `SOURCE_META`, hoặc có file đã sửa. Không so git hash như dự kiến: với `tsx watch` hash lệch sau mỗi commit dù code đã nạp mới, còn sửa chưa commit thì hash không bắt được. `npm run worker:watch` mới, `dev:all` dùng nó. Worker đã khởi động lại lúc 09:59 ngày 11/11.
+- [x] **Risk Regime v2.** Ngày 2026-11-10 badge báo "Né rủi ro" (điểm 0,88, ngưỡng 0,75) trong khi 20/20 thị trường tăng, S&P +2,3%, SOX +6,9%, VIX 20. Điểm chủ yếu đến từ hai thành phần:
+  - HY OAS z +2,5, số của ngày 6/11. Z-score trên cửa sổ 1 năm biến mức 3,42% thành tín hiệu nguy hiểm, dù so với lịch sử đây là mức thấp (căng thẳng thật thường từ 5% trở lên).
+  - 2s10s z +1,4: mức 0,32 bị tính là căng thẳng, trong khi panel Đường cong lợi suất ghi "Bình thường".
+
+  Việc cần làm:
+  - tính z-score trên 5–10 năm, hoặc kết hợp với mức tuyệt đối (kiểm tra nguồn `fred` đang lưu lịch sử bao xa);
+  - tách mức khỏi tốc độ: HY tăng từ khoảng 2,6% lên 3,42% trong vài tháng là tín hiệu thật, nên hiện thành cảnh báo phân kỳ "tín dụng xấu đi trong khi cổ phiếu tăng" thay vì gộp vào badge;
+  - thêm xu hướng cổ phiếu: S&P so với MA200, số thị trường nằm trên MA50 (có sẵn từ Thị trường thế giới);
+  - giảm trọng số cho đầu vào đã cũ; chỉ đổi trạng thái khi tín hiệu giữ đủ 2 phiên;
+  - popover hiện giá trị gốc và ngày của từng thành phần (BR-06 còn thiếu).
+
+  Cập nhật LLDD 06 khi đổi thuật toán.
+
+  Xong 2026-11-11 (LLDD 06 v0.3): z so với tối đa 10 năm (`fred` lấy 10 năm cho `VIXCLS`, `SP500`, `BAA10Y`, `T10Y2Y`, `STLFSI4`), kẹp ±3; STLFSI dùng thẳng vì đã chuẩn hoá. FRED chỉ còn 3 năm HY OAS (ICE), nên điểm dùng chênh lệch Baa − 10 năm (`BAA10Y`, z 10 năm −1,24 ngày 10/11) và HY chuyển sang cảnh báo phân kỳ: HY cao hơn đáy 3 tháng ≥ 50 bp trong khi S&P còn trên MA200 (đang bật: 3,34% so với 2,60% ngày 28/8). Thêm S&P so với MA200 (z 10 năm) và số trong 20 thị trường nằm trên MA50; số trễ nửa trọng số; đổi trạng thái khi giữ 2 phiên (VIX > 35 đổi ngay); popover có giá trị gốc, ngày, "từ ngày", dấu "!" khi có phân kỳ. Ngày 10/11 ra "Trung tính" (−0,18). Kiểm lại trên lịch sử: 3/2020, 6 và 10/2022, 4/2025 ra né rủi ro; 6/2021, 11/2024 ra ưa rủi ro. `regimeFromDb` nằm ở `lib/data/regime.ts` để worker dùng được cho bản tin.
+- [x] **Bản tin AI đọc thêm lịch và thị trường.** Bản tin ngày 2026-11-10 gồm G7, vụ xả súng ở Krakow và chính sách nhập cư. Mục "Cần theo dõi" không có CPI Mỹ lúc 20:30 (tác động cao), vì `lib/ai/brief.ts` chỉ nhận tiêu đề 24 giờ và ảnh chụp Vital Signs. Cần thêm:
+  - sự kiện tác động cao của hôm nay và ngày mai, theo giờ Việt Nam;
+  - các biến động lớn nhất trong ngày và trong tuần;
+  - trạng thái regime.
+
+  Prompt xếp hạng tin theo hệ quả với thị trường và vĩ mô, không theo độ "nóng" của tin. Cập nhật LLDD 05 §3.
+
+  Xong 2026-11-11 (LLDD 05 §3): `briefInput` thêm `moves` (8 biến động lớn nhất của phiên và của 7 ngày qua trong 20 chỉ số, 11 hàng hoá, DXY, Bitcoin), `bigMoves` (≥ 3% trong phiên hoặc ≥ 5% trong tuần, prompt buộc phải nhắc hết, vì lần thử đầu model bỏ qua khí Henry Hub +11,8%, Bitcoin −8,3%, KOSPI −6,5%), `regime` (trạng thái, từ ngày, nghiêng về đâu, cảnh báo phân kỳ, từng thành phần) và `calendar` (sự kiện tác động cao từ giờ đến hết ngày mai theo giờ Việt Nam, kể cả FOMC theo giờ Hà Nội, NHTW khác, VN30F, ngày Cục Thống kê; số vừa công bố so với dự báo). Snapshot thị trường dùng bp cho lợi suất thay cho % tương đối. Hai lần chạy thật ngày 11/11 (`gemini-3.8-flash`): "Cần theo dõi" mở đầu bằng "GDP m/m của Anh, 14:00 thứ Năm 12/11", có bullet lợi suất 10 năm +12 bp kèm cảnh báo phân kỳ tín dụng và các biến động lớn trong tuần.
+- [x] **"Điểm đáng chú ý" ưu tiên cái mới.** `lib/signals/notable.ts` chỉ xét biến động một phiên và cho 2–3 điểm cho ngưỡng đã vượt từ lâu. Vì vậy CPI và PCE lõi Mỹ ngày nào cũng nằm trên panel, còn Brent −13% trong tuần thì không lên. Cần thêm:
+  - ngưỡng vừa vượt trong vài ngày gần đây;
+  - biến động 5 phiên tính theo z;
+  - giảm điểm cho mục đã nằm trên panel nhiều ngày liên tiếp.
+
+  Xong 2026-11-11 (LLDD 05 §3a): lý do ngưỡng có `since` và `fresh` (≤ 5 phiên với series ngày, kỳ mới nhất với series tháng); vừa vượt được 4/3 điểm, vượt đã lâu 2/1,5 và giảm một nửa mỗi 30 ngày (mức nguy hiểm cũ giữ sàn 0,75 để vẫn hiện, xếp cuối); lý do mới `week` là biến động 7 ngày lịch tính theo z; điểm dưới 0,5 không hiện. "Nằm lâu trên panel" suy từ tuổi của chuỗi vượt ngưỡng, không lưu trạng thái. Ngày 11/11 CPI, PCE lõi, GSCPI, CPI Việt Nam rời panel. Brent: quy tắc tuần bật ngày 4–6/11 (z −2,6 đến −2,3) nhưng đến 10/11 tuần −10,8% chỉ còn −1,5σ vì Brent năm nay biến động rất mạnh; bản tin vẫn nhắc qua `bigMoves`.
+
+### P1: nối các chấm
+
+- [ ] **Chủ đề chi phối**, đặt ở đầu trang Tổng quan. `config/themes.ts` khai 4–6 chủ đề (tên kiểu `Bi`). Mỗi chủ đề gắn series, từ khoá tin, kèo Polymarket và kênh truyền dẫn sang Việt Nam. Ví dụ theo dữ liệu ngày 2026-11-10:
+
+  | Chủ đề | Gắn với |
+  |---|---|
+  | Năng lượng vùng Vịnh | Brent, TTF, CPI năng lượng, 5y5y, giá xăng Petrolimex, kèo phong tỏa Iran |
+  | Lạm phát Mỹ và Fed | CPI lõi, mức Fed được định giá, lợi suất thực, DXY → USD/VND |
+  | Chu kỳ AI và bán dẫn | SOX, doanh thu TSMC, tin về Nvidia |
+  | Dòng vốn ngoại vào Việt Nam | khối ngoại, FTSE nâng hạng, khoảng cách tới trần tỷ giá |
+
+  Mỗi thẻ có trạng thái leo thang hay hạ nhiệt (tính từ số liệu), 3 tin mới nhất và xác suất trên Polymarket. AI viết 2–3 câu cho mỗi chủ đề, chỉ từ dữ liệu gắn với chủ đề đó, dùng chung ngân sách lượt gọi với `macronote`. Đưa luôn các chủ đề vào đầu vào của `macronote`: nhận định tuần 46 không có chữ "dầu" vì AI chỉ đọc bảng số của trang Vĩ mô.
+- [ ] **Lớp địa chính trị.** Hiện chỉ có chấm GDELT trên bản đồ (482 điểm ngày 2026-11-10, phần lớn là nhiễu) và một con số GPR toàn cầu. Cần thêm (chưa thử endpoint nào):
+  - lưu lượng tàu qua Hormuz, Bab el-Mandeb, Suez, Malacca và eo biển Đài Loan: IMF PortWatch;
+  - trừng phạt, kiểm soát xuất khẩu, thuế quan: Federal Register API (`federalregister.gov/api/v1`, không cần key);
+  - GPR theo quốc gia: bản tháng của Caldara–Iacoviello (nguồn `gpr` đang đọc bản ngày, chỉ có chỉ số toàn cầu);
+  - lịch bầu cử khai báo tay trong `config/` (BR-10 còn thiếu).
+- [ ] **"Có gì mới từ lần trước"**: một dải ở đầu trang Tổng quan, phục vụ KPI-1 (nắm tình hình dưới 2 phút). Liệt kê:
+  - regime đổi trạng thái;
+  - ngưỡng mới vượt;
+  - số thực tế lệch dự báo;
+  - biến động trên 2σ;
+  - lỗ hổng KEV mới của các hãng đang theo dõi.
+
+  Mốc "lần trước" lưu ở `localStorage` (tiện ích riêng của người xem). Cần lưu thêm lịch sử regime theo ngày.
+- [ ] **Cảnh báo qua Telegram**, do worker gửi. BRD 01 §5.2 đang để push ngoài phạm vi, nên cần cập nhật BRD. Bot token và chat id đặt trong `.env.local`. Các trường hợp cần báo:
+  - số thực tế lệch dự báo;
+  - Vietcombank bán ra cách trần dưới 2%;
+  - chênh lệch SJC đổi mạnh;
+  - xác suất một kèo Polymarket đổi hơn 15 điểm;
+  - sự cố ở đám mây đang dùng;
+  - regime đổi trạng thái.
+
+  Mỗi cảnh báo chỉ gửi một lần cho tới khi điều kiện hết.
+
+### P2: chiều sâu cho nhà đầu tư
+
+- [ ] **Định giá và vị thế.** Lớp này hiện chưa có.
+  - Vị thế trên thị trường tương lai theo báo cáo COT của CFTC (dầu, vàng, USD, trái phiếu Mỹ, BTC): API Socrata `publicreporting.cftc.gov`, không cần key, chưa thử.
+  - P/E, P/B của VN-Index; dư nợ margin; số tài khoản mở mới (VSDC). Chưa dò nguồn.
+- [ ] **Góc nhìn nhà đầu tư Việt.** Bảng "Các lớp tài sản" có chế độ quy ra VND, kèm mốc lãi tiết kiệm 12 tháng, để trả lời "năm nay cái gì thắng tiền gửi". Cần dò nguồn lãi suất niêm yết của các ngân hàng lớn.
+- [ ] **Số liệu tháng của Việt Nam:** xuất khẩu (nhất là sang Mỹ), FDI giải ngân, tăng trưởng tín dụng, sản xuất công nghiệp. **Cần người dùng chọn** một trong hai cách:
+  - form nhập tay ghi vào `kv`;
+  - AI trích từ thông cáo của Cục Thống kê ngày mùng 6, có kiểm tra khoảng giá trị và gắn nhãn "AI trích".
+
+  BR-22 đang để số của Cục Thống kê ngoài phạm vi, vì không có API và scrape dễ hỏng.
+- [ ] **Chỉ số bất ngờ kinh tế Mỹ tự dựng.** Nguồn `calendar` thay toàn bộ danh sách mỗi lần chạy (`replaceItems`), nên số thực tế so với dự báo không được giữ lại. Cần lưu lịch sử này để tính chỉ số theo kiểu Citi Economic Surprise Index.
+
+### P3: bố cục
+
+- [ ] **Sắp lại trang Tổng quan.** Trang dài khoảng 7.000px với 17 panel, và màn hình đầu là quả địa cầu, ít thông tin cho người đọc buổi sáng. Thứ tự đề xuất:
+  - đầu trang: regime, "Có gì mới từ lần trước", Chủ đề chi phối, sự kiện hôm nay;
+  - kế tiếp: bản tin;
+  - bản đồ chuyển xuống dưới.
+
+  Thẻ "Điểm đáng chú ý" ngày nào cũng giảng lại định nghĩa chỉ số; nên thu về một dòng "đổi gì, vì sao quan trọng", phần giải thích để ở chế độ mở rộng.
+- [ ] **Lọc kèo Polymarket** khi nguồn chạy lại. Bỏ các kèo từ 97% trở lên hoặc từ 3% trở xuống, vì không cho thêm thông tin (ví dụ kèo ngừng bắn Israel–Iran đang 100%). Xếp theo mức đổi xác suất trong 24 giờ.
+
 ## Review nội dung từng trang (2026-11-10)
 
 Đọc lại 5 trang trên dữ liệu thật, tìm thông tin giá trị còn thiếu và chỗ một biểu đồ nói được nhiều hơn bảng hay số đơn lẻ. "Có sẵn" = dữ liệu đã nằm trong DB, chỉ cần query và giao diện. Endpoint ghi "thử 2026-11-10" là đã gọi thật, không cần key.

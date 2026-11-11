@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { connection } from "next/server";
 import { getDb } from "@/lib/db";
-import { sourceMeta, type SourceId } from "@/config/sources";
+import { SOURCE_META, sourceMeta, type SourceId } from "@/config/sources";
 import type { SourceStatusRow } from "@/lib/sources/types";
 import type { GoldQuote } from "@/lib/sources/sjc";
 import type { CoinRow, CryptoGlobal, TrendingCoin } from "@/lib/sources/coingecko";
@@ -23,11 +23,13 @@ import { OZ_PER_LUONG, vnMarketDates } from "@/lib/data/vietnam";
 import { clusterStories } from "@/lib/data/news";
 import { btcLeverage, etfFlows, type BtcLeverage, type EtfFlows } from "@/lib/data/crypto";
 import type { Point } from "@/lib/sources/store";
-import { computeRegime, type RegimeResult } from "@/lib/signals/risk-regime";
+import type { RegimeResult } from "@/lib/signals/risk-regime";
+import { regimeFromDb } from "@/lib/data/regime";
 import { FORCE_KEY, type StoredBrief } from "@/lib/ai/brief-shared";
 import { INSIGHT_MAX_AGE, type StoredInsight } from "@/lib/ai/insights-shared";
 import { findNotables, type Reason } from "@/lib/signals/notable";
 import { AI_ENV_HINT, aiStatus, isAiConfigured } from "@/lib/ai/config";
+import { WORKER_INFO_KEY, WORKER_LOCK_KEY, workerHealth, type WorkerHealth } from "@/lib/worker-info";
 
 // Read side for the UI. SQLite reads are synchronous, which Cache Components
 // would otherwise freeze into the build-time shell; connection() makes every
@@ -66,6 +68,17 @@ export async function getPanelStatus(ids: SourceId[]): Promise<PanelStatus> {
     if (!r.last_ok || now - r.last_ok > 3 * sourceMeta(id).intervalMs) stale = true;
   }
   return { lastOk, stale: stale || failing.length > 0, failing, missingKey: [...new Set(missingKey)] };
+}
+
+/** Is the worker running, and running the code and sources this web build knows? */
+export async function getWorkerHealth(): Promise<WorkerHealth> {
+  await connection();
+  const db = getDb();
+  const kv = db.prepare("SELECT value, updated_at FROM kv WHERE key = ?");
+  const lock = kv.get(WORKER_LOCK_KEY) as { value: string | null; updated_at: number } | undefined;
+  const info = kv.get(WORKER_INFO_KEY) as { value: string | null } | undefined;
+  const { last } = db.prepare("SELECT MAX(last_run) AS last FROM source_status").get() as { last: number | null };
+  return workerHealth(lock, info?.value, Object.keys(SOURCE_META), last, Date.now());
 }
 
 // ---------------------------------------------------------------- map
@@ -347,15 +360,7 @@ export async function getHistory(ids: string[], days = 365): Promise<Record<stri
 
 export async function getRegime(): Promise<RegimeResult> {
   await connection();
-  const db = getDb();
-  const since = Date.now() - 400 * 24 * 3600_000;
-  return computeRegime({
-    vix: getPoints(db, SERIES.vix.id, since),
-    hy: getPoints(db, SERIES.hy.id, since),
-    dxy: getPoints(db, SERIES.dxy.id, since),
-    curve: getPoints(db, SERIES.curve.id, since),
-    fsi: getPoints(db, SERIES.fsi.id, since),
-  });
+  return regimeFromDb(getDb());
 }
 
 export interface TickerItem {

@@ -81,6 +81,46 @@ export function assetClassRows(db: DatabaseSync, lang: Locale, now = Date.now())
   );
 }
 
+// ---------------------------------------------------------------- biggest moves (AI brief)
+
+export interface MoveRow {
+  name: string;
+  /** % changes, one decimal. */
+  day: number | null;
+  week: number | null;
+  ytd: number | null;
+}
+
+/** Instruments beyond the stock indices and commodities whose big moves make news. */
+const MOVE_EXTRAS: { id: string; name: string }[] = [
+  { id: "yahoo:DX-Y.NYB", name: "US dollar index (DXY)" },
+  { id: "yahoo:BTC-USD", name: "Bitcoin" },
+];
+
+/**
+ * The largest moves of the latest session and of the past week across the world's main stock indices,
+ * commodities, the dollar and bitcoin, by absolute % change: what the brief must not miss
+ * (on 2026-11-10 Brent was −13% on the week and the brief never said so).
+ */
+export function biggestMoves(db: DatabaseSync, now = Date.now(), n = 8): { day: MoveRow[]; week: MoveRow[] } {
+  const row = marketReader(db, now);
+  const r1 = (x: number | null) => (x === null ? null : Math.round(x * 10) / 10);
+  const all: MoveRow[] = [
+    ...WORLD_INDICES.map((ix) => ({ id: ix.id, name: `${ix.name} (${ix.country.en})` })),
+    ...COMMODITIES.map((c) => ({ id: c.id, name: c.name.en })),
+    ...MOVE_EXTRAS,
+  ].map(({ id, name }) => {
+    const m = row(id);
+    return { name, day: r1(m.ch1d), week: r1(m.ch1w), ytd: r1(m.chYtd) };
+  });
+  const top = (k: "day" | "week") =>
+    all
+      .filter((m) => m[k] !== null)
+      .sort((a, b) => Math.abs(b[k]!) - Math.abs(a[k]!))
+      .slice(0, n);
+  return { day: top("day"), week: top("week") };
+}
+
 // ---------------------------------------------------------------- yield-curve spreads over time
 
 export type SpreadKey = "s2s10" | "s3m10";

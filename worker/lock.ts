@@ -1,13 +1,12 @@
 import { hostname } from "node:os";
 import type { DatabaseSync } from "node:sqlite";
 import { tx } from "@/lib/db";
+import { WORKER_LOCK_KEY as KEY } from "@/lib/worker-info";
 
 // One scheduler per database: a second worker would run every source twice and
 // compete for SQLite's write lock. The holder keeps a heartbeat row in `kv`; a
 // newcomer takes over only when that heartbeat is stale or, on the same machine,
 // when the holding process no longer exists.
-
-const KEY = "worker:lock";
 
 export interface LockHolder {
   pid: number;

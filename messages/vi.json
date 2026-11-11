@@ -43,6 +43,17 @@
     "navMacro": "Vĩ mô",
     "navVietnam": "Việt Nam"
   },
+  "worker": {
+    "down": "Worker không chạy, dữ liệu đang không được cập nhật.",
+    "lastSeen": "Lần chạy cuối {time}.",
+    "fixDown": "Chạy npm run worker.",
+    "outdated": "Worker đang chạy code cũ.",
+    "startedAt": "Khởi động lúc {time}.",
+    "legacy": "Worker khởi động trước khi có phần tự báo phiên bản.",
+    "unknown": "Nguồn worker chưa biết: {list}.",
+    "changed": "File đã sửa sau đó: {list}.",
+    "fixOutdated": "Khởi động lại npm run worker (npm run dev:all tự khởi động lại mỗi lần lưu file)."
+  },
   "regime": {
     "title": "Trạng thái rủi ro",
     "riskOn": "Ưa rủi ro",
@@ -50,13 +61,24 @@
     "riskOff": "Né rủi ro",
     "unknown": "Chưa đủ dữ liệu",
     "score": "Điểm căng thẳng",
-    "explain": "Trung bình z-score 1 năm của các thước đo căng thẳng thị trường. Dương = căng thẳng hơn bình thường.",
+    "explain": "Trung bình có trọng số của các thước đo căng thẳng thị trường, mỗi thước đo là z-score so với tối đa 10 năm lịch sử của nó (chỉ số St. Louis vốn đã chuẩn hoá; độ rộng tính theo thang cố định). Dương = căng thẳng hơn bình thường. Số liệu cũ chỉ tính nửa trọng số.",
+    "since": "từ {date}",
+    "sinceAtLeast": "từ {date} hoặc sớm hơn",
+    "pending": "Phiên gần nhất nghiêng về {regime}; badge chỉ đổi khi tín hiệu giữ đủ 2 phiên.",
+    "halfWeight": "Số liệu cũ, nửa trọng số",
+    "years": "z so với {n} năm",
+    "divergenceTitle": "Tín dụng xấu đi trong khi cổ phiếu tăng.",
+    "divergence": "Chênh lệch HY {hy} ngày {date}, tăng {bp} bp từ đáy {low} ngày {lowDate}, trong khi S&P 500 vẫn cao hơn MA200 {gap}. Không tính vào điểm.",
+    "divergenceShort": "Cảnh báo phân kỳ tín dụng",
+    "rules": "≤ −0,5 → {on} · ≥ +0,75 → {off}. Đổi trạng thái khi giữ đủ 2 phiên; VIX trên 35 đổi ngay.",
     "components": {
       "vix": "VIX",
-      "hy": "Chênh lệch HY",
-      "dxy": "USD thay đổi 1 tháng",
-      "curve": "Đường cong lợi suất (đảo ngược = +)",
-      "fsi": "Chỉ số căng thẳng tài chính"
+      "credit": "Tín dụng (Baa)",
+      "dxy": "USD 1 tháng",
+      "curve": "2s10s (đảo ngược = +)",
+      "fsi": "Căng thẳng tài chính",
+      "trend": "S&P so với MA200",
+      "breadth": "Thị trường trên MA50"
     }
   },
   "panels": {
@@ -555,15 +577,21 @@
   "highlights": {
     "empty": "Hiện chưa có chỉ số nào bất thường.",
     "needsKey": "Thêm AI_API_KEY vào .env.local để AI giải thích từng chỉ số.",
-    "rules": "Chọn khi chỉ số vượt ngưỡng cảnh báo, biến động gấp 2 lần bình thường trở lên, hoặc lập đỉnh/đáy 1 năm. Bấm để xem lịch sử.",
+    "rules": "Chọn khi chỉ số vừa vượt mức lưu ý hay nguy hiểm, biến động gấp 2 lần bình thường trở lên trong phiên hoặc trong 1 tuần, hoặc lập đỉnh/đáy 1 năm. Ngưỡng đã vượt từ lâu được tính ít dần theo thời gian. Bấm để xem lịch sử.",
     "moveTip": "Biến động gấp {z} lần mức thường ngày",
+    "weekTip": "Biến động 1 tuần {change}, gấp {z} lần mức thường",
+    "sinceTip": "Ở mức này từ {date}",
     "reasons": {
       "crit": "Nguy hiểm",
       "warn": "Lưu ý",
       "high": "Cao nhất 1 năm",
       "low": "Thấp nhất 1 năm",
       "moveUp": "Tăng mạnh bất thường",
-      "moveDown": "Giảm mạnh bất thường"
+      "moveDown": "Giảm mạnh bất thường",
+      "warnNew": "Vừa vượt mức lưu ý",
+      "critNew": "Vừa vượt mức nguy hiểm",
+      "weekUp": "Tăng mạnh trong tuần",
+      "weekDown": "Giảm mạnh trong tuần"
     }
   },
   "vn": {

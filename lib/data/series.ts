@@ -167,8 +167,7 @@ export function tileOf(db: DatabaseSync, key: SeriesKey, now = Date.now()): Tile
 }
 
 /** History for the detail drawer, up to today (no forecasts), transformed as displayed (CPI as y/y inflation). */
-export function getDetailPoints(db: DatabaseSync, def: SeriesDef, days: number): Point[] {
-  const now = Date.now();
+export function getDetailPoints(db: DatabaseSync, def: SeriesDef, days: number, now = Date.now()): Point[] {
   const since = now - days * DAY;
   if (def.transform || def.scale) return displayPoints(def, getPoints(db, def.id)).filter((p) => p.ts >= since && p.ts <= now);
   return getPoints(db, def.id, since).filter((p) => p.ts <= now);
