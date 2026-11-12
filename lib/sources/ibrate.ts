@@ -16,7 +16,8 @@ const TAG = "https://thoibaonganhang.vn/tag/diem-lai-thong-tin-kinh-te-5241.tag"
 const DONE_KEY = "ibrate:done";
 const DAY = 24 * 3600_000;
 
-const RATE = /Thị trường tiền tệ liên ngân hàng ngày (\d{1,2})\/(\d{1,2}).{0,400}?bình quân liên ngân hàng VND.{0,300}?qua đêm ([\d,]+)\s*%;?\s*1 tuần ([\d,]+)\s*%;?\s*2 tuần ([\d,]+)\s*%;?\s*(?:và\s*)?1 tháng ([\d,]+)\s*%/;
+// "… liên ngân hàng ngày 09/11, lãi suất …" until early November 2026, then "… liên ngân hàng: Ngày 11/11, lãi suất …".
+const RATE = /Thị trường tiền tệ liên ngân hàng:?\s*[Nn]gày (\d{1,2})\/(\d{1,2}).{0,400}?bình quân liên ngân hàng VND.{0,300}?qua đêm ([\d,]+)\s*%;?\s*1 tuần ([\d,]+)\s*%;?\s*2 tuần ([\d,]+)\s*%;?\s*(?:và\s*)?1 tháng ([\d,]+)\s*%/;
 
 /** The government bond yields sentence of the same recap: "Lợi suất TPCP trên thị trường thứ cấp … chốt phiên ở mức: 3 năm 3,72%; … 10 năm 4,47%; …". */
 const BOND = /Lợi suất (?:TPCP|trái phiếu chính phủ) trên thị trường thứ cấp.{0,300}?chốt phiên[^:]{0,20}:.{0,120}?10 năm ([\d,]+)\s*%/;

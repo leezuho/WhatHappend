@@ -200,7 +200,7 @@ Người không chuyên nhìn con số không hiểu nó nói gì, nên chỉ s�
 
 **Đầu vào mỗi chỉ số:** tên, mô tả tĩnh (`explain`), giá trị, ngày số liệu (`asOf`), thay đổi (lợi suất tính bằng điểm phần trăm thay cho bp), lý do và biên độ 1 năm. Lý do ngưỡng ghi rõ "vừa vượt … tính đến <ngày>" hay "ở trên … từ <ngày>"; lý do `week` ghi thay đổi trong tuần. Kèm 60 tiêu đề 24 giờ (`recentHeadlines` của brief); nếu có chỉ số crypto trong danh sách thì thêm 25 tiêu đề từ báo crypto (`recentHeadlines(…, "crypto")`), có Nasdaq hoặc SOX (`TECH_SIGNS`) thì thêm 25 tiêu đề từ báo công nghệ (`recentHeadlines(…, "tech")`).
 
-**Prompt** yêu cầu: (1) giải nghĩa mức hiện tại bằng lời thường, (2) nêu nguyên nhân **chỉ khi** tiêu đề nói rõ và ghi số tiêu đề vào `refs`, (3) có thể nêu tác động thường gặp tới người dân (giá xăng, lãi vay, Việt Nam), không dự báo, không khuyến nghị đầu tư. Số liệu tuần/tháng có `asOf` cũ hơn tin nên không được gán cho tin 24 giờ. Mỗi ghi chú dưới 60 từ, viết song ngữ.
+**Prompt** yêu cầu: (1) giải nghĩa mức hiện tại bằng lời thường, (2) nêu nguyên nhân **chỉ khi** tiêu đề nói rõ và ghi số tiêu đề vào `refs`, (3) có thể nêu tác động thường gặp tới người dân (giá xăng, lãi vay, Việt Nam), không dự báo, không khuyến nghị đầu tư. Số liệu tuần/tháng có `asOf` cũ hơn tin nên không được gán cho tin 24 giờ. Mỗi ghi chú dưới 60 từ, viết song ngữ. Từ 2026-11-12 có thêm **một dòng cho thẻ** (`line_en`, `line_vi` → `enLine`, `viLine` trong `StoredInsight`, không đổi schema vì nằm trong JSON `content`): một câu dưới 20 từ "đổi gì, vì sao quan trọng" kèm con số, không giải nghĩa chỉ số; thẻ "Điểm đáng chú ý" chỉ in dòng này, ghi chú đầy đủ nằm trong `TileDetail`. Ghi chú viết trước đó không có dòng nên thẻ in câu đầu (`noteLine`) cho tới lần viết lại (tối đa 12 giờ). Lý do (TODO P3): câu đầu của ghi chú cũ thường là định nghĩa chỉ số, ngày nào cũng lặp lại.
 
 **Hiển thị:** panel "Điểm đáng chú ý" dưới bản đồ, cùng ghi chú trong hộp thoại chi tiết của tile. Chip lý do: "Vừa vượt mức lưu ý/nguy hiểm" khi `fresh`, nếu không thì "Lưu ý"/"Nguy hiểm" với tooltip "Ở mức này từ <ngày hoặc kỳ>"; "Tăng/Giảm mạnh trong tuần" với tooltip thay đổi và bội số z. Chip nguồn lấy từ `refs`, tối đa 2, mỗi báo một chip. Chưa có ghi chú (chưa cấu hình AI hoặc worker chưa chạy) thì hiện mô tả tĩnh `explain`.
 
@@ -249,6 +249,20 @@ Panel đầu trang Tổng quan (LLDD 04 §3, Hàng 0) có 2–3 câu do AI viế
 **Đầu ra** (zod): `{ themes: [{ id, en, vi }] }`; id lạ hoặc văn bản rỗng bị bỏ. Lưu `kv['themes:notes']` (`StoredThemeNotes` trong `themes-shared.ts`: ngày Việt Nam, thời điểm, model, `basis`, ghi chú theo id). Web đọc qua `getThemes()`.
 
 **Chạy thật (2026-11-11, `gemini-3.8-flash`):** 4/4 chủ đề, 5.816 ký tự vào, 2.234 token vào / 977 token ra, 9 giây. Ghi chú bám số liệu, dẫn nguồn ("Theo VnExpress, vốn hoá Nvidia bốc hơi hơn 400 tỷ USD…") và nói rõ CPI Việt Nam là số tháng 9.
+
+## 3e. Trích số liệu tháng của Cục Thống kê (`nso`, `lib/sources/nso.ts`)
+
+Không phải viết, mà là chỉ chỗ: model đọc báo cáo tình hình kinh tế – xã hội hằng tháng (văn xuôi tiếng Việt, LLDD 02 §7.6) và chỉ ra 12–14 con số (`config/nso.ts`). Mọi quyết định giữ hay bỏ nằm ở code.
+
+**Model:** `fast` (`gemini-3.5-flash-lite` ngày 2026-11-12), không đụng ngân sách của model `brief`; hết lượt `fast` trong ngày thì phần còn lại chờ hôm sau. Một lượt mỗi báo cáo, mỗi tháng một báo cáo mới; lần đầu đọc lùi khoảng 22 báo cáo (từ 1/2025), 3 báo cáo mỗi 10 phút.
+
+**Đầu vào:** JSON `{ report, month, fields: [{ key, period, ask, wording }], text }`: tiêu đề, tháng ("2026-10 (tháng Mười năm 2026)"), mỗi chỉ số kèm kỳ cần lấy (riêng tháng, từ đầu năm, hoặc quý), mô tả tiếng Anh và cách báo cáo thường viết ("Kim ngạch xuất khẩu hàng hóa tháng Mười đạt X tỷ USD"), rồi toàn văn. Chỉ số quý chỉ hỏi ở báo cáo tháng 3/6/9/12.
+
+**Prompt:** trả `raw` đúng như in (chỉ chữ số và dấu phân cách, không dấu, không đơn vị), `neg` khi giảm hoặc nhập siêu, `quote` chép nguyên văn từ đầu mệnh đề nêu chỉ số và kỳ tới hết con số và phần so sánh; lấy đúng kỳ được hỏi, không thay bằng số của tháng khác, của quý hay lũy kế, không lấy thành phần con, không tính, không làm tròn; không có thì null.
+
+**Đầu ra** (zod): `{ values: [{ key, raw, neg, quote }] }`. Kiểm tra ở LLDD 02 §7.6: đoạn trích phải có trong văn bản và chứa số, câu phải nêu chỉ số và tháng, phép so sánh phải đúng, dấu theo văn bản, khoảng hợp lý, và xuất − nhập = cán cân. Số qua kiểm tra mới ghi vào `observations`; `kv['nso:reports']` giữ lý do của từng số bị bỏ để soát lại.
+
+**Chạy thật (2026-11-12):** bản prompt đầu cho đoạn trích quá ngắn ("tăng 51,4% so với cùng kỳ năm trước"), nên kiểm tra đọc thêm từ đầu câu trong báo cáo và prompt yêu cầu chép từ đầu mệnh đề. Sau đó 11–13 số mỗi báo cáo qua kiểm tra trên các báo cáo tháng 2/2025, 12/2025, 1/2026, 5–10/2026; chưa thấy số sai lọt qua. Số bị bỏ phần lớn vì model chép lệch một chữ, hoặc vì đưa số quý vào ô tháng (IIP quý IV ở báo cáo tháng 12, bị bỏ đúng).
 
 ## 4. Chi phí và hạn mức
 

@@ -52,8 +52,11 @@ export interface ScoreRow {
 
 export const EMPTY: ScoreCell = { value: null, ts: null, freq: null, status: null };
 
-/** Monthly CPI inflation candidates: OECD's and the IMF CPI dataset's; readers take whichever runs later. */
-export const cpiIds = (c: Country) => [c.oecd && oecdId("CPI", c.oecd), imfCpiId(c.imf)];
+/** Monthly CPI inflation candidates: OECD's, the IMF CPI dataset's and the statistics office's; readers take whichever runs later (ties keep the first). */
+export const cpiIds = (c: Country) => [c.oecd && oecdId("CPI", c.oecd), imfCpiId(c.imf), c.office?.cpi];
+
+/** Quarterly GDP growth candidates: OECD's, the World Bank's and the statistics office's. */
+export const gdpIds = (c: Country) => [c.oecd && oecdId("GDP", c.oecd), c.gdp, c.office?.gdp];
 
 /** Monthly unemployment candidates: OECD's and the country's own statistics office's; readers take whichever runs later. */
 export const uneIds = (c: Country) => [c.oecd && oecdId("UNE", c.oecd), c.une];
@@ -83,7 +86,7 @@ function scoreRow(db: DatabaseSync, c: Country, lang: Locale, now: number): Scor
 
   // Growth: latest quarter (OECD, or the World Bank where OECD has none), judged against the country's own 2015–19 average.
   const normal = averageOfYears(getPoints(db, imfId("NGDP_RPCH", c.imf)), 2015, 2019);
-  const gdpQ = freshest(db, [c.oecd && oecdId("GDP", c.oecd), c.gdp], now)?.last;
+  const gdpQ = freshest(db, gdpIds(c), now)?.last;
   const gdp: ScoreCell = gdpQ
     ? {
         value: gdpQ.value,
@@ -258,7 +261,7 @@ function quarterMean(points: Point[], q: number): number | null {
 export function growthInflation(db: DatabaseSync, lang: Locale, now: number, tail = 4): GrowthInflationPoint[] {
   return MACRO_COUNTRIES.flatMap((c) => {
     const normal = averageOfYears(getPoints(db, imfId("NGDP_RPCH", c.imf)), 2015, 2019);
-    const gdpId = freshest(db, [c.oecd && oecdId("GDP", c.oecd), c.gdp], now)?.id;
+    const gdpId = freshest(db, gdpIds(c), now)?.id;
     const cpiId = freshest(db, cpiIds(c), now)?.id;
     if (normal === null || !gdpId || !cpiId) return [];
     const gdp = getPoints(db, gdpId, now - (tail + 2) * 100 * DAY).filter((p) => p.ts <= now);

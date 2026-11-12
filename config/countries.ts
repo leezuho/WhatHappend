@@ -18,7 +18,12 @@ export interface Country {
   y10?: string;
   /** Quarterly real GDP growth where OECD has none (Vietnam: World Bank Global Economic Monitor). */
   gdp?: string;
-  /** Monthly unemployment rate where OECD has none (Brazil: IBGE's PNAD Contínua, lib/sources/ibge.ts). */
+  /**
+   * The statistics office's own quarterly GDP growth and monthly CPI inflation, fresher than `gdp` and the IMF CPI
+   * dataset (Vietnam: the monthly report, read by AI, lib/sources/nso.ts). Readers take whichever runs later.
+   */
+  office?: { gdp: string; cpi: string };
+  /** Monthly unemployment rate where OECD has none (Brazil: IBGE's PNAD Contínua, lib/sources/ibge.ts; India: MoSPI's PLFS, lib/sources/mospi.ts). */
   une?: string;
   /** `une` is not seasonally adjusted, so its colour compares with the same month a year earlier instead of the 12-month low. */
   uneNsa?: true;
@@ -52,11 +57,11 @@ export const COUNTRIES: Country[] = [
   { imf: "AUS", bis: "AU", bisArea: "AU", oecd: "AUS", fx: { symbol: "AUDUSD=X", perUsd: false }, cpiTarget: 2.5, group: "dm", short: "AU", name: { en: "Australia", vi: "Úc" }, macro: true },
   { imf: "KOR", bis: "KR", bisArea: "KR", oecd: "KOR", fx: { symbol: "KRW=X", perUsd: true }, cpiTarget: 2, group: "dm", short: "KR", name: { en: "South Korea", vi: "Hàn Quốc" }, overview: true, macro: true },
   { imf: "CHN", bis: "CN", bisArea: "CN", oecd: "CHN", fx: { symbol: "CNY=X", perUsd: true }, cpiTarget: 2, group: "em", short: "CN", name: { en: "China", vi: "Trung Quốc" }, overview: true, macro: true },
-  { imf: "IND", bis: "IN", bisArea: "IN", oecd: "IND", fx: { symbol: "INR=X", perUsd: true }, cpiTarget: 4, group: "em", short: "IN", name: { en: "India", vi: "Ấn Độ" }, overview: true, macro: true },
+  { imf: "IND", bis: "IN", bisArea: "IN", oecd: "IND", une: "mospi:UNE:IND", uneNsa: true, fx: { symbol: "INR=X", perUsd: true }, cpiTarget: 4, group: "em", short: "IN", name: { en: "India", vi: "Ấn Độ" }, overview: true, macro: true },
   { imf: "IDN", bis: "ID", bisArea: "ID", oecd: "IDN", y10: "cnbc:ID10Y-ID", fx: { symbol: "IDR=X", perUsd: true }, cpiTarget: 2.5, group: "em", short: "ID", name: { en: "Indonesia", vi: "Indonesia" }, macro: true },
   { imf: "BRA", bis: "BR", bisArea: "BR", oecd: "BRA", une: "ibge:UNE:BRA", uneNsa: true, fx: { symbol: "BRL=X", perUsd: true }, cpiTarget: 3, group: "em", short: "BR", name: { en: "Brazil", vi: "Brazil" }, overview: true, macro: true },
   { imf: "MEX", bis: "MX", bisArea: "MX", oecd: "MEX", fx: { symbol: "MXN=X", perUsd: true }, cpiTarget: 3, group: "em", short: "MX", name: { en: "Mexico", vi: "Mexico" }, macro: true },
-  { imf: "VNM", bis: null, bisArea: null, oecd: null, rate: SBV_REFI, gdp: "wb:GDP:VNM", y10: "vn:GB10Y", fx: { symbol: "USDVND=X", perUsd: true }, cpiTarget: 4.5, group: "em", short: "VN", name: { en: "Vietnam", vi: "Việt Nam" }, overview: true, macro: true },
+  { imf: "VNM", bis: null, bisArea: null, oecd: null, rate: SBV_REFI, gdp: "wb:GDP:VNM", office: { gdp: "nso:GDP_YOY", cpi: "nso:CPI_YOY" }, y10: "vn:GB10Y", fx: { symbol: "USDVND=X", perUsd: true }, cpiTarget: 4.5, group: "em", short: "VN", name: { en: "Vietnam", vi: "Việt Nam" }, overview: true, macro: true },
 ];
 
 /**

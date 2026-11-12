@@ -15,6 +15,9 @@ export const SOURCE_META = {
   worldbank: { intervalMs: 24 * HOUR },
   cnbc: { intervalMs: 6 * HOUR },
   ibge: { intervalMs: 24 * HOUR },
+  mospi: { intervalMs: 24 * HOUR },
+  // Vietnam's monthly report, figures read by AI (lib/sources/nso.ts); every 10 minutes while older reports are left to read.
+  nso: { intervalMs: 6 * HOUR, needsAi: true },
   gpr: { intervalMs: 24 * HOUR },
   gscpi: { intervalMs: 24 * HOUR },
   // CFTC Commitments of Traders: weekly, Tuesday's positions published Friday afternoon (US time).

@@ -141,7 +141,7 @@ export async function HighlightsBody({ lang }: { lang: Locale }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <ul className="scroll-thin grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <ul className="scroll-thin grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((it) => {
           const name = pick(it.def.name, lang);
           const delta = fmtDelta(it.def, it.data, lang);
@@ -187,7 +187,8 @@ export async function HighlightsBody({ lang }: { lang: Locale }) {
                       </span>
                     ))}
                   </div>
-                  <p className={clsx("text-xs leading-relaxed", it.note ? "text-ink-2" : "text-muted")}>{it.note?.text ?? pick(it.def.explain, lang)}</p>
+                  {/* One line: what changed, why it matters. The full note and the indicator's definition are in the detail view. */}
+                  {it.note && <p className="text-xs leading-relaxed text-ink-2">{it.note.line}</p>}
                 </div>
               </TileDetail>
               {it.note && it.note.sources.length > 0 && (

@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/Panel";
 import { DetailTile } from "./MarketPanels";
 import { NewsGrid } from "./NewsGrid";
 import { Meter, PolyEvents } from "./WorldPanels";
+import { informativeEvents } from "@/lib/data/prediction";
 
 // ---------------------------------------------------------------- helpers
 
@@ -410,7 +411,7 @@ export async function TrendingCoinsBody({ lang }: { lang: Locale }) {
 
 export async function CryptoOddsBody({ lang }: { lang: Locale }) {
   const t = getDict(lang).crypto;
-  const events = await getItems<PolyEvent>("polymarket_crypto", lang, 8);
+  const events = informativeEvents(await getItems<PolyEvent>("polymarket_crypto", lang, 8));
   if (!events.length) return <EmptyState lang={lang} message={t.noOdds} />;
   return (
     <div className="scroll-thin flex max-h-[420px] flex-col gap-3 overflow-auto pr-1">

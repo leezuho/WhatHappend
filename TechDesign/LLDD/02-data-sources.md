@@ -19,6 +19,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `worldbank` | GDP quý (Việt Nam) | World Bank API v2, Global Economic Monitor | 24 giờ | `observations` `wb:GDP:<iso3>` |
 | `cnbc` | Lợi suất 10 năm (Indonesia) | CNBC `ts-api` chart 1Y | 6 giờ | `observations` `cnbc:<symbol>` |
 | `ibge` | Thất nghiệp tháng (Brazil) | IBGE SIDRA API, bảng 6381 | 24 giờ | `observations` `ibge:UNE:BRA` |
+| `mospi` | Thất nghiệp tháng (Ấn Độ) | MoSPI PLFS API (TLS nới riêng cho host này) | 24 giờ | `observations` `mospi:UNE:IND` |
 | `gpr` | Rủi ro địa chính trị | `data_gpr_daily_recent.xls` | 24 giờ | `observations` `gpr:GPRD`, `gpr:GPRD_MA7` |
 | `gscpi` | Chuỗi cung ứng | NY Fed GSCPI CSV | 24 giờ | `observations` `nyfed:GSCPI` |
 | `cot` | Vị thế trên thị trường tương lai | CFTC COT, file năm `fut_disagg_txt_<năm>.zip`, `fut_fin_txt_<năm>.zip` | 12 giờ | `observations` `cot:<KEY>:net`, `cot:<KEY>:oi` |
@@ -50,6 +51,7 @@ Mọi endpoint dưới đây đã được kiểm chứng thực tế ngày 2026
 | `sbvrate` | Việt Nam | Techcombank (bản sao tỷ giá trung tâm NHNN) | 6 giờ | `observations` `sbv:CENTRAL`, `kv` `sbvrate:backfilled-to` |
 | `petrolimex` | Việt Nam | API cổng Petrolimex | 1 giờ | `items` `fuel_vn`, `observations` `petrolimex:<ID>:z1` |
 | `ibrate` | Việt Nam | Thời báo Ngân hàng (bản tin "Điểm lại thông tin kinh tế") | 6 giờ | `observations` `sbv:IB_ON`, `sbv:IB_1W`, `sbv:IB_2W`, `sbv:IB_1M`, `kv` `ibrate:done` |
+| `nso` | Việt Nam | Báo cáo tình hình kinh tế – xã hội hằng tháng của Cục Thống kê (WordPress `nso.gov.vn`), số do AI trích (cần AI) | 6 giờ (10 phút khi còn báo cáo cũ chưa đọc) | `observations` `nso:<KEY>`, `kv` `nso:reports`, `nso:pending` |
 | `sjc` | Việt Nam | vang.today (dự phòng: PNJ) | 30 phút | `items` `gold_vn`, `observations` `goldvn:<code>:sell` |
 | `vcb` | Việt Nam | Vietcombank exchange-rates JSON | 1 giờ | `items` `vcb`, `observations` `vcb:USD:sell` |
 | `sbv` | Việt Nam | Không gọi mạng: lãi suất tái cấp vốn khai báo trong `config/policy-rates.ts` | 12 giờ | `observations` `sbv:REFI` |
@@ -163,7 +165,7 @@ Ba truy vấn mỗi lần chạy, mọi nước gộp bằng `+`:
 |---|---|---|---|
 | `CLI` | `OECD.SDD.STES,DSD_STES@DF_CLI,` | `<areas>.M.LI.IX._Z.AA.IX._Z.H` | Chỉ báo sớm, điều chỉnh biên độ (100 = xu hướng). Không có khu vực euro (`skip`); OECD chỉ có nhóm `G4E` (Đức, Pháp, Ý, Anh) |
 | `CPI` | `OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,` | `<areas>.M.N.CPI.PA._T.N.GY` | CPI toàn bộ, định nghĩa quốc gia, % so cùng kỳ. Ngày 2026-11-09: không có Nhật; Pháp, Ý, khu vực euro dừng ở 11–12/2025; Mexico dừng ở 7/2024. Trang đọc series nào mới hơn giữa OECD và `imfcpi` (§2.8) |
-| `UNE` | `OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,` | `<areas>.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M` | Thất nghiệp 15+, điều chỉnh mùa vụ. Euro = `EA`; không có CN, IN, ID, BR (Brazil lấy từ `ibge`, §2.11) |
+| `UNE` | `OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,` | `<areas>.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M` | Thất nghiệp 15+, điều chỉnh mùa vụ. Euro = `EA`; không có CN, IN, ID, BR (Brazil lấy từ `ibge`, Ấn Độ từ `mospi`, §2.11) |
 | `GDP` | `OECD.SDD.NAD,DSD_NAMAIN1@DF_QNA_EXPENDITURE_GROWTH_OECD,` | `Q.Y.<areas>.S1.S1.B1GQ._Z...PC.L.GY.T0102` | GDP thực, % so cùng quý năm trước. Euro = `EA`; `PRICE_BASE` là `L` (không phải `LR`) |
 | `IRLT` | `OECD.SDD.STES,DSD_STES@DF_FINMARK,` | `<areas>.M.IRLT.PA._Z._Z._Z._Z.N` | Lợi suất trái phiếu chính phủ dài hạn (10 năm), bình quân tháng. Indonesia dừng ở 12/2024, nên trang dùng số ngày của `cnbc` (§2.10) khi mới hơn; Mỹ dùng FRED `DGS10` |
 | `BCI` | `OECD.SDD.STES,DSD_STES@DF_CLI,` | `<areas>.M.BCICP.IX._Z.AA.IX._Z.H` | Niềm tin doanh nghiệp, điều chỉnh biên độ (100 = trung bình dài hạn) |
@@ -205,10 +207,18 @@ Ba truy vấn mỗi lần chạy, mọi nước gộp bằng `+`:
 - **Lưu:** `ibge:UNE:BRA`; nước khai `une: "ibge:UNE:BRA"` trong `config/countries.ts`.
 - **Đọc ra:** cột thất nghiệp của bảng sức khoẻ và small multiples thất nghiệp lấy series mới hơn giữa `oecd:UNE:<area>` và `une` (`uneIds`, `freshest`).
 - **Các nguồn khác đã thử (2026-11-10):**
-  - **Ấn Độ:** PLFS hằng tháng của MoSPI (`api.mospi.gov.in/api/plfs/getData?indicator_code=3&frequency_code=3&gender_code=3&sector_code=3&age_code=1&year=<năm>&Format=JSON`, không cần key, có từ 4/2025, ngày thử có đến 9/2026: 5,0%). `curl` chạy được, Node thì lỗi `ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED` vì server không hỗ trợ secure renegotiation (RFC 5746). Muốn dùng phải bật `SSL_OP_LEGACY_SERVER_CONNECT` riêng cho host này, tức là nới TLS, nên chờ người dùng quyết. eSankhyiki cũng gọi về đúng host này.
+  - **Ấn Độ:** đã tích hợp thành nguồn `mospi`, xem §2.11b.
   - **Trung Quốc:** `data.stats.gov.cn` trả 403 WAF (`UrlACL`); DBnomics `NBS` chỉ cập nhật đến 6/2026.
   - **ILOSTAT** (`sdmx.ilo.org`, `DF_UNE_DEAP_SEX_AGE_RT`): từ 2025 không có Trung Quốc, Indonesia, Việt Nam; Ấn Độ dừng ở Q4/2025.
   - **Indonesia** (BPS) chỉ công bố hai lần một năm (tháng 2 và 8), **Việt Nam** theo quý; không có số tháng để lấy.
+
+### 2.11b `mospi` — Thất nghiệp tháng của Ấn Độ (`lib/sources/mospi.ts`)
+- **URL:** `https://api.mospi.gov.in/api/plfs/getData?indicator_code=3&frequency_code=3&gender_code=3&sector_code=3&age_code=1&year=<năm>&Format=JSON` (PLFS của MoSPI, không cần key): tỷ lệ thất nghiệp theo tình trạng tuần (CWS), từ 15 tuổi, thành thị + nông thôn, cả nam và nữ, toàn Ấn Độ. `year` là năm dương lịch (`2025-26` trả rỗng). Đọc từng năm từ 2025 tới năm hiện tại; năm chưa có số trả `{ data: [], msg: "No Data Found" }`.
+- **Định dạng:** `data[]` có `frequency` ("Monthly"), `year`, `month` (tên tháng tiếng Anh), `state` ("All India"), `value` (chuỗi, "5" hoặc "5.1"). Dòng khác tần suất, khác bang hay không có số thì bỏ.
+- **TLS:** server không hỗ trợ secure renegotiation (RFC 5746), Node mặc định từ chối (`ERR_SSL_UNSAFE_LEGACY_RENEGOTIATION_DISABLED`), `curl` thì chạy. Người dùng chọn ngày 2026-11-12 nới riêng cho host này: nguồn gọi bằng `node:https` với một `https.Agent` riêng có `secureOptions: SSL_OP_LEGACY_SERVER_CONNECT`, không đi qua `fetch` chung của `lib/sources/http.ts`. Dữ liệu công khai, chỉ đọc, kiểm tra bằng zod.
+- **Định nghĩa:** số tháng có từ 4/2025 (2025: 4–12; 2026 thiếu tháng 3, lần chạy đầu 2026-11-12: 17 tháng, 9/2026 = 5,0%). Công bố khoảng 6 tuần sau tháng. **Không điều chỉnh mùa vụ**, nên `uneNsa: true` như Brazil (màu so cùng tháng năm trước, cần đủ 12 tháng).
+- **Lưu:** `mospi:UNE:IND`; nước khai `une: "mospi:UNE:IND"` trong `config/countries.ts`.
+- **Báo lỗi khi:** không có điểm nào, hoặc tháng mới nhất cũ hơn 150 ngày (truy vấn hay API đã đổi).
 
 ### 2.12 `cot` — Vị thế trên thị trường tương lai, CFTC Commitments of Traders (`lib/sources/cot.ts`, `config/cot.ts`)
 - **URL:** file năm trên `www.cftc.gov`, chỉ hợp đồng tương lai: `https://www.cftc.gov/files/dea/history/fut_disagg_txt_<năm>.zip` (báo cáo disaggregated, hàng hoá, bên trong là `f_year.txt`) và `fut_fin_txt_<năm>.zip` (Traders in Financial Futures, bên trong là `FinFutYY.txt`). Mỗi zip một file CSV có dòng tiêu đề, tên thị trường trong ngoặc kép, số không ngoặc và có khoảng trắng đệm; file tài chính xuống dòng CRLF. CFTC ghi đè file năm hiện tại mỗi thứ Sáu với báo cáo của tuần (vị thế ngày thứ Ba). Giải nén bằng `unzipFirst` (`lib/sources/gdelt.ts`).
@@ -570,6 +580,27 @@ Trang `/[lang]/crypto` đọc các nguồn dưới đây. Không nguồn nào c�
 ### 7.5 Lợi suất trái phiếu chính phủ Việt Nam (HNX chưa tích hợp; đang dùng `ibrate`, §7.4d)
 - HNX công bố đường cong lợi suất mỗi ngày giao dịch: `POST https://hnx.vn/ModuleReportBonds/Bond_YieldCurve/SearchAndNextPageYieldCurveData` với `pDate=dd/mm/yyyy` trả bảng HTML (kỳ hạn, spot rate liên tục, par yield, spot rate theo năm); ngày không giao dịch chỉ có dòng tiêu đề. Ngày 6/11/2026: par yield 10 năm 4,51%.
 - `hnx.vn` không gửi chứng chỉ trung gian (GlobalSign GCC R3 EV TLS CA 2025), nên `fetch` của Node báo `UNABLE_TO_VERIFY_LEAF_SIGNATURE` dù `curl` trên macOS chạy được. Cần bổ sung chứng chỉ trung gian mới tích hợp được. Từ 2026-11-10 ô lợi suất 10 năm của Việt Nam lấy từ bản tin của Thời báo Ngân hàng (`vn:GB10Y`, chốt phiên thứ cấp: 4,47% ngày 9/11, so với par yield 4,51% của HNX ngày 6/11), chỉ có từ 15/10/2026.
+
+### 7.6 `nso` — Số liệu tháng của Cục Thống kê, AI trích (`lib/sources/nso.ts`, `config/nso.ts`)
+Cục Thống kê (`nso.gov.vn`, trước là Tổng cục Thống kê `gso.gov.vn`, tên miền cũ không còn phân giải) không có API. Số tháng nằm trong bài "Báo cáo tình hình kinh tế – xã hội tháng …", văn xuôi, đăng ngày 3–6 tháng sau. Người dùng chọn ngày 2026-11-12 cho AI trích số (thay vì form nhập tay), có kiểm tra và gắn nhãn "AI trích" (BR-22).
+
+- **Liệt kê:** API WordPress `https://www.nso.gov.vn/wp-json/wp/v2/posts?categories=84&per_page=100&after=2025-01-01T00:00:00&_fields=id,date,link,title` (category 84 "Công nghiệp" chứa mọi báo cáo tháng; khoảng 115 bài từ 2025, 2 trang). Chỉ giữ bài có tiêu đề bắt đầu bằng "Báo cáo tình hình kinh tế – xã hội" (`reportMonth`): tháng lấy từ "tháng Mười", "tháng Mười Một" (so khớp phân biệt hoa thường, vì "8 tháng năm 2026" không phải tháng Năm) hoặc "quý I…IV" (→ tháng 3/6/9/12), năm là "năm YYYY" cuối cùng. Ngày đăng phải trong khoảng −2 đến 70 ngày sau khi tháng đó kết thúc. Bài "Một số nét chính…", "Thông cáo báo chí…", infographic bị bỏ.
+- **Nội dung:** `GET /wp-json/wp/v2/posts/<id>?_fields=id,content`, `content.rendered` → văn bản (`htmlText`, NFC, bỏ soft hyphen, gộp khoảng trắng), 16–30 nghìn ký tự (báo cáo quý dài hơn), cắt ở 60 nghìn. Bài còn có file `.docx` và `.xlsx` đính kèm, chưa dùng.
+- **Chỉ số** (`NSO_FIELDS`): xuất khẩu, nhập khẩu, cán cân thương mại của tháng (tỷ USD), xuất khẩu so cùng kỳ, xuất khẩu sang Mỹ lũy kế, IIP và bán lẻ so cùng kỳ của tháng, CPI so cùng kỳ và so tháng trước, FDI giải ngân lũy kế (kèm so cùng kỳ), FDI đăng ký lũy kế; báo cáo quý có thêm tăng trưởng tín dụng so với cuối năm trước và GDP quý so cùng kỳ. Báo cáo quý không có IIP của riêng tháng cuối quý (chỉ có số quý), báo cáo tháng không có tín dụng.
+- **AI:** model `fast`, một lượt mỗi báo cáo (khoảng 6–13K token vào, 1K ra, 4–9 giây với `gemini-3.5-flash-lite`), xem LLDD 05 §3e. Model chỉ trả, cho mỗi chỉ số, con số đúng như in (`"51,4"`), cờ giảm/nhập siêu và đoạn trích nguyên văn.
+- **Kiểm tra** (`checkPick`, `checkReport`), không đạt thì bỏ số đó và ghi lý do:
+  - đoạn trích có trong văn bản, chứa đúng con số (không dính chữ số khác);
+  - câu chứa đoạn trích, tính từ đầu câu trong báo cáo đến hết đoạn trích, có từ khoá của chỉ số (`must`: "xuất khẩu", "IIP|sản xuất công nghiệp", "bán lẻ", "tín dụng", "GDP" và "quý"…) và, với số của tháng, tên tháng ("tháng Mười" nhưng không phải "tháng Mười Một" hay "mười tháng"; hoặc "tháng 10" / "tháng 10/2026", không nhận "tháng 12/2025");
+  - số so sánh phải có "cùng kỳ" (hoặc "tháng trước" với CPI so tháng trước) ngay sau con số hoặc trước nó trong cùng mệnh đề (`after`), nên "tăng 4,41% so với tháng 12/2025" không thay được CPI so cùng kỳ;
+  - dấu lấy theo từ gần nhất trước con số ("giảm", "nhập siêu" → âm); cờ của model trái với văn bản thì bỏ;
+  - nằm trong khoảng hợp lý (`min`, `max`);
+  - xuất khẩu − nhập khẩu phải bằng cán cân (lệch ≤ 0,05 tỷ), không thì bỏ cả ba. Câu nhập khẩu thường không nhắc lại tháng ("Nhập khẩu hàng hóa đạt 57,36 tỷ USD" ngay sau xuất khẩu tháng Mười), nên nhập khẩu được nhận khi đẳng thức này đúng với xuất khẩu và cán cân của tháng. Báo cáo tháng Một chỉ ghi cán cân một lần, không nêu tháng: khi có xuất và nhập khẩu thì cán cân = xuất − nhập (`derived`).
+  - Báo cáo có dưới 4 số qua kiểm tra thì coi là lỗi (thử lại tối đa 3 lần, sau đó bỏ qua và ghi log).
+- **Lưu:** `observations` `nso:<KEY>` (`EXPORTS`, `EXPORTS_YOY`, `IMPORTS`, `TRADE_BAL`, `EXPORTS_US_YTD`, `IIP_YOY`, `RETAIL_YOY`, `CPI_YOY`, `CPI_MOM`, `FDI_DISB_YTD`, `FDI_DISB_YTD_YOY`, `FDI_REG_YTD`, `CREDIT_YTD`, `GDP_YOY`), ts = ngày đầu tháng của báo cáo; `GDP_YOY` ở ngày đầu quý (như `wb:GDP:VNM`). Tỷ USD và %, có dấu. `kv` `nso:reports`: theo "YYYY-MM", bài nào (id, link, tiêu đề, ngày đăng), model, số đã giữ, số trống, số bị bỏ kèm lý do, số tính ra, lỗi và số lần thử. `kv` `nso:pending`: số báo cáo còn chờ đọc.
+- **Lịch:** đọc lùi tới 1/2025 (`NSO_SINCE`), 3 báo cáo mỗi lượt, 10 phút một lượt cho tới khi hết; sau đó 6 giờ một lần. Báo cáo đã đọc không đọc lại trừ khi bài đổi id. Số sơ bộ, không cập nhật khi Cục Thống kê điều chỉnh ở kỳ sau.
+- **Báo lỗi khi:** không tìm thấy báo cáo nào, báo cáo mới nhất cũ hơn 70 ngày (tiêu đề hay category đã đổi), hoặc mọi báo cáo của lượt đều lỗi. Chưa cấu hình AI thì nguồn bị bỏ qua (`needsAi`).
+- **Lần chạy đầu (2026-11-12):** 6 báo cáo 5–10/2026, 12–13 số mỗi báo cáo; số bị bỏ chủ yếu là "đoạn trích không có trong văn bản" (model sửa chữ khi chép), số của tháng 10: xuất khẩu 64,67 tỷ USD (+51,4%), xuất siêu 7,31 tỷ, IIP +15,0%, CPI 5,09%; tháng 9: tín dụng 10,89%, GDP quý III 9,95%.
+- **Đọc ra:** panel "Số liệu tháng" trang Việt Nam (LLDD 04 §3c, `vnMonthly` trong `lib/data/nso.ts`); bảng sức khoẻ trang Vĩ mô và panel lạm phát trang tổng quan lấy `nso:CPI_YOY` / `nso:GDP_YOY` khi mới hơn IMF / World Bank (`office` trong `config/countries.ts`, `cpiIds`, `gdpIds`; bằng kỳ thì giữ IMF / World Bank).
 
 ## 8b. Công nghệ
 

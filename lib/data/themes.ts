@@ -10,6 +10,7 @@ import { getDetailPoints, getPoints, getTile } from "./series";
 import { centralBand } from "./vietnam";
 import { chokepointRow } from "./geopolitics";
 import { CHOKEPOINTS, chokepointId } from "@/config/geopolitics";
+import { openOutcomes } from "./prediction";
 
 /** IMF PortWatch id of the Strait of Hormuz (config/geopolitics.ts). */
 const HORMUZ = "chokepoint6";
@@ -41,8 +42,6 @@ const PROMPT_HEADLINES = 8;
 const MAX_MARKETS = 2;
 /** Prediction-market snapshots older than this are not shown (the source is often blocked). */
 const MARKET_MAX_AGE = 3 * DAY;
-/** A leading outcome this likely (or a lone "Yes" this unlikely) is treated as settled and not shown. */
-const SETTLED = 0.97;
 
 export type ThemeStatus = "heating" | "cooling" | "steady" | "unknown";
 
@@ -334,10 +333,10 @@ function themeMarkets(rows: MarketRow[], re: RegExp | undefined, now: number): T
     .filter((r) => re.test(r.title) && now - r.fetched_at <= MARKET_MAX_AGE)
     .flatMap((r) => {
       const d = r.data ? (JSON.parse(r.data) as { volume24hr?: number; outcomes?: { label: string; prob: number; change24h: number | null }[] }) : {};
-      const top = d.outcomes?.[0];
-      // A near-certain market says nothing ("ceasefire holds through today: 99%"), nor does a long shot.
-      const settled = top && (top.prob >= SETTLED || (d.outcomes!.length === 1 && top.prob <= 1 - SETTLED));
-      return top && !settled ? [{ m: { title: r.title, titleVi: r.title_vi, url: r.url, label: top.label, prob: top.prob, change24h: top.change24h, fetchedAt: r.fetched_at }, vol: d.volume24hr ?? 0 }] : [];
+      // A near-certain outcome says nothing ("ceasefire holds through today: 99%"), nor does a long shot: the leading
+      // outcome still in play stands for the market.
+      const top = openOutcomes(d.outcomes ?? [])[0];
+      return top ? [{ m: { title: r.title, titleVi: r.title_vi, url: r.url, label: top.label, prob: top.prob, change24h: top.change24h, fetchedAt: r.fetched_at }, vol: d.volume24hr ?? 0 }] : [];
     })
     .sort((a, b) => b.vol - a.vol)
     .slice(0, MAX_MARKETS)

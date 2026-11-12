@@ -364,7 +364,9 @@
 - Vàng (các thương hiệu, giá thế giới quy đổi, chênh lệch SJC), tỷ giá Vietcombank và 15 tin VnExpress.
 - Lãi suất NHNN khai báo tay; quá 180 ngày chưa kiểm tra lại thì panel báo lỗi nguồn thay vì hiện số có thể đã cũ.
 
-**Ngoài phạm vi:** PMI Việt Nam (S&P Global, trả phí); số tháng của Tổng cục Thống kê (không có API, phải scrape thông cáo nên dễ hỏng); World Bank WDI (IMF đã đủ, có cả dự báo).
+- Số liệu tháng của Cục Thống kê (từ 2026-11-12, người dùng chọn AI trích thay cho nhập tay): xuất nhập khẩu và cán cân, xuất khẩu sang Mỹ, FDI giải ngân, IIP, bán lẻ, CPI, cùng tín dụng và GDP quý ở báo cáo quý. Mỗi số chỉ được giữ khi xuất hiện nguyên văn trong báo cáo, trong câu nêu đúng chỉ số và tháng, và nằm trong khoảng hợp lý; panel gắn nhãn "AI trích" và link tới báo cáo gốc (LLDD 02 §7.6, LLDD 05 §3e).
+
+**Ngoài phạm vi:** PMI Việt Nam (S&P Global, trả phí); World Bank WDI (IMF đã đủ, có cả dự báo).
 
 ---
 

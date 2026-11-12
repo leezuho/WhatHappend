@@ -56,27 +56,16 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <ThemesBody lang={lang} />
         </Panel>
 
-        {/* Row 1: the world at a glance */}
-        <Panel lang={lang} title={p.map.title} subtitle={p.map.subtitle} sources={["usgs", "gdacs", "eonet", "gdelt"]} className="md:col-span-2 xl:col-span-12">
-          <MapBody lang={lang} />
-        </Panel>
-
-        {/* Row 1b: the geopolitical layer under the map: shipping lanes, risk by country, Washington's actions */}
-        <Panel lang={lang} title={p.chokepoints.title} subtitle={p.chokepoints.subtitle} sources={["portwatch"]} className="md:col-span-2 xl:col-span-4">
-          <ChokepointsBody lang={lang} />
-        </Panel>
-        <Panel lang={lang} title={p.gprCountries.title} subtitle={p.gprCountries.subtitle} sources={["gprc"]} className="xl:col-span-4">
-          <GprCountriesBody lang={lang} />
-        </Panel>
-        <Panel lang={lang} title={p.usPolicy.title} subtitle={p.usPolicy.subtitle} sources={["uspolicy"]} className="xl:col-span-4">
-          <UsPolicyBody lang={lang} />
-        </Panel>
-
-        {/* Row 2: the story of the day */}
-        <Panel lang={lang} title={p.brief.title} subtitle={p.brief.subtitle} sources={["brief"]} className="md:col-span-2 xl:col-span-5">
+        {/* Row 1: the story of the day, beside what is on the calendar today and the next weeks */}
+        <Panel lang={lang} title={p.brief.title} subtitle={p.brief.subtitle} sources={["brief"]} className="md:col-span-2 xl:col-span-8">
           <BriefBody lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.highlights.title} subtitle={p.highlights.subtitle} sources={["insights", "yahoo", "fred"]} className="md:col-span-2 xl:col-span-7">
+        <Panel lang={lang} title={p.calendar.title} subtitle={p.calendar.subtitle} sources={["calendar", "releases", "launches"]} className="md:col-span-2 xl:col-span-4">
+          <CalendarBody lang={lang} />
+        </Panel>
+
+        {/* Row 1b: indicators that stand out today, one line each */}
+        <Panel lang={lang} title={p.highlights.title} subtitle={p.highlights.subtitle} sources={["insights", "yahoo", "fred"]} className="md:col-span-2 xl:col-span-12">
           <HighlightsBody lang={lang} />
         </Panel>
 
@@ -115,26 +104,39 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <EconomyPulse lang={lang} />
         </Panel>
 
-        {/* Row 5: news + calendar */}
+        {/* Row 5: news, and what prediction markets are betting on */}
         <Panel lang={lang} title={p.news.title} subtitle={p.news.subtitle} sources={["rss", "translate"]} className="md:col-span-2 xl:col-span-8">
           <NewsBody lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.calendar.title} subtitle={p.calendar.subtitle} sources={["calendar", "releases", "launches"]} className="md:col-span-2 xl:col-span-4">
-          <CalendarBody lang={lang} />
-        </Panel>
-
-        {/* Row 6: attention, odds, planet */}
-        <Panel lang={lang} title={p.trending.title} subtitle={p.trending.subtitle} sources={["wikipedia", "hackernews"]} className="xl:col-span-4">
-          <TrendingBody lang={lang} />
-        </Panel>
-        <Panel lang={lang} title={p.prediction.title} subtitle={p.prediction.subtitle} sources={["polymarket", "kalshi"]} className="xl:col-span-4">
+        <Panel lang={lang} title={p.prediction.title} subtitle={p.prediction.subtitle} sources={["polymarket", "kalshi"]} className="md:col-span-2 xl:col-span-4">
           <PredictionBody lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.env.title} subtitle={p.env.subtitle} sources={["co2", "gistemp", "airquality", "who"]} className="md:col-span-2 xl:col-span-4">
+
+        {/* Row 6: the world at a glance (below the morning read) */}
+        <Panel lang={lang} title={p.map.title} subtitle={p.map.subtitle} sources={["usgs", "gdacs", "eonet", "gdelt"]} className="md:col-span-2 xl:col-span-12">
+          <MapBody lang={lang} />
+        </Panel>
+
+        {/* Row 6b: the geopolitical layer under the map: shipping lanes, risk by country, Washington's actions */}
+        <Panel lang={lang} title={p.chokepoints.title} subtitle={p.chokepoints.subtitle} sources={["portwatch"]} className="md:col-span-2 xl:col-span-4">
+          <ChokepointsBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.gprCountries.title} subtitle={p.gprCountries.subtitle} sources={["gprc"]} className="xl:col-span-4">
+          <GprCountriesBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.usPolicy.title} subtitle={p.usPolicy.subtitle} sources={["uspolicy"]} className="xl:col-span-4">
+          <UsPolicyBody lang={lang} />
+        </Panel>
+
+        {/* Row 7: attention and the planet */}
+        <Panel lang={lang} title={p.trending.title} subtitle={p.trending.subtitle} sources={["wikipedia", "hackernews"]} className="xl:col-span-6">
+          <TrendingBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.env.title} subtitle={p.env.subtitle} sources={["co2", "gistemp", "airquality", "who"]} className="xl:col-span-6">
           <EnvBody lang={lang} />
         </Panel>
 
-        {/* Row 7: Vietnam */}
+        {/* Row 8: Vietnam */}
         <Panel
           lang={lang}
           title={p.vietnam.title}

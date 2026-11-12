@@ -149,7 +149,7 @@ Index: `events_ts (ts DESC)`.
 
 Web server ghi cờ (ví dụ khi bấm nút "Làm mới" Brief). Worker đọc cờ trong `isDue` của nguồn liên quan.
 
-Các khoá đang dùng: `brief:force` (yêu cầu viết lại bản tin), `ai:calls:<ngày Thái Bình Dương>:<model>` (số lần gọi AI trong ngày) và `ai:exhausted:<model>` (ngày model hết quota), xem LLDD 05 §4.1; `macro:note` (nhận định vĩ mô tuần, JSON `StoredMacroNote`), LLDD 05 §3b; `tech:note` (nhận định công nghệ tuần, `StoredTechNote`), LLDD 05 §3c; `themes:notes` (ghi chú AI cho các chủ đề chi phối, `StoredThemeNotes`), LLDD 05 §3d; `changes:state` (trạng thái lần chạy trước của nguồn `changes`, JSON `WatchState`), §3.13; `alerts:state` (cảnh báo Telegram: con trỏ trong bảng `changes` và các điều kiện đang bật, JSON `AlertState`), LLDD 03 §9. Các nguồn cũng giữ trạng thái nhỏ ở đây (LLDD 02): `vnstocks:shares` (số cổ phiếu lưu hành của VN30, làm mới mỗi ngày), `sbvrate:backfilled-to` (ngày đã lùi tới khi nạp lịch sử tỷ giá trung tâm), `ibrate:done` (60 bài Thời báo Ngân hàng đã đọc).
+Các khoá đang dùng: `brief:force` (yêu cầu viết lại bản tin), `ai:calls:<ngày Thái Bình Dương>:<model>` (số lần gọi AI trong ngày) và `ai:exhausted:<model>` (ngày model hết quota), xem LLDD 05 §4.1; `macro:note` (nhận định vĩ mô tuần, JSON `StoredMacroNote`), LLDD 05 §3b; `tech:note` (nhận định công nghệ tuần, `StoredTechNote`), LLDD 05 §3c; `themes:notes` (ghi chú AI cho các chủ đề chi phối, `StoredThemeNotes`), LLDD 05 §3d; `changes:state` (trạng thái lần chạy trước của nguồn `changes`, JSON `WatchState`), §3.13; `alerts:state` (cảnh báo Telegram: con trỏ trong bảng `changes` và các điều kiện đang bật, JSON `AlertState`), LLDD 03 §9. Các nguồn cũng giữ trạng thái nhỏ ở đây (LLDD 02): `vnstocks:shares` (số cổ phiếu lưu hành của VN30, làm mới mỗi ngày), `sbvrate:backfilled-to` (ngày đã lùi tới khi nạp lịch sử tỷ giá trung tâm), `ibrate:done` (60 bài Thời báo Ngân hàng đã đọc), `nso:reports` (báo cáo tháng nào của Cục Thống kê đã đọc, số nào giữ, số nào bỏ và vì sao) và `nso:pending`.
 
 ### 3.11 `watchlist`
 | Cột | Kiểu | Ý nghĩa |
@@ -186,7 +186,7 @@ Chỉ mục `changes_at (at DESC)` và `changes_key (kind, key, at)`. Ghi bởi 
 |---|---|---|
 | Series từ Yahoo | `yahoo:<symbol>` | `yahoo:^GSPC`, `yahoo:DX-Y.NYB` |
 | Series từ FRED | `fred:<series id>` | `fred:DGS10`, `fred:T10Y2Y` |
-| Series từ nguồn khác | `<prefix>:<mã>` | `vn:VNINDEX`, `bis:US`, `imf:PCPIPCH:VNM`, `imf:CPI_M:JPN`, `sbv:REFI`, `wb:GDP:VNM`, `cnbc:ID10Y-ID`, `ibge:UNE:BRA`, `gpr:GPRD`, `gpr:C:ISR` (GPR theo nước), `portwatch:chokepoint6` (`:tanker`), `nyfed:GSCPI`, `noaa:co2`, `giss:global`, `goldvn:SJL1L10:sell`, `vcb:USD:sell` |
+| Series từ nguồn khác | `<prefix>:<mã>` | `vn:VNINDEX`, `bis:US`, `imf:PCPIPCH:VNM`, `imf:CPI_M:JPN`, `sbv:REFI`, `wb:GDP:VNM`, `cnbc:ID10Y-ID`, `ibge:UNE:BRA`, `mospi:UNE:IND`, `nso:CPI_YOY` (số tháng của Cục Thống kê, AI trích, LLDD 02 §7.6), `gpr:GPRD`, `gpr:C:ISR` (GPR theo nước), `portwatch:chokepoint6` (`:tanker`), `nyfed:GSCPI`, `noaa:co2`, `giss:global`, `goldvn:SJL1L10:sell`, `vcb:USD:sell` |
 | Series theo chỉ số × quốc gia | `<nguồn>:<chỉ số>:<mã vùng>` | `oecd:CLI:USA`, `oecd:CPI:EA20`, `oecd:BCI:DEU`, `imf:LUR:JPN`, `imf:NGDP_RPCH:WEOWORLD` (nhóm IMF), `bis:REER:DE`, `bis:GAP:XM`. Tháng và quý lưu ở ngày đầu kỳ; năm ở 1/1 |
 | Series dẫn xuất | `calc:<tên>` | `calc:GLOBAL_LIQ`, `calc:NETLIQ_US`, `calc:RECPROB_US` (ghi bởi `fred`, xem LLDD 02 §2.2) |
 | Event | `<source>:<id gốc>` | `usgs:us7000abcd` |

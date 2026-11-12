@@ -28,7 +28,7 @@ import type { Point } from "@/lib/sources/store";
 import type { RegimeResult } from "@/lib/signals/risk-regime";
 import { regimeFromDb } from "@/lib/data/regime";
 import { FORCE_KEY, type StoredBrief } from "@/lib/ai/brief-shared";
-import { INSIGHT_MAX_AGE, type StoredInsight } from "@/lib/ai/insights-shared";
+import { INSIGHT_MAX_AGE, noteLine, type StoredInsight } from "@/lib/ai/insights-shared";
 import { findNotables, type Reason } from "@/lib/signals/notable";
 import { AI_ENV_HINT, aiStatus, isAiConfigured } from "@/lib/ai/config";
 import { WORKER_INFO_KEY, WORKER_LOCK_KEY, workerHealth, type WorkerHealth } from "@/lib/worker-info";
@@ -433,7 +433,10 @@ function articleImages(db: ReturnType<typeof getDb>, urls: string[]): Record<str
 // ---------------------------------------------------------------- what stands out
 
 export interface InsightNote {
+  /** The full note, for the detail view. */
   text: string;
+  /** One line for the card: what changed, why it matters. */
+  line: string;
   sources: StoredInsight["sources"];
   model: string;
   createdAt: number;
@@ -467,7 +470,7 @@ export async function getHighlights(lang: Locale): Promise<{ items: Highlight[];
     def,
     data,
     reasons,
-    note: stored && { text: stored.content[lang], sources: stored.content.sources, model: stored.content.model, createdAt: stored.createdAt },
+    note: stored && { text: stored.content[lang], line: noteLine(stored.content, lang), sources: stored.content.sources, model: stored.content.model, createdAt: stored.createdAt },
   }));
   return { items, hasKey: isAiConfigured() };
 }

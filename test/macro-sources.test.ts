@@ -5,6 +5,7 @@ import { SBV_CHECKED, SBV_RECHECK_DAYS, SBV_REFI_STEPS } from "@/config/policy-r
 import { freshest } from "@/lib/data/series";
 import { parseCnbcBars } from "@/lib/sources/cnbc";
 import { parseSidra } from "@/lib/sources/ibge";
+import { parsePlfs } from "@/lib/sources/mospi";
 import { MACRO_COUNTRIES } from "@/config/countries";
 import { uneIds, uneRise } from "@/lib/data/macro";
 import { unemploymentRise, unemploymentRiseYoy, unemploymentStatus } from "@/lib/signals/macro";
@@ -63,6 +64,28 @@ test("IBGE SIDRA: header row skipped, rolling quarters at their last month, no-d
     { ts: month(2026, 8), value: 5.3 },
     { ts: month(2026, 9), value: 5.2 },
   ]);
+});
+
+test("MoSPI PLFS: All-India monthly rows by month name, other rows and blanks dropped", () => {
+  const row = (month: string, value: string, extra: Partial<{ frequency: string; state: string; year: string }> = {}) => ({ frequency: "Monthly", year: "2026", state: "All India", month, value, ...extra });
+  const pts = parsePlfs([
+    row("September", "5"),
+    row("August", "5"),
+    row("December", "4.8", { year: "2025" }),
+    row("July", "", {}),
+    row("June", "9.1", { state: "Kerala" }),
+    row("May", "5.4", { frequency: "Quarterly" }),
+    row("Sept", "5"),
+  ]);
+  assert.deepEqual(pts, [
+    { ts: month(2025, 12), value: 4.8 },
+    { ts: month(2026, 8), value: 5 },
+    { ts: month(2026, 9), value: 5 },
+  ]);
+  // India has no OECD series and an unadjusted survey, coloured like Brazil's.
+  const india = MACRO_COUNTRIES.find((c) => c.imf === "IND")!;
+  assert.equal(india.une, "mospi:UNE:IND");
+  assert.equal(india.uneNsa, true);
 });
 
 test("unemployment: Brazil reads IBGE, OECD members keep OECD's series", () => {

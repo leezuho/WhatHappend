@@ -523,6 +523,8 @@ test("parseRecap: interbank VND rates from Thời báo Ngân hàng's daily sente
   const text =
     "Trên thị trường liên ngân hàng, tỷ giá đô-đồng chốt phiên với mức 25.547 VND/USD. Thị trường tiền tệ liên ngân hàng ngày 09/11, lãi suất bình quân liên ngân hàng VND giảm 0,05 – 1,60 điểm phần trăm ở các kỳ hạn ngắn trong khi tăng 0,02 điểm phần trăm ở kỳ hạn 1 tháng so với phiên cuối tuần trước, giao dịch tại: qua đêm 4,60%; 1 tuần 4,95%; 2 tuần 5,10% và 1 tháng 5,50%. Lãi suất bình quân liên ngân hàng USD tăng 0,01 điểm phần trăm, qua đêm 3,85%; 1 tuần 3,90%; 2 tuần 3,92%, 1 tháng 4,03. Lợi suất TPCP trên thị trường thứ cấp không thay đổi ở hầu hết các kỳ hạn ngoại trừ giảm nhẹ ở các kỳ hạn 7 năm và 10 năm, chốt phiên ở mức: 3 năm 3,72%; 5 năm 4,28%; 7 năm 4,34%; 10 năm 4,47%; 15 năm 4,57%.";
   assert.deepEqual(parseRecap(text, Date.UTC(2026, 10, 10, 2)), { ts: Date.UTC(2026, 10, 9), on: 4.6, w1: 4.95, w2: 5.1, m1: 5.5, y10: 4.47 });
+  // The lead-in used from 12 November 2026.
+  assert.equal(parseRecap(text.replace("liên ngân hàng ngày 09/11", "liên ngân hàng: Ngày 09/11"), Date.UTC(2026, 10, 10))!.on, 4.6);
   // The other wording seen in October.
   assert.equal(parseRecap(text.replace("Lợi suất TPCP trên", "Lợi suất trái phiếu chính phủ trên").replace("chốt phiên ở mức:", "chốt phiên:"), Date.UTC(2026, 10, 10))!.y10, 4.47);
   assert.equal(parseRecap(text.slice(0, text.indexOf("Lợi suất TPCP")), Date.UTC(2026, 10, 10))!.y10, null);

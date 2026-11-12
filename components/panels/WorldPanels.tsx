@@ -5,6 +5,7 @@ import { getCalendar, getEnv, getItems, requestNow, type CalendarEntry, type Ite
 import { Sparkline } from "@/components/charts/Sparkline";
 import { EmptyState } from "@/components/ui/Panel";
 import { Tabs } from "@/components/ui/Tabs";
+import { informativeEvents } from "@/lib/data/prediction";
 
 const TZ = "Asia/Ho_Chi_Minh";
 
@@ -186,7 +187,7 @@ export async function PredictionBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);
   const [fed, poly] = await Promise.all([
     getItems<{ prob: number | null; strike: number | null; eventTitle: string }>("kalshi_fed", lang, 40),
-    getItems<PolyEvent>("polymarket", lang, 12),
+    getItems<PolyEvent>("polymarket", lang, 12).then(informativeEvents),
   ]);
   if (!fed.length && !poly.length) return <EmptyState lang={lang} />;
   const pct = (p: number) => `${fmtNumber(p * 100, lang, 0)}%`;
@@ -211,6 +212,7 @@ export async function PredictionBody({ lang }: { lang: Locale }) {
       )}
       <section className="flex flex-col gap-3">
         <h3 className="text-xs font-semibold text-ink">{d.prediction.markets}</h3>
+        <p className="-mt-2 text-[11px] text-muted">{d.prediction.filterNote}</p>
         <PolyEvents events={poly} lang={lang} />
       </section>
     </div>

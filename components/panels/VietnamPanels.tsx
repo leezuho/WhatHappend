@@ -2,13 +2,13 @@ import type { ReactNode } from "react";
 import clsx from "clsx";
 import { VIETNAM_ECONOMY, VIETNAM_MARKETS, type SeriesKey } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtAxisPct, fmtCompact, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtRelative, fmtSigned } from "@/lib/format";
+import { fmtAxisPct, fmtCompact, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtPeriod, fmtRelative, fmtSigned } from "@/lib/format";
 import { getInsightNotes, getItems, getTiles, getVietnam, getVietnamNews, getWatchlist, getWorldMarkets, requestNow } from "@/lib/queries";
 import type { Vn30Stock } from "@/lib/sources/vnstocks";
 import type { FuelPrice } from "@/lib/sources/petrolimex";
 import type { GtrendsItem } from "@/lib/sources/gtrends";
 import type { VnExpressItem } from "@/lib/sources/vnexpress";
-import { getCentralBand, getDollarHistory, getForeignFlows, getGoldPremium, getVietnamOutlook, getVnHazards, getVnRates } from "@/lib/queries-vietnam";
+import { getCentralBand, getDollarHistory, getForeignFlows, getGoldPremium, getVietnamOutlook, getVnHazards, getVnMonthly, getVnRates } from "@/lib/queries-vietnam";
 import { EmptyState } from "@/components/ui/Panel";
 import { BarList } from "@/components/charts/BarList";
 import { ColumnBars } from "@/components/charts/ColumnBars";
@@ -438,6 +438,149 @@ export async function VnFuel({ lang }: { lang: Locale }) {
         </tbody>
       </table>
       <p className="text-[10px] leading-snug text-muted">{d.vn.fuelNote}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- this month's figures (statistics office, read by AI)
+
+/** One figure of the monthly panel, laid out like a KPI tile without a sparkline. */
+function Fig({ label, value, tone, sub, period }: { label: string; value: string; tone?: "up" | "down"; sub?: ReactNode; period: string }) {
+  return (
+    <div className="flex min-h-[88px] flex-col gap-1 rounded-lg bg-surface-2/60 p-3">
+      <span className="text-xs text-ink-2">{label}</span>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <span className={clsx("text-[22px] leading-tight font-semibold tracking-tight whitespace-nowrap", tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-ink")}>
+          {value}
+        </span>
+        <span className="text-[11px] whitespace-nowrap text-muted">{period}</span>
+      </div>
+      {sub && <span className="text-[11px] leading-snug text-ink-2">{sub}</span>}
+    </div>
+  );
+}
+
+export async function VnMonthly({ lang }: { lang: Locale }) {
+  const d = getDict(lang);
+  const t = d.vn.monthly;
+  const v = await getVnMonthly();
+  const L = v.latest;
+  if (!v.report || !Object.keys(L).length) return <EmptyState lang={lang} />;
+  const month = (ts: number) => fmtPeriod(ts, "m", lang);
+  const usd = (x: number, digits = 2) => t.billion.replace("{v}", fmtNumber(x, lang, digits));
+  const pct = (x: number, digits = 1) => fmtPct(x, lang, digits);
+  const tone = (x: number) => (x > 0 ? "up" : x < 0 ? "down" : undefined);
+  const same = (k: string, ts: number) => (L[k]?.ts === ts ? L[k].value : null);
+  const figs: ReactNode[] = [];
+
+  if (L.EXPORTS) {
+    const yoy = same("EXPORTS_YOY", L.EXPORTS.ts);
+    figs.push(
+      <Fig key="x" label={t.exports} value={usd(L.EXPORTS.value)} period={month(L.EXPORTS.ts)} sub={yoy !== null && <span className={yoy >= 0 ? "text-up" : "text-down"}>{t.yoy.replace("{v}", pct(yoy))}</span>} />,
+    );
+  }
+  if (L.TRADE_BAL) {
+    const b = L.TRADE_BAL.value;
+    figs.push(
+      <Fig
+        key="b"
+        label={t.balance}
+        value={`${b >= 0 ? "+" : "−"}${usd(Math.abs(b))}`}
+        tone={tone(b)}
+        period={month(L.TRADE_BAL.ts)}
+        sub={[b >= 0 ? t.surplus : t.deficit, v.balanceYtd !== null ? t.balanceYtd.replace("{v}", `${v.balanceYtd >= 0 ? "+" : "−"}${usd(Math.abs(v.balanceYtd))}`) : null].filter(Boolean).join(" · ")}
+      />,
+    );
+  }
+  if (L.EXPORTS_US_YTD) {
+    const ytd = L.EXPORTS_US_YTD;
+    const sub = [
+      v.usMonth ? t.usYtd.replace("{v}", usd(ytd.value, 1)) : null,
+      v.usYtdYoy !== null ? t.usYtdYoy.replace("{v}", pct(v.usYtdYoy)) : null,
+    ].filter(Boolean).join(" · ");
+    figs.push(<Fig key="us" label={t.us} value={usd(v.usMonth ? v.usMonth.value : ytd.value, 1)} period={v.usMonth ? month(ytd.ts) : t.usYtd.replace("{v}", "").trim()} sub={sub || undefined} />);
+  }
+  if (L.FDI_DISB_YTD) {
+    const yoy = same("FDI_DISB_YTD_YOY", L.FDI_DISB_YTD.ts);
+    const reg = same("FDI_REG_YTD", L.FDI_DISB_YTD.ts);
+    const sub = [yoy !== null ? t.ytdYoy.replace("{v}", pct(yoy)) : null, reg !== null ? t.fdiRegistered.replace("{v}", usd(reg)) : null].filter(Boolean).join(" · ");
+    figs.push(<Fig key="fdi" label={t.fdi} value={usd(L.FDI_DISB_YTD.value)} period={month(L.FDI_DISB_YTD.ts)} sub={sub || undefined} />);
+  }
+  if (L.IIP_YOY) figs.push(<Fig key="iip" label={t.iip} value={pct(L.IIP_YOY.value)} tone={tone(L.IIP_YOY.value)} period={month(L.IIP_YOY.ts)} sub={t.yoy.replace("{v}", "").trim()} />);
+  if (L.RETAIL_YOY) figs.push(<Fig key="ret" label={t.retail} value={pct(L.RETAIL_YOY.value)} tone={tone(L.RETAIL_YOY.value)} period={month(L.RETAIL_YOY.ts)} sub={t.yoy.replace("{v}", "").trim()} />);
+  if (L.CPI_YOY) {
+    const mom = same("CPI_MOM", L.CPI_YOY.ts);
+    figs.push(
+      <Fig
+        key="cpi"
+        label={t.cpi}
+        value={`${fmtNumber(L.CPI_YOY.value, lang, 2)}%`}
+        period={month(L.CPI_YOY.ts)}
+        sub={[t.yoy.replace("{v}", "").trim(), mom !== null ? t.mom.replace("{v}", pct(mom, 2)) : null].filter(Boolean).join(" · ")}
+      />,
+    );
+  }
+  if (L.CREDIT_YTD) figs.push(<Fig key="cr" label={t.credit} value={`${fmtNumber(L.CREDIT_YTD.value, lang, 2)}%`} period={month(L.CREDIT_YTD.ts)} sub={t.creditSince} />);
+  if (L.GDP_YOY) figs.push(<Fig key="gdp" label={t.gdp} value={`${fmtNumber(L.GDP_YOY.value, lang, 2)}%`} period={fmtPeriod(L.GDP_YOY.ts, "q", lang)} sub={t.gdpQuarter} />);
+
+  const growth = v.rows.map((r) => ({ ts: r.ts, exports: r.exportsYoy, iip: r.iipYoy, retail: r.retailYoy, cpi: r.cpiYoy }));
+  const balance = v.rows.filter((r) => r.balance !== null);
+  const reportTs = Date.UTC(v.report.year, v.report.month - 1, 1);
+  const [before, after] = t.note
+    .replace("{month}", month(reportTs))
+    .replace("{date}", fmtDate(v.report.published ? Date.parse(`${v.report.published}T00:00:00Z`) : v.report.at, lang, { day: "numeric", month: "numeric", year: "numeric", timeZone: "UTC" }))
+    .split("{link}");
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
+        <div className="grid grid-cols-2 content-start gap-2 sm:grid-cols-3">{figs}</div>
+        <div className="flex min-w-0 flex-col gap-2">
+          {growth.length > 1 && (
+            <>
+              <p className="text-xs text-ink-2">{t.growthChart}</p>
+              <LineChart
+                data={growth}
+                xKey="ts"
+                xFormat="month"
+                series={[
+                  { key: "exports", label: t.seriesExports, color: "var(--s1)" },
+                  { key: "iip", label: t.seriesIip, color: "var(--s2)" },
+                  { key: "retail", label: t.seriesRetail, color: "var(--s3)" },
+                  { key: "cpi", label: t.seriesCpi, color: "var(--s4)" },
+                ]}
+                yDigits={1}
+                ySuffix="%"
+                refY={0}
+                height={180}
+                locale={lang}
+                tableLabels={{ table: d.common.showTable, chart: d.common.showChart }}
+              />
+            </>
+          )}
+          {balance.length > 1 && (
+            <>
+              <p className="mt-1 text-xs text-ink-2">{t.balanceChart}</p>
+              <ColumnBars
+                rows={balance.map((r) => ({ key: String(r.ts), value: r.balance!, title: `${month(r.ts)}: ${fmtSigned(r.balance!, lang, 2)}` }))}
+                tick={(x) => fmtNumber(x, lang, 0)}
+                first={month(balance[0].ts)}
+                last={month(balance[balance.length - 1].ts)}
+                label={t.balanceChart}
+                height={110}
+              />
+            </>
+          )}
+        </div>
+      </div>
+      <p className="text-[10px] leading-snug text-muted">
+        <span className="mr-1 rounded bg-surface-2 px-1 py-0.5 font-medium text-ink-2">{t.aiBadge}</span>
+        {before}
+        <a href={v.report.link} target="_blank" rel="noreferrer" className="underline hover:text-ink">
+          {t.linkText}
+        </a>
+        {after}
+      </p>
     </div>
   );
 }

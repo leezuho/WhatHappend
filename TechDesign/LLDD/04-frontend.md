@@ -35,19 +35,22 @@ TopBar: MarketClocks · RegimeBadge · LangSwitch · ThemeToggle      (sticky)
         Ticker (dải giá chạy ngang)
 Hàng 0  Có gì mới từ lần trước [xl:12]: dải danh sách (1/2/3 cột)
         Chủ đề chi phối [xl:12]: 4 thẻ (2 cột ở md, 4 cột ở xl)
-Hàng 1  Bản đồ [xl:12]: bản đồ + cột "Cảnh báo & động đất lớn"
-Hàng 1b Eo biển và kênh đào [xl:4] │ Rủi ro địa chính trị theo nước [xl:4] │ Trừng phạt và thương mại của Mỹ [xl:4]
-Hàng 2  Brief [xl:5]                     │ Điểm đáng chú ý [xl:7]
+Hàng 1  Brief [xl:8]                     │ Lịch sắp tới [xl:4] (bắt đầu bằng "Hôm nay")
+Hàng 1b Điểm đáng chú ý [xl:12]: thẻ 1 dòng (1/2/3 cột)
 Hàng 3  Vital Signs [xl:12] (+ hàng "Bạn đã ghim" nếu có watchlist)
         Thị trường thế giới [xl:12]
         Hàng hoá [xl:7]                  │ Các lớp tài sản năm nay [xl:5]
 Hàng 3c Vị thế trên thị trường tương lai [xl:12]: hàng hoá │ tài chính (hai bảng cạnh nhau từ lg)
 Hàng 4  Yield curve [xl:6]               │ Lạm phát vs lãi suất [xl:6]      (lưới 2×2)
         Căng thẳng thị trường [xl:6]     │ Nhịp đập kinh tế Mỹ [xl:6]
-Hàng 5  Tin tức [xl:8]                   │ Lịch sắp tới [xl:4]
-Hàng 6  Trending [xl:4] │ Prediction [xl:4] │ Hành tinh & sức khỏe [xl:4]
-Hàng 7  Góc Việt Nam [xl:12]
+Hàng 5  Tin tức [xl:8]                   │ Prediction [xl:4]
+Hàng 6  Bản đồ [xl:12]: bản đồ + cột "Cảnh báo & động đất lớn"
+Hàng 6b Eo biển và kênh đào [xl:4] │ Rủi ro địa chính trị theo nước [xl:4] │ Trừng phạt và thương mại của Mỹ [xl:4]
+Hàng 7  Trending [xl:6] │ Hành tinh & sức khỏe [xl:6]
+Hàng 8  Góc Việt Nam [xl:12]
 ```
+
+Thứ tự từ 2026-11-12 (TODO P3): màn hình đầu là phần đọc buổi sáng (đổi gì, chủ đề, bản tin, hôm nay có gì) thay cho quả địa cầu; bản đồ và lớp địa chính trị xuống sau tin tức. Trước đó: Hàng 1 bản đồ, Hàng 2 Brief [xl:5] │ Điểm đáng chú ý [xl:7], lịch cạnh tin tức.
 
 | Panel | Component (thân) | Nguồn (`sources`) dùng để tính trạng thái |
 |---|---|---|
@@ -58,7 +61,7 @@ Hàng 7  Góc Việt Nam [xl:12]
 | Eo biển và kênh đào | `ChokepointsBody` (`GeoPanels.tsx`): bảng 7 eo biển (`chokepointRows`, `lib/data/geopolitics.ts`) | `portwatch` |
 | Rủi ro địa chính trị theo nước | `GprCountriesBody` (`GeoPanels.tsx`): heatmap 16 nước × 24 tháng (`gprHeatmap`) | `gprc` |
 | Trừng phạt và thương mại của Mỹ | `UsPolicyBody` (`GeoPanels.tsx`): tab Tất cả / Trừng phạt / Thương mại và xuất khẩu | `uspolicy` |
-| Điểm đáng chú ý | `HighlightsBody` (`MarketPanels.tsx`), mỗi thẻ mở `TileDetail` | `insights`, `yahoo`, `fred` |
+| Điểm đáng chú ý | `HighlightsBody` (`MarketPanels.tsx`): mỗi thẻ là tên, giá trị, mức đổi, chip lý do và **một dòng** "đổi gì, vì sao quan trọng" (`InsightNote.line`: `enLine`/`viLine` của ghi chú AI, ghi chú cũ thì câu đầu, `noteLine`); bấm mở `TileDetail` có ghi chú đầy đủ và phần giải thích chỉ số. Không có ghi chú thì thẻ không in giải thích | `insights`, `yahoo`, `fred` |
 | Vital Signs | `VitalSigns` (`MarketPanels.tsx`) | `yahoo`, `fred`, `vnindex` |
 | Thị trường thế giới | `WorldMarkets` (`MarketPanels.tsx`): bảng 20 chỉ số chứng khoán chính chia 3 khu vực (`config/markets.ts`) | `yahoo`, `vnindex` |
 | Hàng hoá | `Commodities` (`MarketPanels.tsx`): 11 hợp đồng tương lai kỳ gần (`COMMODITIES` trong `config/markets.ts`) chia năng lượng / kim loại / lương thực, cùng bảng `MarketTable` với Thị trường thế giới | `yahoo` |
@@ -71,7 +74,7 @@ Hàng 7  Góc Việt Nam [xl:12]
 | Tin tức | `NewsBody` → `NewsList` (client, lọc region/topic) | `rss`, `translate` |
 | Lịch | `CalendarBody` (`WorldPanels.tsx`). Số liệu Mỹ đã công bố có dòng "Thực tế" (`CalendarEntry.result`): số tô `up` khi tốt hơn dự báo cho nền kinh tế, `down` khi xấu hơn (theo `polarity` trong `config/calendar.ts`), kèm độ lệch so với dự báo; mục có kết quả còn hiện 18 giờ sau giờ công bố, mục khác 3 giờ | `calendar`, `releases`, `launches` |
 | Trending | `TrendingBody` (tab Wikipedia EN / HN / Wikipedia VI) | `wikipedia`, `hackernews` |
-| Prediction | `PredictionBody` | `polymarket`, `kalshi` |
+| Prediction | `PredictionBody`: bậc thang lãi suất Fed của Kalshi, rồi các sự kiện Polymarket qua `informativeEvents` (`lib/data/prediction.ts`): ẩn kết quả từ 97% trở lên hoặc từ 3% trở xuống (so trên số đã làm tròn như khi in, để không còn kèo ghi "3%"), bỏ sự kiện không còn kết quả nào, xếp theo mức đổi 24 giờ lớn nhất của các kết quả còn lại (bằng nhau thì theo khối lượng); một dòng ghi chú nói rõ quy tắc | `polymarket`, `kalshi` |
 | Hành tinh & sức khỏe | `EnvBody` | `co2`, `gistemp`, `airquality`, `who` |
 | Việt Nam | `VietnamBody` | `vnindex`, `sjc`, `vcb` |
 
@@ -91,7 +94,7 @@ Ghi chú hành vi từng panel:
   - **Ghi chú AI** 2–3 câu (`kv['themes:notes']`, LLDD 05 §3d); chưa có thì bỏ trống, chân panel hướng dẫn đặt `AI_API_KEY`.
   - **Các chỉ số:** tên ngắn (`label`), giá trị, thay đổi 1 tháng (% cho giá, bp hoặc điểm % cho lãi suất như tile), sparkline 90 ngày (13 kỳ với số tháng). Mũi tên tô theo hướng tác động lên chủ đề, không theo "tăng là tốt": `serious` khi đẩy chủ đề nóng lên, `s1` khi làm hạ nhiệt. Tooltip ghi tên đầy đủ, mô tả, thay đổi tính từ ngày nào và gấp bao nhiêu lần mức thường gặp. Dưới chỉ số là các "sự kiện" tính riêng (`facts`): Vietcombank bán ra cách trần biên độ bao xa, doanh thu tháng của TSMC so cùng kỳ, số tàu qua eo Hormuz (trung bình 7 ngày, so với một năm trước; chủ đề Năng lượng). Hormuz là fact chứ không phải chỉ số tính trạng thái, vì eo biển đã gần như đóng từ tháng 3/2026 nên biến động trong tháng rất nhỏ.
   - **Việt Nam:** một câu về kênh truyền dẫn (`vietnam.text`) và các chỉ số Việt Nam (giá xăng RON 95, CPI, USD/VND, liên ngân hàng qua đêm, FPT), chỉ để xem, không tính vào trạng thái.
-  - **Kèo:** tối đa 2 kèo Polymarket có tiêu đề khớp `markets`, khối lượng 24 giờ lớn nhất trước, hiện kết quả dẫn đầu và mức đổi 24 giờ. Bỏ kèo gần như đã ngã ngũ (kết quả dẫn đầu ≥ 97%, hoặc "Yes" ≤ 3%) và snapshot cũ hơn 3 ngày (nguồn hay bị chặn).
+  - **Kèo:** tối đa 2 kèo Polymarket có tiêu đề khớp `markets`, khối lượng 24 giờ lớn nhất trước, hiện kết quả dẫn đầu và mức đổi 24 giờ. Kết quả hiện là kết quả dẫn đầu trong số còn mở (`openOutcomes`: bỏ kết quả ≥ 97% hoặc ≤ 3%, như panel Prediction); kèo không còn kết quả nào và snapshot cũ hơn 3 ngày (nguồn hay bị chặn) bị bỏ.
   - **Tin:** đếm bài khớp trong 24 giờ và 7 ngày (mỗi `title_key` một lần), 3 câu chuyện mới nhất trong 2 ngày, gom bằng `clusterStories` trên tiêu đề tiếng Anh. Bài khớp khi tiêu đề tiếng Anh (gốc hoặc bản dịch) khớp `news.en`, hoặc tiêu đề tiếng Việt chưa dịch khớp `news.vi`; bỏ thể thao và báo crypto, chỉ chủ đề AI đọc báo công nghệ; `news.regions` lọc theo khu vực AI gán (Fed: `americas`, `global`; Vốn ngoại: `vietnam`). Từ khoá được thử trên tin thật ngày 2026-11-11: "Iran" chỉ tính khi đi cùng chiến tranh, đàm phán, phong toả… (một vụ tấn công mạng đổ cho Iran không phải chuyện năng lượng); "Huang" phải là "Jensen Huang"; "dong" bị bỏ vì khớp cả Đồng Nai, Đồng Tháp và "tỷ đồng".
 - **Hàng 1:** bản đồ chiếm cả hàng, cao 360 / 440 / 520px (mobile / `md` / `xl`), xem §9.
 - **Hàng 1b, lớp địa chính trị** (từ 2026-11-11, TODO P1): ba panel ngay dưới bản đồ, vì chấm GDELT trên bản đồ phần lớn là nhiễu và chỉ số GPR toàn cầu không cho biết ở đâu. Cấu hình trong `config/geopolitics.ts`, số liệu tính ở `lib/data/geopolitics.ts` (không import Next, worker dùng chung cho fact Hormuz của chủ đề Năng lượng), web đọc qua `lib/queries-geo.ts`.
@@ -140,7 +143,7 @@ Hàng 4  Tin crypto [xl:12] (2 cột từ md)
 | ETH/BTC | `EthBtcBody`: `ratioSeries(yahoo:ETH-USD, yahoo:BTC-USD)` 1 năm (chỉ ngày cả hai có giá), số hiện tại, % trong năm, biên độ 1 năm | `yahoo` |
 | Mạng Bitcoin | `NetworkBody`: ngày halving ước tính, meter tiến độ epoch, phí sat/vB, điều chỉnh độ khó, hashrate so với 30 ngày trước | `mempool` |
 | Coin đang hot | `TrendingCoinsBody` | `coingecko` |
-| Kèo crypto | `CryptoOddsBody` → `PolyEvents` (dùng chung với panel Prediction) | `polymarket` |
+| Kèo crypto | `CryptoOddsBody` → `informativeEvents` → `PolyEvents` (cùng quy tắc lọc và thứ tự với panel Prediction) | `polymarket` |
 | Tin crypto | `CryptoNewsBody` (`getCryptoNews`) | `rss`, `translate` |
 
 Đơn vị `$B` (tỷ USD) hiển thị dạng rút gọn theo ngôn ngữ: `$2.59T` / `$2,59 NT`, khớp với `fmtCompact` trong các bảng.
@@ -170,14 +173,14 @@ Hàng 11 Tín hiệu suy thoái [xl:7] │ Lịch vĩ mô [xl:5]
 | Panel | Component | `sources` |
 |---|---|---|
 | Nhịp kinh tế thế giới | `WorldPulse` → `DetailTile` (dùng lại của `MarketPanels`): tăng trưởng và lạm phát thế giới (IMF), giá hàng hoá IMF, GSCPI, USD rổ rộng, thanh khoản NHTW toàn cầu, xác suất suy thoái Mỹ, bất định chính sách toàn cầu | `imf`, `fred`, `gscpi` |
-| Sức khoẻ các nền kinh tế | `ScorecardPanel` (`sources`: `oecd`, `imfcpi`, `ibge`, `imf`, `bis`, `sbv`, `worldbank`, `cnbc`, `yahoo`, `fred`): bảng HTML do server render, nhóm "Kinh tế phát triển" / "Kinh tế mới nổi", cột tên nước ghim khi cuộn ngang. Mỗi ô: số, kỳ dữ liệu (chữ nhỏ), chấm trạng thái + nền nhạt (`warning`/`critical` /10), nhãn trạng thái ẩn cho trình đọc màn hình, tooltip. Tiêu đề cột có tooltip giải thích cách tô màu (`SCORE_COLS` trong `config/macro.ts`) | `oecd`, `imf`, `bis`, `yahoo`, `fred` |
+| Sức khoẻ các nền kinh tế | `ScorecardPanel` (`sources`: `oecd`, `imfcpi`, `ibge`, `mospi`, `imf`, `bis`, `sbv`, `worldbank`, `cnbc`, `yahoo`, `fred`): bảng HTML do server render, nhóm "Kinh tế phát triển" / "Kinh tế mới nổi", cột tên nước ghim khi cuộn ngang. Mỗi ô: số, kỳ dữ liệu (chữ nhỏ), chấm trạng thái + nền nhạt (`warning`/`critical` /10), nhãn trạng thái ẩn cho trình đọc màn hình, tooltip. Tiêu đề cột có tooltip giải thích cách tô màu (`SCORE_COLS` trong `config/macro.ts`) | `oecd`, `imf`, `bis`, `yahoo`, `fred` |
 | Đồng hồ chu kỳ | `CycleClockPanel` → `CycleClock` (client, SVG tự vẽ) | `oecd` |
 | Tăng trưởng và lạm phát | `GrowthInflationPanel` → `QuadrantScatter`: mỗi nước một chấm, x = GDP so cùng kỳ quý gần nhất − trung bình 2015–19 (IMF), y = CPI bình quân cùng quý − mục tiêu (`growthInflation` trong `lib/data/macro.ts`); 4 góc Đình lạm (tô `critical`/7%) · Quá nóng · Suy yếu · Ổn định; rê chuột một nước thì hiện đuôi 4 quý trước | `oecd`, `imfcpi`, `worldbank`, `imf` |
 | Nợ công và ngân sách | `FiscalPanel` → `QuadrantScatter`: x = cân đối ngân sách năm nay, y = nợ chính phủ năm nay (IMF, từ `getDebtTable`); mốc thâm hụt 3% và nợ 90% GDP, góc trên trái là Rủi ro tài khoá | `imf` |
 | Tăng trưởng | `GrowthPanel`: tile GDPNow, WEI, CFNAI, sản xuất công nghiệp, bán lẻ │ small multiples CLI 24 tháng (đường 100), dòng dưới mỗi ô là GDP quý mới nhất (lấy từ `getScorecard`) | `oecd`, `fred` |
 | Lạm phát | `InflationPanel`: tile CPI, CPI lõi, PCE lõi, 5y5y, giá lương thực IMF; dưới tile là `UsCpiParts`: `LineChart` 24 tháng CPI so cùng kỳ theo 5 nhóm `US_CPI_PARTS` (`config/macro.ts`: năng lượng, thực phẩm, hàng hoá lõi, nhà ở, dịch vụ trừ nhà ở) và danh sách số tháng mới nhất kèm thay đổi 3 tháng (`usCpiParts` trong `lib/data/macro.ts`) │ small multiples CPI 24 tháng (OECD hoặc IMF, nguồn nào mới hơn), đường đứt = mục tiêu của từng NHTW, chấm = `cpiStatus` | `oecd`, `imfcpi`, `fred` |
 | Tiền tệ & thanh khoản | `MoneyPanel`: tile lãi suất Fed, Fed được định giá 12 tháng (`fedPriced`, đơn vị `bp`), thanh khoản ròng, NFCI, lợi suất thực 10 năm │ small multiples lãi suất điều hành (`--s1`) và lãi suất thực (`--s2`) 36 tháng, mỗi NHTW một ô (Đức, Pháp, Ý gộp vào ECB; Việt Nam là NHNN), thang riêng; dưới là `ZeroBars` tỷ giá thực hiệu dụng so với trung bình 10 năm | `bis`, `sbv`, `oecd`, `imfcpi`, `fred` |
-| Việc làm & tiêu dùng | `JobsPanel`: tile việc làm phi nông nghiệp, thất nghiệp, claims, UMich │ small multiples thất nghiệp 24 tháng (OECD, Brazil từ `ibge`; thang riêng, chấm = `unemploymentStatus`, Brazil so cùng kỳ vì chưa điều chỉnh mùa vụ); dưới là bảng niềm tin người tiêu dùng / doanh nghiệp OECD tách đôi | `oecd`, `ibge`, `fred` |
+| Việc làm & tiêu dùng | `JobsPanel`: tile việc làm phi nông nghiệp, thất nghiệp, claims, UMich │ small multiples thất nghiệp 24 tháng (OECD, Brazil từ `ibge`, Ấn Độ từ `mospi`; thang riêng, chấm = `unemploymentStatus`, Brazil và Ấn Độ so cùng kỳ vì chưa điều chỉnh mùa vụ); dưới là bảng niềm tin người tiêu dùng / doanh nghiệp OECD tách đôi | `oecd`, `ibge`, `fred` |
 | Nợ & ngân sách | `DebtPanel`: tile nợ liên bang/GDP, chi trả lãi, chênh lệch IG, HY, EM │ bảng 16 nước: nợ công năm nay, so với 2019, cân đối ngân sách, khoảng trống tín dụng BIS (tô màu theo `debtStatus`, `budgetStatus`, `creditGapStatus`) | `imf`, `bis`, `fred` |
 | Bất ngờ kinh tế Mỹ | `SurprisePanel.tsx` (`SurpriseBody`): hai chỉ số tăng trưởng và lạm phát (số, câu đọc, số một tháng trước, hai lần công bố đang kéo chỉ số nhiều nhất), `LineChart` hai đường theo tuần với đường 0, và bảng 12 lần công bố gần nhất (ngày, chỉ số, thực tế, dự báo, bất ngờ theo σ; cột dự báo ẩn dưới `sm`) | `surprise` |
 | Tín hiệu suy thoái | `RecessionPanel`: bảng `RECESSION_SIGNALS` (tên, số mới nhất + kỳ, sparkline, ngưỡng theo dõi · báo động, trạng thái chấm + chữ) cộng một dòng "số nền kinh tế có CLI ở pha Suy yếu" (⅓ = theo dõi, ½ = báo động); câu đầu đếm số tín hiệu đang bật | `fred`, `oecd` |
@@ -223,6 +226,7 @@ Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Bảng vàng, b
 Hàng 1  Thị trường Việt Nam [xl:12]: 8 tile VIETNAM_MARKETS (4 chỉ số, 4 giá đô/vàng) + dòng độ rộng
 Hàng 1b Cổ phiếu VN30 [xl:8]: treemap │ khối ngoại trong VN30      Khối ngoại [xl:4]
 Hàng 2  Kinh tế Việt Nam [xl:12]: 4 tile VIETNAM_ECONOMY + lãi suất thực (2fr) │ bảng IMF (3fr)
+Hàng 2a Số liệu tháng [xl:12]: 9 ô số (3fr) │ biểu đồ tăng trưởng so cùng kỳ + cột cán cân thương mại (2fr)
         Lạm phát và lãi suất NHNN [xl:7] │ VN-Index và khu vực [xl:5]
 Hàng 3  Giá vàng [xl:6]: bảng │ biểu đồ chênh lệch      Tỷ giá [xl:6]: biểu đồ ba giá đô │ bảng Vietcombank
 Hàng 4  Tin Việt Nam [xl:8] │ cột [xl:4]: Lịch thị trường Việt Nam + Giá xăng dầu + Thiên tai gần Việt Nam (cùng bố cục hàng tin của trang tổng quan)
@@ -235,6 +239,7 @@ Hàng 5  Người Việt đang tìm và đọc gì [xl:12]: Google │ VnExpress
 | Cổ phiếu VN30 | `Vn30Map`: `Treemap` 30 mã (kind `vn30`), diện tích = vốn hoá, màu = % hôm nay (bước 1/3/5%); cột phải là 5 mã khối ngoại mua ròng và 5 mã bán ròng nhiều nhất hôm nay | `vnstocks` |
 | Khối ngoại | `VnForeign` (`foreignFlows` trong `lib/data/vietnam.ts`): mua/bán ròng phiên gần nhất, tổng ròng 5 phiên, 20 phiên và từ đầu năm; `ColumnBars` (cột xanh/đỏ quanh đường 0, HTML vẽ ở server) 40 phiên | `vnflows` |
 | Kinh tế Việt Nam | `VnEconomy`: tile GDP quý (`vnGdp`, `wb:GDP:VNM`), CPI tháng (`vnCpi`, `imf:CPI_M:VNM`), tái cấp vốn (`vnRefi`, `sbv:REFI`), liên ngân hàng qua đêm (`vnIbOn`, `sbv:IB_ON`, cảnh báo trên 6%, nguy hiểm trên 10%), lưới 2×2; lãi suất thực = tái cấp vốn − CPI; bảng `VN_OUTLOOK` (`config/vietnam.ts`) theo năm, năm nay nền `surface-2`, năm sau nghiêng và nhạt, cột cuối là nhóm `OEMDC` năm nay. Nút `vn.compare` sang `/macro` | `worldbank`, `imfcpi`, `sbv`, `imf` |
+| Số liệu tháng | `VnMonthly` (`vnMonthly` trong `lib/data/nso.ts`, đọc qua `getVnMonthly`): 9 ô (`Fig`, kiểu KPI không sparkline) xuất khẩu tháng (kèm so cùng kỳ), cán cân (xuất/nhập siêu, cộng dồn từ đầu năm khi đủ các tháng), xuất khẩu sang Mỹ trong tháng (lũy kế trừ lũy kế tháng trước; kèm lũy kế và so cùng kỳ lũy kế khi có năm trước), FDI giải ngân lũy kế (so cùng kỳ, vốn đăng ký), IIP, bán lẻ, CPI (so tháng trước), tín dụng, GDP quý, mỗi ô ghi kỳ của nó; `LineChart` tăng trưởng so cùng kỳ (xuất khẩu, IIP, bán lẻ, CPI) và `ColumnBars` cán cân theo tháng, từ tháng đầu tiên có số; chú thích có nhãn "AI trích", link bài báo cáo và ngày đăng, cách kiểm tra | `nso` |
 | Lạm phát và lãi suất NHNN | `VnRates` → `LineChart` theo tháng (`vnRatesHistory` trong `lib/data/vietnam.ts`): CPI so cùng kỳ và lãi suất tái cấp vốn tại cuối mỗi tháng (đường bậc thang, `ChartSeries.step`), từ tháng CPI đầu tiên, tối đa 4 năm | `imfcpi`, `sbv` |
 | VN-Index và khu vực | `VnRegion` → `BarList` (chế độ `highlight`): từ đầu năm của 9 chỉ số châu Á – Thái Bình Dương trong `getWorldMarkets`, VN-Index màu `s1`, còn lại xám; dòng trên ghi thứ hạng | `yahoo`, `vnindex` |
 | Giá vàng | `VnGold` → `GoldTable` và `LineChart` chênh lệch SJC − vàng thế giới theo ngày (`goldPremiumHistory` trong `lib/data/vietnam.ts`: giá SJC cuối mỗi ngày giờ Hà Nội so với `GC=F` × `USDVND=X` × `OZ_PER_LUONG` đang hiệu lực ngày đó, triệu ₫/lượng). Giá SJC chỉ có từ 31/10/2026 (vang.today không có lịch sử) nên biểu đồ dài dần | `sjc`, `yahoo` |

@@ -63,7 +63,7 @@ export default async function MacroPage({ params }: PageProps<"/[lang]/macro">) 
         </Panel>
 
         {/* Row 3: every economy's health on one table */}
-        <Panel lang={lang} title={p.scorecard.title} subtitle={p.scorecard.subtitle} sources={["oecd", "imfcpi", "ibge", "imf", "bis", "sbv", "worldbank", "cnbc", "yahoo", "fred"]} className="md:col-span-2 xl:col-span-12">
+        <Panel lang={lang} title={p.scorecard.title} subtitle={p.scorecard.subtitle} sources={["oecd", "imfcpi", "ibge", "mospi", "imf", "bis", "sbv", "worldbank", "nso", "cnbc", "yahoo", "fred"]} className="md:col-span-2 xl:col-span-12">
           <ScorecardPanel lang={lang} />
         </Panel>
 
@@ -95,7 +95,7 @@ export default async function MacroPage({ params }: PageProps<"/[lang]/macro">) 
         <Panel lang={lang} title={p.money.title} subtitle={p.money.subtitle} sources={["bis", "sbv", "oecd", "imfcpi", "fred"]} className="md:col-span-2 xl:col-span-12">
           <MoneyPanel lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.jobs.title} subtitle={p.jobs.subtitle} sources={["oecd", "ibge", "fred"]} className="md:col-span-2 xl:col-span-12">
+        <Panel lang={lang} title={p.jobs.title} subtitle={p.jobs.subtitle} sources={["oecd", "ibge", "mospi", "fred"]} className="md:col-span-2 xl:col-span-12">
           <JobsPanel lang={lang} />
         </Panel>
         <Panel lang={lang} title={p.debt.title} subtitle={p.debt.subtitle} sources={["imf", "bis", "fred"]} className="md:col-span-2 xl:col-span-12">

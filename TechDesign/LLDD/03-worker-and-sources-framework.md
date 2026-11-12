@@ -133,13 +133,13 @@ npm run fetch                    # in hướng dẫn và danh sách nguồn
 | Nhóm | Nguồn → chu kỳ |
 |---|---|
 | Thị trường | `yahoo` 3 phút |
-| Vĩ mô | `fred`, `cnbc` 6 giờ · `bis` 12 giờ · `imf`, `imfcpi`, `ibge`, `oecd`, `worldbank`, `gpr`, `gscpi` 24 giờ |
+| Vĩ mô | `fred`, `cnbc` 6 giờ · `bis` 12 giờ · `imf`, `imfcpi`, `ibge`, `mospi`, `oecd`, `worldbank`, `gpr`, `gscpi` 24 giờ |
 | Tin tức và AI | `rss` 10 phút · `gdelt` 15 phút · `translate` 5 phút* · `insights` 30 phút* · `brief` 24 giờ* (lúc 06:00) · `themes` 24 giờ* (sau 06:00, viết lại khi trạng thái một chủ đề đổi) · `macronote`, `technote` 1 tuần* (thứ Hai) · `changes` 15 phút (chỉ đọc DB) |
 | Cảnh báo | `telegram` 5 phút (cần `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`; xem §9) |
 | Bản đồ | `usgs` 10 phút · `gdacs` 30 phút · `eonet` 1 giờ |
 | Trending / lịch / dự đoán | `hackernews` 20 phút · `polymarket`, `kalshi` 15 phút · `wikipedia`, `calendar`, `launches` 3 giờ |
 | Môi trường và sức khỏe | `airquality` 1 giờ · `who` 6 giờ · `co2`, `gistemp` 24 giờ |
-| Việt Nam | `vnindex` 3 phút · `sjc` 30 phút · `vcb` 1 giờ · `sbv` 12 giờ |
+| Việt Nam | `vnindex` 3 phút · `sjc` 30 phút · `vcb` 1 giờ · `sbv` 12 giờ · `nso` 6 giờ* (10 phút khi còn báo cáo cũ chưa đọc) |
 | Công nghệ | `cloudstatus` 10 phút · `huggingface` 3 giờ · `openrouter`, `kev` 6 giờ |
 
 \* `needsAi`: cần AI provider đã cấu hình (`AI_API_KEY`, Gemini hoặc Claude). Lúc khởi động, worker in `AI: <provider> (brief …, fast …)` hoặc `AI: off`, rồi in một dòng `skip <id>: <lý do>` cho mỗi nguồn còn thiếu cấu hình. Cả 43 nguồn đã được cài đặt.

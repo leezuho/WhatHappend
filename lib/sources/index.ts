@@ -34,6 +34,8 @@ import { gscpi } from "./gscpi";
 import { hackernews } from "./hackernews";
 import { huggingface } from "./huggingface";
 import { ibge } from "./ibge";
+import { mospi } from "./mospi";
+import { nso } from "./nso";
 import { imf } from "./imf";
 import { imfcpi } from "./imfcpi";
 import { kalshi } from "./kalshi";
@@ -82,6 +84,8 @@ export const sources: Source[] = [
   worldbank,
   cnbc,
   ibge,
+  mospi,
+  nso,
   gpr,
   gscpi,
   cot,

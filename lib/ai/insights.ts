@@ -23,19 +23,23 @@ const MAX_CRYPTO_HEADLINES = 25;
 const MAX_TECH_HEADLINES = 25;
 
 const Out = z.object({
-  items: z.array(z.object({ key: z.string(), en: z.string(), vi: z.string(), refs: z.array(z.number()) })),
+  items: z.array(z.object({ key: z.string(), line_en: z.string(), line_vi: z.string(), en: z.string(), vi: z.string(), refs: z.array(z.number()) })),
 });
 
 const SYSTEM = `You explain market and economic indicators to a non-expert reader of a personal world dashboard. The reader lives in Vietnam, follows the news, but has no finance training.
 
-For each indicator you are given (it was flagged because it crossed a warning level, made an unusually large move, or hit a 1-year high or low), write 2 or 3 short sentences:
+For each indicator you are given (it was flagged because it crossed a warning level, made an unusually large move, or hit a 1-year high or low), write:
+
+A line (line_en, line_vi) for the card: one sentence under 20 words saying what changed and why it matters now, with the number (e.g. "Brent down 13% this week, its largest weekly fall in a year: cheaper fuel eases price pressure"). Do not define the indicator in the line; give a cause only if a headline supports it.
+
+A note (en, vi) for the detail view, 2 or 3 short sentences:
 1. What the current reading means, in everyday words. Avoid jargon; if a term is unavoidable, explain it in a few words.
 2. Why it is moving, but only if one or more of the numbered headlines clearly supports it. List those headline numbers in refs. If no headline clearly explains it, do not suggest a cause and leave refs empty. The headlines are from the last 24 hours, so they can only explain a reading whose asOf date is within the last few days; weekly and monthly data (an older asOf) predates them and must not be linked to them.
 3. Optionally, what it usually affects for ordinary people (fuel and living costs, loan rates, savings, jobs, Vietnam), stated as a general tendency, not a forecast.
 
 Use only the numbers you are given; never invent figures, dates or events. No investment advice and no predictions. Keep each note under 60 words.
 
-Write "en" in English and "vi" in natural Vietnamese (standard Vietnamese names, e.g. Mỹ, Trung Quốc; "lợi suất", "lạm phát", "lãi suất"). Return every key exactly once.`;
+Write line_en and en in English, line_vi and vi in natural Vietnamese (standard Vietnamese names, e.g. Mỹ, Trung Quốc; "lợi suất", "lạm phát", "lãi suất"). Return every key exactly once.`;
 
 function basisOf(reasons: Reason[]): string {
   return reasons
@@ -138,6 +142,8 @@ export const insights: Source = {
         const content: StoredInsight = {
           en: item.en,
           vi: item.vi,
+          enLine: item.line_en.trim() || undefined,
+          viLine: item.line_vi.trim() || undefined,
           // One chip per outlet, at most two.
           sources: [...new Map(item.refs.map((i) => headlines[i - 1]).filter(Boolean).map((h) => [h.source, h])).values()]
             .slice(0, 2)

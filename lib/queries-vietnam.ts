@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { imfId } from "@/config/macro";
 import { OUTLOOK_AHEAD, OUTLOOK_BACK, VN_OUTLOOK } from "@/config/vietnam";
 import { pick, type Locale } from "@/lib/i18n";
+import { vnMonthly, type VnMonthly } from "@/lib/data/nso";
 import { centralBand, dollarHistory, foreignFlows, goldPremiumHistory, type ForeignFlows, vnHazards, vnRatesHistory, type DollarRow, type GoldPremiumRow, type VnHazard, type VnRatesRow } from "@/lib/data/vietnam";
 
 // Read side of the Vietnam page (app/[lang]/vietnam) beyond getVietnam() in
@@ -70,4 +71,10 @@ export async function getForeignFlows(): Promise<ForeignFlows | null> {
 export async function getCentralBand(): Promise<ReturnType<typeof centralBand>> {
   await connection();
   return centralBand(getDb());
+}
+
+/** Vietnam's monthly figures read from the statistics office's report (lib/sources/nso.ts). */
+export async function getVnMonthly(): Promise<VnMonthly> {
+  await connection();
+  return vnMonthly(getDb());
 }
