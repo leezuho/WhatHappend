@@ -1,10 +1,12 @@
+import { Suspense } from "react";
 import clsx from "clsx";
 import type { SeriesKey } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtValue } from "@/lib/format";
 import { getLatestBrief, getMapEvents, getNews, getTiles, getVietnam, requestNow, type VietnamData } from "@/lib/queries";
 import { getForeignFlows } from "@/lib/queries-vietnam";
-import { EmptyState } from "@/components/ui/Panel";
+import { EmptyState, PanelSkeleton } from "@/components/ui/Panel";
+import { Tabs } from "@/components/ui/Tabs";
 import { Thumb } from "@/components/ui/Thumb";
 import { MapView } from "./MapView";
 import { NewsList } from "./NewsList";
@@ -79,6 +81,41 @@ export async function BriefBody({ lang }: { lang: Locale }) {
 }
 
 // ---------------------------------------------------------------- news
+
+/**
+ * The overview's one news panel: the AI brief first, the latest headlines a tab away. They used to be two panels, and
+ * the brief's stories came back in the headline list further down the page.
+ */
+export function NewsTabs({ lang }: { lang: Locale }) {
+  const t = getDict(lang).news;
+  return (
+    <Tabs
+      fill
+      tabs={[
+        {
+          key: "brief",
+          label: t.tabBrief,
+          content: (
+            <Suspense fallback={<PanelSkeleton />}>
+              <BriefBody lang={lang} />
+            </Suspense>
+          ),
+        },
+        {
+          key: "latest",
+          label: t.tabLatest,
+          content: (
+            <div className="scroll-thin max-h-[560px] overflow-auto pr-1">
+              <Suspense fallback={<PanelSkeleton />}>
+                <NewsBody lang={lang} />
+              </Suspense>
+            </div>
+          ),
+        },
+      ]}
+    />
+  );
+}
 
 export async function NewsBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);

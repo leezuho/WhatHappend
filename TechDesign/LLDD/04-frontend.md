@@ -35,7 +35,7 @@ TopBar: MarketClocks · RegimeBadge · LangSwitch · ThemeToggle      (sticky)
         Ticker (dải giá chạy ngang)
 Hàng 0  Có gì mới từ lần trước [xl:12]: dải danh sách (1/2/3 cột)
         Chủ đề chi phối [xl:12]: 4 thẻ (2 cột ở md, 4 cột ở xl)
-Hàng 1  Brief [xl:8]                     │ Lịch sắp tới [xl:4] (bắt đầu bằng "Hôm nay")
+Hàng 1  Tin tức hôm nay [xl:8]: tab Bản tin AI │ Tin mới nhất │ Lịch sắp tới [xl:4] (bắt đầu bằng "Hôm nay")
 Hàng 2  Vital Signs [xl:12]: 12 tile, chỉ số đang nổi bật có chip lý do + 1 dòng AI
         (+ hàng "Nổi bật ngoài 12 chỉ số trên", + hàng "Bạn đã ghim" nếu có watchlist)
         Thị trường thế giới [xl:12]
@@ -43,9 +43,9 @@ Hàng 2  Vital Signs [xl:12]: 12 tile, chỉ số đang nổi bật có chip lý
 Hàng 3c Vị thế trên thị trường tương lai [xl:12]: hàng hoá │ tài chính (hai bảng cạnh nhau từ lg)
 Hàng 4  Yield curve [xl:6]               │ Lạm phát vs lãi suất [xl:6]      (lưới 2×2)
         Căng thẳng thị trường [xl:6]     │ Nhịp đập kinh tế Mỹ [xl:6]
-Hàng 5  Tin tức [xl:8]                   │ Prediction [xl:4]
 Hàng 6  Bản đồ [xl:12]: bản đồ + cột "Cảnh báo & động đất lớn"
-Hàng 6b Eo biển và kênh đào [xl:4] │ Rủi ro địa chính trị theo nước [xl:4] │ Trừng phạt và thương mại của Mỹ [xl:4]
+Hàng 6b Eo biển và kênh đào [xl:6]          │ Rủi ro địa chính trị theo nước [xl:6]   (lưới 2×2)
+        Trừng phạt và thương mại của Mỹ [xl:6] │ Prediction [xl:6]
 Hàng 7  Trending [xl:6] │ Hành tinh & sức khỏe [xl:6]
 Hàng 8  Góc Việt Nam [xl:12]
 ```
@@ -58,6 +58,7 @@ Bỏ trùng lặp từ 2026-11-13 (người dùng thấy trang "hơi trùng lặ
 - Chủ đề chi phối: ghi chú AI không nhắc lại số đã in trên thẻ (LLDD 05 §3d); USD/VND và khoảng cách tới trần chỉ còn ở thẻ "Vốn ngoại và tỷ giá", thẻ Fed đổi sang liên ngân hàng qua đêm và lợi suất trái phiếu 10 năm.
 - Bản tin: "Cần theo dõi" không liệt kê lại lịch công bố số liệu đặt ngay bên cạnh (LLDD 05 §3).
 - Góc Việt Nam: bỏ tile VN-Index và USD/VND (đã có ở Vital Signs), thay bằng bảng bốn chỉ số sàn và khối ngoại phiên gần nhất.
+- Bản tin và Tin thế giới gộp thành một panel "Tin tức hôm nay" ở Hàng 1, hai tab: Bản tin AI (mặc định) và Tin mới nhất. Trước đó là hai panel (Hàng 1 và Hàng 5) và các chuyện của bản tin (Nvidia, Iran) lại hiện trong danh sách tin bên dưới. Prediction rời Hàng 5 xuống lớp địa chính trị (Hàng 6b thành lưới 2×2).
 
 Giữ có chủ ý: Ticker (dính trên đầu mọi trang, BR-01); tile tóm tắt so với panel chi tiết (VIX ở Vital Signs và Căng thẳng thị trường 12 tháng, 2s10s và Yield curve, Brent và bảng Hàng hoá, Các lớp tài sản năm nay so sánh chéo các cột "Từ đầu năm"); kèo của chủ đề so với panel Prediction (chủ đề chỉ lấy 2 kèo liên quan).
 
@@ -65,7 +66,7 @@ Giữ có chủ ý: Ticker (dính trên đầu mọi trang, BR-01); tile tóm t�
 |---|---|---|
 | Có gì mới từ lần trước | `WhatsNewBody` (`WhatsNew.tsx`, server: viết câu) → `WhatsNewList` (`components/ui/WhatsNewList.tsx`, client: lọc theo lần xem trước) | `changes` |
 | Chủ đề chi phối | `ThemesBody` (`ThemePanels.tsx`), mỗi chủ đề một thẻ (`ThemeCard`) | `themes`, `yahoo`, `fred`, `rss` |
-| Brief | `BriefBody` (`ContentPanels.tsx`) + `BriefRefresh` | `brief` |
+| Tin tức hôm nay | `NewsTabs` (`ContentPanels.tsx`): `Tabs fill` với tab Bản tin AI (`BriefBody` + `BriefRefresh`) và tab Tin mới nhất (`NewsBody` → `NewsList`, client, lọc region/topic, cuộn trong 560px) | `brief`, `rss`, `translate` |
 | Bản đồ | `MapBody` → `MapView` (client) | `usgs`, `gdacs`, `eonet`, `gdelt` |
 | Eo biển và kênh đào | `ChokepointsBody` (`GeoPanels.tsx`): bảng 7 eo biển (`chokepointRows`, `lib/data/geopolitics.ts`) | `portwatch` |
 | Rủi ro địa chính trị theo nước | `GprCountriesBody` (`GeoPanels.tsx`): heatmap 16 nước × 24 tháng (`gprHeatmap`) | `gprc` |
@@ -79,7 +80,6 @@ Giữ có chủ ý: Ticker (dính trên đầu mọi trang, BR-01); tile tóm t�
 | Lạm phát vs lãi suất | `InflationRatesPanel` | `imf`, `bis`, `sbv` |
 | Căng thẳng thị trường | `StressPanel` (small multiples VIX, HY OAS, STLFSI, GPR MA7) | `yahoo`, `fred`, `gpr` |
 | Nhịp đập kinh tế Mỹ | `EconomyPulse` (8 KPI tile: Claims, Sahm, GDPNow, CPI y/y, Fed funds, 5y5y, Fed BS, GSCPI) | `fred`, `gscpi` |
-| Tin tức | `NewsBody` → `NewsList` (client, lọc region/topic) | `rss`, `translate` |
 | Lịch | `CalendarBody` (`WorldPanels.tsx`). Số liệu Mỹ đã công bố có dòng "Thực tế" (`CalendarEntry.result`): số tô `up` khi tốt hơn dự báo cho nền kinh tế, `down` khi xấu hơn (theo `polarity` trong `config/calendar.ts`), kèm độ lệch so với dự báo; mục có kết quả còn hiện 18 giờ sau giờ công bố, mục khác 3 giờ | `calendar`, `releases`, `launches` |
 | Trending | `TrendingBody` (tab Wikipedia EN / HN / Wikipedia VI) | `wikipedia`, `hackernews` |
 | Prediction | `PredictionBody`: bậc thang lãi suất Fed của Kalshi, rồi các sự kiện Polymarket qua `informativeEvents` (`lib/data/prediction.ts`): ẩn kết quả từ 97% trở lên hoặc từ 3% trở xuống (so trên số đã làm tròn như khi in, để không còn kèo ghi "3%"), bỏ sự kiện không còn kết quả nào, xếp theo mức đổi 24 giờ lớn nhất của các kết quả còn lại (bằng nhau thì theo khối lượng); một dòng ghi chú nói rõ quy tắc | `polymarket`, `kalshi` |
@@ -111,7 +111,7 @@ Ghi chú hành vi từng panel:
   - **Eo biển và kênh đào:** mỗi eo biển một dòng (tên, một dòng vì sao quan trọng, tối đa 2 dòng): số tàu/ngày trung bình 7 ngày đến ngày mới nhất PortWatch có, % so với cùng 7 ngày của 52 tuần trước (khớp thứ trong tuần), số tàu dầu/ngày (từ `sm`), sparkline trung bình tuần từ 2023 (từ `md`). Cửa sổ 7 ngày có ít hơn 5 ngày số liệu thì để trống. Chưa bằng một nửa năm trước (từ mức ≥ 10 tàu/ngày) thì thêm chấm `critical` và nhãn "Gần như đóng" (Hormuz ngày 11/11: 4 tàu/ngày, −95%). % để màu chữ thường: ít tàu hơn không phải lúc nào cũng xấu (Mũi Hảo Vọng đông lên khi tàu tránh Biển Đỏ). Chân panel ghi ngày của số liệu (ngày dạng "8/11" ở bản vi, "8 Nov" ở bản en để không đọc nhầm thành tháng 8).
   - **Rủi ro địa chính trị theo nước:** heatmap, mỗi dòng một nước của `GPR_COUNTRIES`, mỗi cột một tháng (24 tháng; dưới `sm` chỉ 12 tháng cuối), màu theo chỉ số (100 = trung bình 1985–2019 của chính nước đó) chia 6 lớp `GPR_BINS` (<100, 100–150, 150–200, 200–300, 300–500, ≥ 500) bằng dải tuần tự `--seq-0`…`--seq-5` (§8). Ô cách nhau 2px, tháng thiếu số là ô viền đứt. Dòng xếp theo trung bình 3 tháng gần nhất, cao trước; Việt Nam in đậm. Cột cuối là số của tháng mới nhất (tiêu đề cột là tên tháng đó), trục chỉ ghi năm ở tháng 1. Rê chuột vào ô có tooltip "nước, tháng: chỉ số". Dưới là chú giải và ghi chú: không có Iran, nước nhỏ dao động mạnh. Ngày 11/11 cột 3/2026 đậm ở gần như mọi nước (chiến sự vùng Vịnh).
   - **Trừng phạt và thương mại của Mỹ:** 40 mục mới nhất của `us_policy`, mỗi dòng: ngày, chip cơ quan (OFAC, BIS, USTR, Nhà Trắng; tooltip là tên đầy đủ), tiêu đề (bản dịch ở trang vi, tối đa 3 dòng) mở trang gốc, dưới là các nước tiêu đề nhắc tới. Mục nhắc Việt Nam có nền `surface-2` và chip "Việt Nam" màu `accent`. Danh sách cuộn trong 520px.
-- **Hàng 1:** Brief và Lịch nằm cạnh nhau. Chân Brief (`mt-auto`) luôn nằm đáy panel.
+- **Hàng 1:** Tin tức hôm nay và Lịch nằm cạnh nhau. `Tabs fill` cho tab đang mở chiếm phần cao còn lại của panel, nên chân Brief (`mt-auto`) luôn nằm đáy panel. Tab Tin mới nhất cuộn trong 560px để hàng không cao vọt khi đổi tab.
 - **Thị trường thế giới:** chỉ số chính của mỗi nền kinh tế trên trang Vĩ mô, cộng Russell 2000, Hang Seng và TAIEX; Châu Mỹ và Châu Âu một cột, Châu Á – Thái Bình Dương một cột (hai cột từ `xl`). Cột: điểm, phiên gần nhất (`change_pct` của quote, sàn đang mở hay đã đóng), 1 tuần, 1 tháng, từ đầu năm (`changeSince` trên giá đóng cửa, `lib/data/markets.ts`) và sparkline 1 năm. Ô % tô nền `up`/`down` 3 mức, thang riêng từng cột (`HEAT_STEPS`: phiên 0,5/1,5/3%, tuần 1/3/6%, tháng 2/5/10%, năm 5/15/30%); chữ vẫn màu `ink` và có dấu nên không phụ thuộc màu. Dòng tóm tắt đếm số thị trường tăng và nêu chỉ số mạnh nhất, yếu nhất. Mobile chỉ giữ tên, phiên và từ đầu năm. Tính bằng nội tệ.
 - **Hàng hoá:** dầu Brent, WTI, khí Henry Hub, khí TTF; vàng, bạc, đồng; lúa mì, ngô, gạo, cà phê arabica (gạo và cà phê vì Việt Nam xuất khẩu nhiều). Cột và tô nền như Thị trường thế giới (`MarketTable` + `MoveSummary` trong `components/panels/MarketTable.tsx`, `commodityRows` trong `lib/data/markets.ts`); sau tên là đơn vị của hợp đồng (`$/thùng`, `¢/giạ`…).
 - **Các lớp tài sản năm nay:** cổ phiếu Mỹ (`^GSPC`), thế giới (`ACWI`), mới nổi (`EEM`), VN-Index, trái phiếu Mỹ 7–10 năm (`IEF`), vàng, dầu Brent, đồng, DXY, Bitcoin; % so với giá đóng cửa cuối năm trước (`assetClassRows`), thanh xanh/đỏ theo dấu. ETF chỉ tính giá, không gồm cổ tức và coupon (chú thích ghi rõ).

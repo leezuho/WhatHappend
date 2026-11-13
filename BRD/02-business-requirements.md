@@ -155,7 +155,7 @@
 
 ## BR-08 — Tin tức thế giới · M · M3
 
-**Trạng thái:** Done. Tin lấy từ RSS (GDELT chỉ dùng cho bản đồ). Bộ lọc chủ đề và bản dịch tiêu đề cần AI đã cấu hình; đã chạy thật với Gemini. Thiếu key thì hiện tiêu đề gốc.
+**Trạng thái:** Done. Tin lấy từ RSS (GDELT chỉ dùng cho bản đồ). Bộ lọc chủ đề và bản dịch tiêu đề cần AI đã cấu hình; đã chạy thật với Gemini. Thiếu key thì hiện tiêu đề gốc. Từ 2026-11-13, trên trang Tổng quan, danh sách tin là tab "Tin mới nhất" trong cùng panel "Tin tức hôm nay" với bản tin AI (BR-07), không còn là panel riêng nhắc lại các chuyện bản tin vừa tóm tắt.
 
 **Mô tả:** Tin lấy từ RSS của các báo lớn và từ GDELT, đã loại trùng, phân loại theo khu vực và chủ đề, hiển thị theo tab. Tiêu đề được dịch sang ngôn ngữ đang chọn.
 

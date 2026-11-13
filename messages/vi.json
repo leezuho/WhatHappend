@@ -91,10 +91,6 @@
       "title": "Chủ đề chi phối",
       "subtitle": "Những câu chuyện đang dẫn dắt thị trường: nóng lên hay hạ nhiệt, tin mới, kèo và tác động tới Việt Nam"
     },
-    "brief": {
-      "title": "Bản tin hôm nay",
-      "subtitle": "AI tóm tắt 24 giờ qua"
-    },
     "map": {
       "title": "Bản đồ thế giới",
       "subtitle": "Động đất, thiên tai và điểm nóng tin tức"
@@ -148,8 +144,8 @@
       "subtitle": "Việc làm, dự báo tăng trưởng, thanh khoản Fed"
     },
     "news": {
-      "title": "Tin thế giới",
-      "subtitle": "Tin mới nhất theo khu vực và chủ đề"
+      "title": "Tin tức hôm nay",
+      "subtitle": "Bản tin AI mỗi ngày và tin mới nhất theo khu vực, chủ đề"
     },
     "calendar": {
       "title": "Sắp diễn ra",
@@ -586,6 +582,8 @@
     "pulse": "Nhấp nháy = cảnh báo hoặc động đất ≥ 6"
   },
   "news": {
+    "tabBrief": "Bản tin AI",
+    "tabLatest": "Tin mới nhất",
     "related": "+{n} bài cùng chuyện",
     "all": "Tất cả",
     "alsoIn": "cùng tin",

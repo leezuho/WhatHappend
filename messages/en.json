@@ -91,10 +91,6 @@
       "title": "Dominant themes",
       "subtitle": "The stories driving markets: heating up or cooling, the latest news, the odds, and how they reach Vietnam"
     },
-    "brief": {
-      "title": "Daily brief",
-      "subtitle": "AI summary of the last 24 hours"
-    },
     "map": {
       "title": "World map",
       "subtitle": "Earthquakes, disasters and news hotspots"
@@ -148,8 +144,8 @@
       "subtitle": "Jobs, growth nowcast and Fed liquidity"
     },
     "news": {
-      "title": "World news",
-      "subtitle": "Latest headlines by region and topic"
+      "title": "Today's news",
+      "subtitle": "A daily AI brief and the latest headlines by region and topic"
     },
     "calendar": {
       "title": "Upcoming",
@@ -586,6 +582,8 @@
     "pulse": "Pulsing = alert or M6+ quake"
   },
   "news": {
+    "tabBrief": "AI brief",
+    "tabLatest": "Latest",
     "related": "+{n} more on this story",
     "all": "All",
     "alsoIn": "also",

@@ -17,7 +17,7 @@ import {
   WorldMarkets,
   YieldCurvePanel,
 } from "@/components/panels/MarketPanels";
-import { BriefBody, MapBody, NewsBody, VietnamBody } from "@/components/panels/ContentPanels";
+import { MapBody, NewsTabs, VietnamBody } from "@/components/panels/ContentPanels";
 import { CalendarBody, EnvBody, PredictionBody, TrendingBody } from "@/components/panels/WorldPanels";
 import { ThemesBody } from "@/components/panels/ThemePanels";
 import { WhatsNewBody } from "@/components/panels/WhatsNew";
@@ -55,9 +55,9 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <ThemesBody lang={lang} />
         </Panel>
 
-        {/* Row 1: the story of the day, beside what is on the calendar today and the next weeks */}
-        <Panel lang={lang} title={p.brief.title} subtitle={p.brief.subtitle} sources={["brief"]} className="md:col-span-2 xl:col-span-8">
-          <BriefBody lang={lang} />
+        {/* Row 1: the news (the AI brief, the latest headlines a tab away), beside what is on the calendar today and the next weeks */}
+        <Panel lang={lang} title={p.news.title} subtitle={p.news.subtitle} sources={["brief", "rss", "translate"]} className="md:col-span-2 xl:col-span-8">
+          <NewsTabs lang={lang} />
         </Panel>
         <Panel lang={lang} title={p.calendar.title} subtitle={p.calendar.subtitle} sources={["calendar", "releases", "launches"]} className="md:col-span-2 xl:col-span-4">
           <CalendarBody lang={lang} />
@@ -98,28 +98,23 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <EconomyPulse lang={lang} />
         </Panel>
 
-        {/* Row 5: news, and what prediction markets are betting on */}
-        <Panel lang={lang} title={p.news.title} subtitle={p.news.subtitle} sources={["rss", "translate"]} className="md:col-span-2 xl:col-span-8">
-          <NewsBody lang={lang} />
-        </Panel>
-        <Panel lang={lang} title={p.prediction.title} subtitle={p.prediction.subtitle} sources={["polymarket", "kalshi"]} className="md:col-span-2 xl:col-span-4">
-          <PredictionBody lang={lang} />
-        </Panel>
-
         {/* Row 6: the world at a glance (below the morning read) */}
         <Panel lang={lang} title={p.map.title} subtitle={p.map.subtitle} sources={["usgs", "gdacs", "eonet", "gdelt"]} className="md:col-span-2 xl:col-span-12">
           <MapBody lang={lang} />
         </Panel>
 
-        {/* Row 6b: the geopolitical layer under the map: shipping lanes, risk by country, Washington's actions */}
-        <Panel lang={lang} title={p.chokepoints.title} subtitle={p.chokepoints.subtitle} sources={["portwatch"]} className="md:col-span-2 xl:col-span-4">
+        {/* Row 6b: the geopolitical layer under the map: shipping lanes, risk by country, Washington's actions, what prediction markets bet on */}
+        <Panel lang={lang} title={p.chokepoints.title} subtitle={p.chokepoints.subtitle} sources={["portwatch"]} className="md:col-span-2 xl:col-span-6">
           <ChokepointsBody lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.gprCountries.title} subtitle={p.gprCountries.subtitle} sources={["gprc"]} className="xl:col-span-4">
+        <Panel lang={lang} title={p.gprCountries.title} subtitle={p.gprCountries.subtitle} sources={["gprc"]} className="md:col-span-2 xl:col-span-6">
           <GprCountriesBody lang={lang} />
         </Panel>
-        <Panel lang={lang} title={p.usPolicy.title} subtitle={p.usPolicy.subtitle} sources={["uspolicy"]} className="xl:col-span-4">
+        <Panel lang={lang} title={p.usPolicy.title} subtitle={p.usPolicy.subtitle} sources={["uspolicy"]} className="xl:col-span-6">
           <UsPolicyBody lang={lang} />
+        </Panel>
+        <Panel lang={lang} title={p.prediction.title} subtitle={p.prediction.subtitle} sources={["polymarket", "kalshi"]} className="xl:col-span-6">
+          <PredictionBody lang={lang} />
         </Panel>
 
         {/* Row 7: attention and the planet */}
