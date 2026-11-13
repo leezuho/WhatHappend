@@ -1,9 +1,9 @@
 import clsx from "clsx";
-import { SERIES } from "@/config/series";
-import { getDict, type Locale } from "@/lib/i18n";
-import { fmtDateTime, fmtNumber, fmtPct } from "@/lib/format";
-import { getLatestBrief, getMapEvents, getNews, getVietnam, requestNow, type VietnamData } from "@/lib/queries";
-import { KpiTile } from "@/components/charts/KpiTile";
+import type { SeriesKey } from "@/config/series";
+import { getDict, pick, type Locale } from "@/lib/i18n";
+import { fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtValue } from "@/lib/format";
+import { getLatestBrief, getMapEvents, getNews, getTiles, getVietnam, requestNow, type VietnamData } from "@/lib/queries";
+import { getForeignFlows } from "@/lib/queries-vietnam";
 import { EmptyState } from "@/components/ui/Panel";
 import { Thumb } from "@/components/ui/Thumb";
 import { MapView } from "./MapView";
@@ -237,16 +237,66 @@ export function VnNewsList({ v, lang, title = true }: { v: VietnamData; lang: Lo
   );
 }
 
+const VN_INDICES: SeriesKey[] = ["vnindex", "vn30", "hnx", "upcom"];
+
+/**
+ * The four Vietnamese indices with today's breadth and foreign flow. VN-Index and USD/VND already have their tiles in
+ * Vital signs (and the dollar its row in the Vietcombank table), so the corner adds what the overview shows nowhere else.
+ */
+async function VnIndices({ v, lang }: { v: VietnamData; lang: Locale }) {
+  const d = getDict(lang);
+  const [tiles, flows] = await Promise.all([getTiles(VN_INDICES), getForeignFlows()]);
+  const today = flows?.rows[flows.rows.length - 1];
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-xs font-semibold text-ink-2">{d.vn.indices}</h3>
+      <table className="tabular w-full text-xs">
+        <tbody>
+          {tiles.map(({ key, def, data }) => (
+            <tr key={key} className="border-t border-line first:border-t-0">
+              <td className="py-1 text-ink-2">{pick(def.name, lang)}</td>
+              <td className="py-1 text-right font-medium text-ink">{data ? fmtValue(def, data.value, lang) : "—"}</td>
+              <td
+                className={clsx(
+                  "w-16 py-1 text-right",
+                  !data?.changePct ? "text-muted" : data.changePct > 0 ? "text-up" : "text-down",
+                )}
+              >
+                {data?.changePct == null ? "—" : `${data.changePct > 0 ? "▲" : data.changePct < 0 ? "▼" : ""}${fmtPct(data.changePct, lang)}`}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <VnBreadth v={v} lang={lang} />
+      {today && (
+        <p className="text-xs text-ink-2">
+          {d.vn.foreignToday
+            .replace("{day}", fmtDate(today.ts, lang, { day: "numeric", month: "numeric", timeZone: "UTC" }))
+            .replace("{dir}", today.net >= 0 ? d.vn.foreignBuy : d.vn.foreignSell)
+            .split("{v}")
+            .flatMap((part, i) =>
+              i
+                ? [
+                    <span key={i} className={clsx("tabular font-medium", today.net >= 0 ? "text-up" : "text-down")}>
+                      {d.vn.valueFmt.replace("{v}", fmtNumber(Math.abs(today.net) / 1e9, lang, 0))}
+                    </span>,
+                    part,
+                  ]
+                : [part],
+            )}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export async function VietnamBody({ lang }: { lang: Locale }) {
   const v = await getVietnam(lang);
   if (!v.vnindex && !v.gold.length && !v.vcb.length) return <EmptyState lang={lang} />;
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-      <div className="flex flex-col gap-2">
-        <KpiTile def={SERIES.vnindex} data={v.vnindex} locale={lang} />
-        <VnBreadth v={v} lang={lang} />
-        <KpiTile def={SERIES.usdvnd} data={v.usdvnd} locale={lang} />
-      </div>
+      <VnIndices v={v} lang={lang} />
       <GoldTable v={v} lang={lang} />
       <VcbTable v={v} lang={lang} />
       <VnNewsList v={v} lang={lang} />

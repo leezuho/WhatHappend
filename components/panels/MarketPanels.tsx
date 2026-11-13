@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import clsx from "clsx";
 import { SERIES, VITAL_SIGNS, type SeriesDef, type SeriesKey } from "@/config/series";
 import { getDict, pick, type Dict, type Locale } from "@/lib/i18n";
@@ -18,6 +19,7 @@ import {
   getWatchlist,
   getWorldMarkets,
   getYieldCurve,
+  type Highlight,
   type Tile,
 } from "@/lib/queries";
 import { COMMODITY_GROUPS, type MarketRegion } from "@/config/markets";
@@ -33,7 +35,21 @@ import { EmptyState } from "@/components/ui/Panel";
 // ---------------------------------------------------------------- tiles
 
 /** A KPI tile that opens its history (and pin toggle) on click. */
-export function DetailTile({ tile, lang, watched, note }: { tile: Tile; lang: Locale; watched: boolean; note?: string }) {
+export function DetailTile({
+  tile,
+  lang,
+  watched,
+  note,
+  sources,
+  footer,
+}: {
+  tile: Tile;
+  lang: Locale;
+  watched: boolean;
+  note?: string;
+  sources?: { source: string; url: string; title: string }[];
+  footer?: ReactNode;
+}) {
   const d = getDict(lang);
   const shown = tile.def;
   return (
@@ -42,6 +58,7 @@ export function DetailTile({ tile, lang, watched, note }: { tile: Tile; lang: Lo
       name={pick(shown.name, lang)}
       explain={pick(shown.explain, lang)}
       note={note}
+      sources={sources}
       unit={shown.unit}
       digits={shown.digits}
       watched={watched}
@@ -49,36 +66,60 @@ export function DetailTile({ tile, lang, watched, note }: { tile: Tile; lang: Lo
       locale={lang}
       labels={{ ...d.detail, close: d.common.close, table: d.common.showTable, chart: d.common.showChart }}
     >
-      <KpiTile def={shown} data={tile.data} locale={lang} />
+      <KpiTile def={shown} data={tile.data} locale={lang} footer={footer} />
     </TileDetail>
   );
 }
 
+/**
+ * Vital signs (BR-02) with what stands out (LLDD 04 §3): the dozen fixed tiles, then the other indicators that stand
+ * out right now, then the reader's pinned ones. A tile that stands out carries its reasons and the AI's one line; the
+ * full note and its sources open with the tile. One panel, so an unusual Brent is not shown twice.
+ */
 export async function VitalSigns({ lang }: { lang: Locale }) {
   const d = getDict(lang);
-  const watch = await getWatchlist();
-  const notes = await getInsightNotes(lang);
-  const tiles = await getTiles(VITAL_SIGNS);
-  const extra = await getTiles(watch.filter((k) => !VITAL_SIGNS.includes(k)));
-  if (tiles.every((t) => !t.data)) return <EmptyState lang={lang} />;
+  const t = d.highlights;
+  const [watch, { items, hasKey }, tiles] = await Promise.all([getWatchlist(), getHighlights(lang), getTiles(VITAL_SIGNS)]);
+  const notable = new Map(items.map((i) => [i.key, i]));
+  const others: Tile[] = items.filter((i) => !VITAL_SIGNS.includes(i.key)).map((i) => ({ key: i.key, def: i.def, data: i.data }));
+  const pinned = await getTiles(watch.filter((k) => !VITAL_SIGNS.includes(k) && !notable.has(k)));
+  if (tiles.every((x) => !x.data) && !others.length) return <EmptyState lang={lang} />;
+  const latest = items.reduce<number | null>((a, i) => (i.note && (a === null || i.note.createdAt > a) ? i.note.createdAt : a), null);
+  const model = items.find((i) => i.note?.createdAt === latest)?.note?.model;
   const grid = "grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6";
+  const cell = (tile: Tile) => {
+    const it = notable.get(tile.key);
+    return (
+      <DetailTile
+        key={tile.key}
+        tile={tile}
+        lang={lang}
+        watched={watch.includes(tile.key)}
+        note={it?.note?.text}
+        sources={it?.note?.sources}
+        footer={it && <StandsOut it={it} lang={lang} />}
+      />
+    );
+  };
   return (
     <div className="flex flex-col gap-3">
-      <div className={grid}>
-        {tiles.map((t) => (
-          <DetailTile key={t.key} tile={t} lang={lang} watched={watch.includes(t.key)} note={notes[t.key]} />
-        ))}
-      </div>
-      {extra.length > 0 && (
+      <div className={grid}>{tiles.map(cell)}</div>
+      {others.length > 0 && (
         <>
-          <h3 className="text-xs font-semibold text-ink-2">★ {d.detail.watchlist}</h3>
-          <div className={grid}>
-            {extra.map((t) => (
-              <DetailTile key={t.key} tile={t} lang={lang} watched note={notes[t.key]} />
-            ))}
-          </div>
+          <h3 className="text-xs font-semibold text-ink-2">{t.others}</h3>
+          <div className={grid}>{others.map(cell)}</div>
         </>
       )}
+      {pinned.length > 0 && (
+        <>
+          <h3 className="text-xs font-semibold text-ink-2">★ {d.detail.watchlist}</h3>
+          <div className={grid}>{pinned.map(cell)}</div>
+        </>
+      )}
+      <p className="text-[11px] text-muted">
+        {items.length ? t.rules : t.empty}
+        {!hasKey ? ` ${t.needsKey}` : latest && model ? ` · AI ${fmtTime(latest, lang)} · ${model}` : ""}
+      </p>
     </div>
   );
 }
@@ -130,84 +171,32 @@ function reasonTip(r: Reason, def: SeriesDef, data: TileData, t: Dict["highlight
   }
 }
 
-export async function HighlightsBody({ lang }: { lang: Locale }) {
-  const d = getDict(lang);
-  const t = d.highlights;
-  const { items, hasKey } = await getHighlights(lang);
-  const watch = await getWatchlist();
-  if (!items.length) return <EmptyState lang={lang} message={t.empty} />;
-  const latest = items.reduce<number | null>((a, i) => (i.note && (a === null || i.note.createdAt > a) ? i.note.createdAt : a), null);
-  const model = items.find((i) => i.note?.createdAt === latest)?.note?.model;
-
+/**
+ * The bottom of a tile that stands out: why (a level crossed long ago is left to the tile's own "Watch"/"Danger"
+ * badge) and what changed, why it matters, in the AI's one line.
+ */
+function StandsOut({ it, lang }: { it: Highlight; lang: Locale }) {
+  const t = getDict(lang).highlights;
+  const reasons = it.reasons.filter((r) => !((r.kind === "warn" || r.kind === "crit") && !r.fresh));
   return (
-    <div className="flex flex-col gap-2">
-      <ul className="scroll-thin grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-        {items.map((it) => {
-          const name = pick(it.def.name, lang);
-          const delta = fmtDelta(it.def, it.data, lang);
-          const dir = (it.def.delta === "abs" ? it.data.change : it.data.changePct) ?? 0;
-          const good = it.def.polarity === "neutral" ? null : (dir > 0) === (it.def.polarity === "up-good");
-          return (
-            <li key={it.key} className="flex flex-col rounded-lg bg-surface-2/60">
-              <TileDetail
-                seriesKey={it.key}
-                name={name}
-                explain={pick(it.def.explain, lang)}
-                note={it.note?.text}
-                unit={it.def.unit}
-                digits={it.def.digits}
-                watched={watch.includes(it.key)}
-                price={it.def.price}
-                locale={lang}
-                labels={{ ...d.detail, close: d.common.close, table: d.common.showTable, chart: d.common.showChart }}
-              >
-                <div className="flex flex-col gap-1.5 p-2.5 pb-1.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate text-xs font-medium text-ink">{name}</span>
-                    <span className="tabular shrink-0 text-sm font-semibold whitespace-nowrap text-ink">
-                      {fmtValue(it.def, it.data.value, lang)}
-                      {delta && (
-                        <span className={clsx("ml-1.5 text-xs font-medium", dir === 0 || good === null ? "text-ink-2" : good ? "text-up" : "text-down")}>
-                          {dir > 0 ? "▲" : dir < 0 ? "▼" : ""} {delta}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {it.reasons.map((r) => (
-                      <span
-                        key={r.kind}
-                        className="flex items-center gap-1 rounded-full bg-surface px-1.5 py-px text-[10px] text-ink-2"
-                        title={reasonTip(r, it.def, it.data, t, lang)}
-                      >
-                        {(r.kind === "crit" || r.kind === "warn") && (
-                          <span aria-hidden className={clsx("inline-block size-1.5 rounded-full", r.kind === "crit" ? "bg-critical" : "bg-warning")} />
-                        )}
-                        {reasonLabel(r, t)}
-                      </span>
-                    ))}
-                  </div>
-                  {/* One line: what changed, why it matters. The full note and the indicator's definition are in the detail view. */}
-                  {it.note && <p className="text-xs leading-relaxed text-ink-2">{it.note.line}</p>}
-                </div>
-              </TileDetail>
-              {it.note && it.note.sources.length > 0 && (
-                <div className="flex flex-wrap gap-1 px-2.5 pb-2">
-                  {it.note.sources.map((s, j) => (
-                    <a key={j} href={s.url} target="_blank" rel="noreferrer" title={s.title} className="rounded bg-surface px-1 text-[10px] text-ink-2 hover:text-ink">
-                      {s.source}
-                    </a>
-                  ))}
-                </div>
+    <div className="mt-0.5 flex flex-col gap-1 border-t border-line pt-1.5">
+      {reasons.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {reasons.map((r) => (
+            <span
+              key={r.kind}
+              className="flex items-center gap-1 rounded-full bg-surface px-1.5 py-px text-[10px] text-ink-2"
+              title={reasonTip(r, it.def, it.data, t, lang)}
+            >
+              {(r.kind === "crit" || r.kind === "warn") && (
+                <span aria-hidden className={clsx("inline-block size-1.5 rounded-full", r.kind === "crit" ? "bg-critical" : "bg-warning")} />
               )}
-            </li>
-          );
-        })}
-      </ul>
-      <p className="text-[11px] text-muted">
-        {t.rules}
-        {!hasKey ? ` ${t.needsKey}` : latest && model ? ` · AI ${fmtTime(latest, lang)} · ${model}` : ""}
-      </p>
+              {reasonLabel(r, t)}
+            </span>
+          ))}
+        </div>
+      )}
+      {it.note && <p className="text-xs leading-snug text-ink-2">{it.note.line}</p>}
     </div>
   );
 }

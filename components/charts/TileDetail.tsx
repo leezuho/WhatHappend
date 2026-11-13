@@ -12,6 +12,8 @@ interface Props {
   explain: string;
   /** AI note on why the reading stands out right now. */
   note?: string;
+  /** Articles the note draws on. */
+  sources?: { source: string; url: string; title: string }[];
   unit: string;
   digits: number;
   watched: boolean;
@@ -25,7 +27,7 @@ interface Props {
 const RANGES = ["90", "365", "730", "1825"];
 
 /** Makes a KPI tile clickable: opens a dialog with the series history and a pin toggle. */
-export function TileDetail({ seriesKey, name, explain, note, unit, digits, watched, price, locale, labels, children }: Props) {
+export function TileDetail({ seriesKey, name, explain, note, sources, unit, digits, watched, price, locale, labels, children }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
@@ -53,7 +55,7 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
     <>
       <button
         type="button"
-        className="block w-full cursor-pointer rounded-lg text-left transition-shadow hover:shadow-lift focus-visible:outline-2 focus-visible:outline-s1"
+        className="block h-full w-full cursor-pointer rounded-lg text-left transition-shadow hover:shadow-lift focus-visible:outline-2 focus-visible:outline-s1"
         aria-label={`${name}: ${labels.open}`}
         onClick={() => {
           setOpen(true);
@@ -82,6 +84,15 @@ export function TileDetail({ seriesKey, name, explain, note, unit, digits, watch
             <div className="rounded-lg bg-surface-2 px-3 py-2">
               <h3 className="mb-0.5 text-[11px] font-semibold text-ink-2">{labels.note}</h3>
               <p className="text-sm leading-snug text-ink">{note}</p>
+              {sources && sources.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {sources.map((s, i) => (
+                    <a key={i} href={s.url} target="_blank" rel="noreferrer" title={s.title} className="rounded bg-surface px-1.5 text-[11px] text-ink-2 hover:text-ink hover:underline">
+                      {s.source}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2">

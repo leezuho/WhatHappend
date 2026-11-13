@@ -9,7 +9,6 @@ import {
   AssetClasses,
   Commodities,
   EconomyPulse,
-  HighlightsBody,
   InflationRatesPanel,
   RegimeBadge,
   StressPanel,
@@ -64,13 +63,8 @@ export default async function DashboardPage({ params }: PageProps<"/[lang]">) {
           <CalendarBody lang={lang} />
         </Panel>
 
-        {/* Row 1b: indicators that stand out today, one line each */}
-        <Panel lang={lang} title={p.highlights.title} subtitle={p.highlights.subtitle} sources={["insights", "yahoo", "fred"]} className="md:col-span-2 xl:col-span-12">
-          <HighlightsBody lang={lang} />
-        </Panel>
-
-        {/* Row 3: vital signs */}
-        <Panel lang={lang} title={p.vitals.title} subtitle={p.vitals.subtitle} sources={["yahoo", "fred", "vnindex"]} className="md:col-span-2 xl:col-span-12">
+        {/* Row 2: vital signs, with the indicators that stand out today (reasons and one AI line on the tile) */}
+        <Panel id="vitals" lang={lang} title={p.vitals.title} subtitle={p.vitals.subtitle} sources={["yahoo", "fred", "vnindex", "insights"]} className="md:col-span-2 xl:col-span-12">
           <VitalSigns lang={lang} />
         </Panel>
 

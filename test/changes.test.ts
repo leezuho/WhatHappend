@@ -4,7 +4,7 @@ import { openDb } from "@/lib/db";
 import { CHANGES_STATE_KEY, diffState, logChanges, observe, parseState, readChanges, REGIME_SCORE_ID, stateOf, type Observed, type WatchState } from "@/lib/data/changes";
 import { changes } from "@/lib/sources/changes";
 import { replaceItems } from "@/lib/sources/store";
-import { describeChange, orderChanges } from "@/components/panels/WhatsNew";
+import { describeChange, orderChanges, withoutShown } from "@/components/panels/WhatsNew";
 
 const H = 3_600_000;
 const DAY = 24 * H;
@@ -118,5 +118,12 @@ test("describeChange and orderChanges: sentences in both languages, most importa
   assert.deepEqual(
     ordered.map((r) => r.id),
     [4, 3, 2, 5, 1],
+  );
+
+  // Brent still stands out (its tile in Vital signs says so): its signals leave the strip; VIX has calmed down, so its
+  // crossing stays, and so do the regime change and the vulnerability.
+  assert.deepEqual(
+    withoutShown(ordered, new Set(["brent"])).map((r) => r.id),
+    [4, 3, 1],
   );
 });

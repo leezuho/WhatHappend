@@ -62,7 +62,7 @@
 
 ## BR-02 — Vital Signs · M · M2
 
-**Trạng thái:** Done. Ô 2s10s < 0 hiện nhãn cảnh báo "Lưu ý" (< −0,5 là "Nguy hiểm"); nhãn "Đảo ngược" hiện ở panel Yield curve. Thời điểm cập nhật nằm trên dòng trạng thái panel.
+**Trạng thái:** Done. Ô 2s10s < 0 hiện nhãn cảnh báo "Lưu ý" (< −0,5 là "Nguy hiểm"); nhãn "Đảo ngược" hiện ở panel Yield curve. Thời điểm cập nhật nằm trên dòng trạng thái panel. Từ 2026-11-13 panel "Điểm đáng chú ý" gộp vào đây để không lặp: ô đang nổi bật có chip lý do và một dòng AI giải thích, chỉ số nổi bật ngoài 12 ô thành một hàng riêng.
 
 **Mô tả:** 12 ô KPI: S&P 500, Nasdaq, US10Y, 2s10s, DXY, VIX, Brent, Vàng, Đồng, BTC, VN-Index, USD/VND. Mỗi ô có:
 - **nhãn**;
@@ -233,7 +233,7 @@
 
 ## BR-14 — Góc Việt Nam · M · M6
 
-**Trạng thái:** Done. Giá vàng SJC lấy qua vang.today/PNJ (trang SJC chặn bot); có thêm tỷ giá Vietcombank và chênh lệch SJC so với vàng thế giới.
+**Trạng thái:** Done. Giá vàng SJC lấy qua vang.today/PNJ (trang SJC chặn bot); có thêm tỷ giá Vietcombank và chênh lệch SJC so với vàng thế giới. Từ 2026-11-13 VN-Index nằm trong bảng bốn chỉ số sàn (VN-Index, VN30, HNX, UPCoM) kèm khối ngoại phiên gần nhất, thay cho tile trùng với Vital Signs; tỷ giá USD đọc ở bảng Vietcombank và ô USD/VND của Vital Signs.
 
 **Mô tả:** VN-Index, tỷ giá USD/VND, giá vàng SJC (mua/bán) và tin VnExpress.
 
@@ -414,7 +414,7 @@
 
 ## BR-25 — Có gì mới từ lần trước · S
 
-**Trạng thái:** Done (2026-11-11). Dải đầu trang Tổng quan, nhật ký do worker ghi. Thiết kế ở [LLDD 04 §3](../TechDesign/LLDD/04-frontend.md) (Hàng 0) và [LLDD 01 §3.13](../TechDesign/LLDD/01-database-schema.md).
+**Trạng thái:** Done (2026-11-11). Dải đầu trang Tổng quan, nhật ký do worker ghi. Thiết kế ở [LLDD 04 §3](../TechDesign/LLDD/04-frontend.md) (Hàng 0) và [LLDD 01 §3.13](../TechDesign/LLDD/01-database-schema.md). Từ 2026-11-13 dải không lặp tín hiệu của các chỉ số đang nổi bật (đã hiện ở Vital Signs), chỉ ghi một liên kết tới đó.
 
 **Mô tả:** Một dải liệt kê những gì đã đổi kể từ lần người dùng xem trước: trạng thái rủi ro đổi, trạng thái chủ đề chi phối đổi, chỉ số vừa vượt ngưỡng, số liệu vừa công bố so với dự báo, biến động bất thường, lỗ hổng vừa bị khai thác ở các hãng đang theo dõi. Phục vụ KPI-1 (nắm tình hình dưới 2 phút, [BRD 01 §7](01-project-overview.md)): người đọc buổi sáng không phải dò lại 17 panel để biết cái gì mới.
 

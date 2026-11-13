@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import clsx from "clsx";
 import type { SeriesDef } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
@@ -6,12 +7,13 @@ import type { TileData } from "@/lib/data/series";
 import { alertOf } from "@/lib/signals/notable";
 import { Sparkline } from "./Sparkline";
 
-export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData | null; locale: Locale }) {
+/** `footer`: what makes the reading stand out (vital signs), under the range bar. */
+export function KpiTile({ def, data, locale, footer }: { def: SeriesDef; data: TileData | null; locale: Locale; footer?: ReactNode }) {
   const name = pick(def.name, locale);
   const d = getDict(locale);
   if (!data) {
     return (
-      <div className="flex min-h-[104px] flex-col justify-between rounded-lg bg-surface-2/60 p-3">
+      <div className="flex h-full min-h-[104px] flex-col justify-between rounded-lg bg-surface-2/60 p-3">
         <span className="text-xs text-ink-2">{name}</span>
         <span className="text-lg font-semibold text-muted">—</span>
       </div>
@@ -24,7 +26,7 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
   return (
     <div
       className={clsx(
-        "relative flex min-h-[104px] flex-col gap-1.5 rounded-lg p-3",
+        "relative flex h-full min-h-[104px] flex-col gap-1.5 rounded-lg p-3",
         alert ? "bg-surface-2 ring-1 ring-inset" : "bg-surface-2/60",
         alert === "crit" ? "ring-critical" : alert === "warn" ? "ring-warning" : "",
       )}
@@ -54,6 +56,7 @@ export function KpiTile({ def, data, locale }: { def: SeriesDef; data: TileData 
       </div>
       <Sparkline points={data.spark} height={34} fluid trend={def.price} label={`${name}, ${d.charts.spark[def.freq ?? "d"]}`} />
       {data.range && <RangeBar def={def} value={data.value} range={data.range} locale={locale} />}
+      {footer}
     </div>
   );
 }

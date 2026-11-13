@@ -49,7 +49,7 @@ Write:
   - Every item in bigMoves (a session move of 3% or more, or 5% or more over the week) must appear, with the numbers given: inside the related story when a headline states its cause, otherwise together in one markets bullet. Do not invent causes. The rest of moves is context.
   - When calendar.released has a number with a forecast, report actual against forecast where it fits.
   - When regime.state is "risk-off", regime.leaningTo is set, or regime.creditDivergence is present, say so in one clause.
-- watch: 2 to 5 short items for the next day or two. First every calendar.upcoming event with impact "High", each with its Vietnam time as given (e.g. "US CPI, Wed 12 Nov 20:30"); then other items grounded in the inputs.
+- watch: 2 to 4 short items for the next day or two, grounded in the inputs: talks, votes, decisions, deadlines and other outcomes the stories wait on. The dashboard prints calendar.upcoming beside the brief with the times, so do not list scheduled data releases one by one; name a release only when a story turns on it, inside that item (e.g. "Whether Friday's PPI confirms the Fed's worry about prices"). Empty when nothing qualifies.
 Mention a market move only if markets or moves show it. No investment advice.
 
 Produce the same brief twice: "en" in English and "vi" in natural Vietnamese (standard Vietnamese names for countries, e.g. Mỹ, Trung Quốc, Nga; times as "20:30 thứ Tư 12/11"). Both versions cover the same stories with the same refs.`;

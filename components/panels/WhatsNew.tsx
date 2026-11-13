@@ -2,7 +2,7 @@ import { SERIES, type SeriesDef } from "@/config/series";
 import { THEMES } from "@/config/themes";
 import { getDict, pick, type Dict, type Locale } from "@/lib/i18n";
 import { fmtDelta, fmtNumber, fmtPct, fmtValue } from "@/lib/format";
-import { getChanges } from "@/lib/queries";
+import { getChanges, getHighlights } from "@/lib/queries";
 import type { ChangeData, ChangeRow } from "@/lib/data/changes";
 import type { Regime } from "@/lib/signals/risk-regime";
 import { WhatsNewList, type NewsEntry, type Tone } from "@/components/ui/WhatsNewList";
@@ -91,10 +91,20 @@ export function orderChanges(rows: ChangeRow[]): ChangeRow[] {
   return [...rows].sort((a, b) => rank(a) - rank(b) || b.at - a.at);
 }
 
+/**
+ * Drops indicator signals (a level crossed, an unusual move) of the indicators that still stand out: the vital-signs
+ * panel shows them with the same reasons and the AI's line, so the strip keeps only what the page shows nowhere else
+ * (regime and theme changes, releases, vulnerabilities, and signals that have faded since).
+ */
+export function withoutShown(rows: ChangeRow[], shown: ReadonlySet<string>): ChangeRow[] {
+  return rows.filter((r) => !((r.data.kind === "threshold" || r.data.kind === "move") && shown.has(r.data.key)));
+}
+
 export async function WhatsNewBody({ lang }: { lang: Locale }) {
   const t = getDict(lang).whatsNew;
-  const { rows: logged, now } = await getChanges();
-  const rows = orderChanges(logged);
+  const [{ rows: logged, now }, { items }] = await Promise.all([getChanges(), getHighlights(lang)]);
+  const shown = new Set<string>(items.map((i) => i.key));
+  const rows = orderChanges(withoutShown(logged, shown));
   const entries: NewsEntry[] = rows.flatMap((r) => {
     const c = describeChange(r.data, lang);
     return c ? [{ id: r.id, at: r.at, ...c }] : [];
@@ -105,6 +115,7 @@ export async function WhatsNewBody({ lang }: { lang: Locale }) {
       now={now}
       lang={lang}
       labels={{ since: t.since, firstVisit: t.firstVisit, nothing: t.nothing, seen: t.seen, more: t.more, less: t.less, rules: t.rules }}
+      aside={shown.size ? { text: t.standingOut.replace("{n}", String(shown.size)), href: "#vitals" } : undefined}
     />
   );
 }

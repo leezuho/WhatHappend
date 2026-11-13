@@ -153,6 +153,8 @@ Nút "Viết lại" (`BriefRefresh`) gọi `POST /api/brief`. Route này chỉ g
 
 Lý do (review 2026-11-10): bản tin ngày đó gồm G7, vụ xả súng ở Krakow và chính sách nhập cư, mục "Cần theo dõi" không có CPI Mỹ lúc 20:30, và không nhắc Brent −13% trong tuần, vì model chỉ thấy tiêu đề và snapshot.
 
+Từ 2026-11-13 "Cần theo dõi" không còn chép lịch: từ khi Lịch nằm ngay cạnh bản tin (LLDD 04, Hàng 1), các mục "PPI m/m Mỹ, 20:30 thứ Sáu" in hai lần cạnh nhau. Prompt bảo model chọn những gì câu chuyện đang chờ (đàm phán, bỏ phiếu, quyết định, hạn chót) và chỉ nhắc một số liệu khi câu chuyện xoay quanh nó, trong chính mục đó. `calendar` vẫn vào đầu vào, để model đối chiếu số đã công bố với dự báo và biết hôm nay có gì.
+
 **Đầu ra (JSON, kiểm tra bằng zod), sinh cho cả `vi` và `en`:**
 Một lần gọi sinh cả hai ngôn ngữ: `{ vi: BriefLang, en: BriefLang }`, với
 ```json
@@ -161,7 +163,7 @@ Một lần gọi sinh cả hai ngôn ngữ: `{ vi: BriefLang, en: BriefLang }`,
   "bullets": [
     { "title": "Ngắn gọn", "body": "1–3 câu: chuyện gì và vì sao quan trọng", "refs": [3, 17] }
   ],
-  "watch": ["2–5 điều cần theo dõi 1–2 ngày tới, sự kiện tác động cao của lịch đứng trước, kèm giờ Việt Nam"]
+  "watch": ["2–4 điều cần theo dõi 1–2 ngày tới mà các câu chuyện đang chờ (đàm phán, bỏ phiếu, quyết định, hạn chót); có thể rỗng"]
 }
 ```
 - 5–7 bullet, quan trọng nhất trước. `refs` là số thứ tự tiêu đề đầu vào; để trống khi ý chỉ dựa trên số liệu thị trường hay lịch (UI khi đó không hiện chip). Khi lưu, ref không hợp lệ bị bỏ, và mỗi báo chỉ giữ **một** chip: tiêu đề đầu tiên được dẫn từ báo đó. Tối đa 4 chip `{ title, url, source }`.
@@ -244,7 +246,7 @@ Panel đầu trang Tổng quan (LLDD 04 §3, Hàng 0) có 2–3 câu do AI viế
 
 **Đầu vào** (`themeForPrompt`, khoảng 6.000 ký tự ≈ 2,2K token cho 4 chủ đề): mỗi chủ đề có tên, trạng thái, điểm, "nóng lên nghĩa là gì", các chỉ số dạng chữ gọn (`gaugeText`: "Brent crude: $92.41 (2026-11-11), over 1 month -13.4%, heat -0.8"), sự kiện (cách trần tỷ giá, doanh thu TSMC), kênh sang Việt Nam và số liệu Việt Nam, kèo Polymarket, số bài 24 giờ / 7 ngày và tối đa 8 câu chuyện được đưa tin nhiều nhất trong 2 ngày (tiêu đề tiếng Anh, gom bằng `clusterStories`).
 
-**Prompt:** mỗi chủ đề 2–3 câu, dưới 70 từ: đang ở đâu (trạng thái và một hai biến động chính kèm số), vì sao (chỉ khi tiêu đề nói rõ, ghi theo nguồn nào), nghĩa là gì với Việt Nam (khi số liệu Việt Nam cho thấy). Chỉ dùng dữ liệu của chính chủ đề đó, không mượn số hay tin của chủ đề khác; nói rõ khi số liệu đã cũ; kèo viết dạng "thị trường đặt N%"; không khuyến nghị, không dự báo. Song ngữ trong một lần gọi.
+**Prompt:** mỗi chủ đề 2–3 câu, dưới 60 từ: đang ở đâu (trạng thái và một hai biến động chính, nói bằng lời: "dầu đã lùi khỏi đỉnh", "đô la ở mức cao nhất một năm"), vì sao (chỉ khi tiêu đề nói rõ, ghi theo nguồn nào; được dẫn số của tiêu đề mà thẻ không in), nghĩa là gì với Việt Nam (khi số liệu Việt Nam cho thấy, cũng bằng lời). Từ 2026-11-13 ghi chú **không nhắc lại số đã in trên thẻ** (chỉ số, sự kiện, số liệu Việt Nam, kèo): trước đó mỗi số xuất hiện hai lần, một trong ghi chú và một ngay dưới. Kèo chỉ nói thị trường đang nghiêng về đâu, không in phần trăm. Chỉ dùng dữ liệu của chính chủ đề đó, không mượn số hay tin của chủ đề khác; nói rõ khi số liệu đã cũ; không khuyến nghị, không dự báo. Song ngữ trong một lần gọi.
 
 **Đầu ra** (zod): `{ themes: [{ id, en, vi }] }`; id lạ hoặc văn bản rỗng bị bỏ. Lưu `kv['themes:notes']` (`StoredThemeNotes` trong `themes-shared.ts`: ngày Việt Nam, thời điểm, model, `basis`, ghi chú theo id). Web đọc qua `getThemes()`.
 

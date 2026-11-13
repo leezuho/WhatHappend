@@ -111,13 +111,9 @@
       "title": "Trừng phạt và thương mại của Mỹ",
       "subtitle": "OFAC, kiểm soát xuất khẩu, thuế quan, 60 ngày qua"
     },
-    "highlights": {
-      "title": "Điểm đáng chú ý",
-      "subtitle": "Chỉ số bất thường, AI giải thích dễ hiểu"
-    },
     "vitals": {
       "title": "Chỉ số sống còn",
-      "subtitle": "12 con số giới chuyên môn xem đầu tiên"
+      "subtitle": "12 con số giới chuyên môn xem đầu tiên, và các chỉ số đang nổi bật"
     },
     "worldMarkets": {
       "title": "Thị trường thế giới",
@@ -173,7 +169,7 @@
     },
     "vietnam": {
       "title": "Góc Việt Nam",
-      "subtitle": "VN-Index, USD/VND, vàng SJC, VnExpress"
+      "subtitle": "Chứng khoán, vàng, tỷ giá Vietcombank, VnExpress"
     },
     "vnMarkets": {
       "title": "Thị trường Việt Nam",
@@ -634,9 +630,9 @@
     "less": "Thu gọn"
   },
   "highlights": {
-    "empty": "Hiện chưa có chỉ số nào bất thường.",
+    "empty": "Hiện chưa có chỉ số nào nổi bật.",
     "needsKey": "Thêm AI_API_KEY vào .env.local để AI giải thích từng chỉ số.",
-    "rules": "Chọn khi chỉ số vừa vượt mức lưu ý hay nguy hiểm, biến động gấp 2 lần bình thường trở lên trong phiên hoặc trong 1 tuần, hoặc lập đỉnh/đáy 1 năm. Ngưỡng đã vượt từ lâu được tính ít dần theo thời gian. Bấm để xem lịch sử.",
+    "rules": "Ô có dòng chữ ở cuối là chỉ số đang nổi bật: vừa vượt mức lưu ý hay nguy hiểm, biến động gấp 2 lần bình thường trở lên trong phiên hoặc trong 1 tuần, hoặc lập đỉnh/đáy 1 năm; dòng chữ do AI viết. Ngưỡng đã vượt từ lâu được tính ít dần theo thời gian. Bấm ô để xem lịch sử và ghi chú đầy đủ.",
     "moveTip": "Biến động gấp {z} lần mức thường ngày",
     "weekTip": "Biến động 1 tuần {change}, gấp {z} lần mức thường",
     "sinceTip": "Ở mức này từ {date}",
@@ -651,7 +647,8 @@
       "critNew": "Vừa vượt mức nguy hiểm",
       "weekUp": "Tăng mạnh trong tuần",
       "weekDown": "Giảm mạnh trong tuần"
-    }
+    },
+    "others": "Nổi bật ngoài 12 chỉ số trên"
   },
   "themes": {
     "status": {
@@ -702,7 +699,8 @@
     "better": "tốt hơn dự báo",
     "worse": "xấu hơn dự báo",
     "kev": "Lỗ hổng bị khai thác: {vendor} {product} ({id})",
-    "ransomware": "đã bị mã độc tống tiền dùng"
+    "ransomware": "đã bị mã độc tống tiền dùng",
+    "standingOut": "{n} chỉ số đang nổi bật nằm ở Chỉ số sống còn"
   },
   "vn": {
     "fuelAdjusted": "Điều chỉnh gần nhất {t}",
@@ -734,6 +732,7 @@
     "p2pGap": "Chênh P2P so với Vietcombank: {v} ₫ ({pct})",
     "p2pHint": "Người mua đô ngoài hệ thống ngân hàng phải trả thêm bao nhiêu. Chênh lệch nới rộng là nhu cầu đô la mà ngân hàng không đáp ứng, dấu hiệu sớm và rõ nhất của áp lực lên tiền đồng.",
     "historyNote": "Giá SJC, Vietcombank và P2P chỉ được lưu từ cuối tháng 10/2026 nên các biểu đồ này dài dần theo ngày.",
+    "indices": "Chứng khoán",
     "gold": "Vàng (VND/lượng)",
     "buy": "Mua",
     "sell": "Bán",

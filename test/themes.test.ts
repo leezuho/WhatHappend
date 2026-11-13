@@ -4,7 +4,7 @@ import { openDb } from "@/lib/db";
 import type { SeriesDef } from "@/config/series";
 import { THEMES, type ThemeDef, type ThemeGauge } from "@/config/themes";
 import { gaugeText, matchesNews, readGauge, statusOf, themeForPrompt, themeHeat, themeStates, type GaugeReading } from "@/lib/data/themes";
-import { basisOf, pickTier, themesDue } from "@/lib/ai/themes";
+import { basisOf, isWhole, pickTier, themesDue } from "@/lib/ai/themes";
 import { recordCall } from "@/lib/ai/budget";
 import type { AiConfig } from "@/lib/ai/config";
 import { vnDate } from "@/lib/ai/brief";
@@ -209,4 +209,12 @@ test("macroInput carries the themes (without their headlines)", () => {
     THEMES.map((t) => t.id),
   );
   assert.equal(input.themes.every((t) => !("headlines" in t)), true);
+});
+
+test("isWhole: a theme note cut off mid-sentence is caught", () => {
+  assert.equal(isWhole("Cổ phiếu ngành chip và các"), false);
+  assert.equal(isWhole("Brent has slid back from its peak."), true);
+  assert.equal(isWhole('Theo BBC, "ông Huang từ chức." '), true);
+  assert.equal(isWhole("Markets expect a hike (December)."), true);
+  assert.equal(isWhole("Is the dollar turning?"), true);
 });

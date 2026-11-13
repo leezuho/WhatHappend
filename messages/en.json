@@ -111,13 +111,9 @@
       "title": "US sanctions and trade actions",
       "subtitle": "OFAC, export controls, tariffs, last 60 days"
     },
-    "highlights": {
-      "title": "What stands out",
-      "subtitle": "Unusual readings, explained in plain words by AI"
-    },
     "vitals": {
       "title": "Vital signs",
-      "subtitle": "The dozen numbers professionals check first"
+      "subtitle": "The dozen numbers professionals check first, and what stands out"
     },
     "worldMarkets": {
       "title": "World markets",
@@ -173,7 +169,7 @@
     },
     "vietnam": {
       "title": "Vietnam corner",
-      "subtitle": "VN-Index, USD/VND, SJC gold, VnExpress"
+      "subtitle": "Stocks, gold, Vietcombank rates, VnExpress"
     },
     "vnMarkets": {
       "title": "Vietnam markets",
@@ -634,9 +630,9 @@
     "less": "Show less"
   },
   "highlights": {
-    "empty": "Nothing unusual in the indicators right now.",
+    "empty": "Nothing stands out in the indicators right now.",
     "needsKey": "Add AI_API_KEY to .env.local to get an AI explanation for each one.",
-    "rules": "Picked when an indicator has just crossed its watch or danger level, moved at least twice its usual size in a session or over a week, or hit a 1-year high or low. A level crossed long ago counts less as time passes. Click for the history.",
+    "rules": "A tile with a line at the bottom stands out: it has just crossed its watch or danger level, moved at least twice its usual size in a session or over a week, or hit a 1-year high or low; the line is written by AI. A level crossed long ago counts less as time passes. Click a tile for the history and the full note.",
     "moveTip": "{z}× its usual move",
     "weekTip": "1-week change {change}, {z} times the usual",
     "sinceTip": "Beyond this level since {date}",
@@ -651,7 +647,8 @@
       "critNew": "Just crossed danger level",
       "weekUp": "Big rise this week",
       "weekDown": "Big fall this week"
-    }
+    },
+    "others": "Also standing out"
   },
   "themes": {
     "status": {
@@ -702,7 +699,8 @@
     "better": "better than expected",
     "worse": "worse than expected",
     "kev": "Exploited vulnerability: {vendor} {product} ({id})",
-    "ransomware": "used by ransomware"
+    "ransomware": "used by ransomware",
+    "standingOut": "{n} indicators standing out are in Vital signs"
   },
   "vn": {
     "fuelAdjusted": "Last adjusted {t}",
@@ -734,6 +732,7 @@
     "p2pGap": "P2P minus Vietcombank: {v} ₫ ({pct})",
     "p2pHint": "How much more people pay for a dollar outside the banking system. A gap that widens is dollar demand the banks are not meeting, the clearest early sign of pressure on the dong.",
     "historyNote": "SJC, Vietcombank and P2P prices are only stored from late October 2026, so these charts lengthen day by day.",
+    "indices": "Stocks",
     "gold": "Gold (VND per tael)",
     "buy": "Buy",
     "sell": "Sell",

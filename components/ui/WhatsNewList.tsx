@@ -120,12 +120,15 @@ export function WhatsNewList({
   now,
   lang,
   labels,
+  aside,
 }: {
   entries: NewsEntry[];
   /** Server time of the render, for "3 hours ago" (the page refreshes every minute). */
   now: number;
   lang: Locale;
   labels: { since: string; firstVisit: string; nothing: string; seen: string; more: string; less: string; rules: string };
+  /** A pointer to what is left out because another panel shows it. */
+  aside?: { text: string; href: string };
 }) {
   const base = useSyncExternalStore(subscribe, getBaseline, () => null);
   const [open, setOpen] = useState(false);
@@ -134,11 +137,19 @@ export function WhatsNewList({
   const fresh = entries.filter((e) => e.at > base.since);
   const sinceText = fmtDateTime(base.since, lang);
   const heading = base.first ? labels.firstVisit : labels.since.replace("{time}", sinceText);
+  const pointer = aside && (
+    <a href={aside.href} className="self-start text-[11px] text-ink-2 hover:text-ink hover:underline">
+      {aside.text} ↓
+    </a>
+  );
   if (!fresh.length) {
     return (
-      <p className="text-xs text-muted" title={labels.rules}>
-        {labels.nothing.replace("{time}", sinceText)}
-      </p>
+      <div className="flex flex-col gap-1">
+        <p className="text-xs text-muted" title={labels.rules}>
+          {labels.nothing.replace("{time}", sinceText)}
+        </p>
+        {pointer}
+      </div>
     );
   }
   const shown = open ? fresh : fresh.slice(0, SHOWN);
@@ -175,11 +186,14 @@ export function WhatsNewList({
           );
         })}
       </ul>
-      {fresh.length > SHOWN && (
-        <button type="button" onClick={() => setOpen(!open)} className="self-start text-[11px] text-ink-2 hover:text-ink hover:underline">
-          {open ? labels.less : labels.more.replace("{n}", String(fresh.length - SHOWN))}
-        </button>
-      )}
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        {fresh.length > SHOWN && (
+          <button type="button" onClick={() => setOpen(!open)} className="self-start text-[11px] text-ink-2 hover:text-ink hover:underline">
+            {open ? labels.less : labels.more.replace("{n}", String(fresh.length - SHOWN))}
+          </button>
+        )}
+        {pointer}
+      </div>
     </div>
   );
 }

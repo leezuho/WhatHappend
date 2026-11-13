@@ -15,13 +15,15 @@ interface PanelProps {
   children: ReactNode;
   /** Extra controls rendered in the header, before the status. */
   actions?: ReactNode;
+  /** Anchor for links from other panels; the scroll margin keeps the title below the sticky top bar. */
+  id?: string;
 }
 
 // Static frame (title, subtitle) is part of the prerendered shell; the status
 // line and the body stream in per request behind their own Suspense.
-export function Panel({ title, subtitle, sources, lang, className, children, actions }: PanelProps) {
+export function Panel({ title, subtitle, sources, lang, className, children, actions, id }: PanelProps) {
   return (
-    <section className={clsx("flex min-w-0 flex-col rounded-xl border border-line bg-surface shadow-card", className)}>
+    <section id={id} className={clsx("flex min-w-0 scroll-mt-32 flex-col rounded-xl border border-line bg-surface shadow-card", className)}>
       <header className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-2.5">
         <div className="min-w-0">
           <h2 className="font-display text-[15px] leading-snug font-semibold tracking-tight text-ink">{title}</h2>

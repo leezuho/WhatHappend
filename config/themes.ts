@@ -1,6 +1,6 @@
 import type { Bi } from "@/lib/i18n";
 import type { SeriesDef, SeriesKey } from "@/config/series";
-import { VN_FOREIGN } from "@/config/vietnam";
+import { VN_FOREIGN, VN_GB10Y } from "@/config/vietnam";
 
 // The overview's "Dominant themes" (TODO P1, LLDD 04 §3, LLDD 05 §3d): the few
 // stories that drive markets right now, each tied to the numbers that tell
@@ -103,6 +103,21 @@ const NVDA = priceDef("yahoo:NVDA", { en: "Nvidia", vi: "Nvidia" }, "NVDA", { en
 const TSM = priceDef("yahoo:TSM", { en: "TSMC (ADR)", vi: "TSMC (ADR)" }, "TSM", { en: "The chipmaker that builds most AI processors, $ per ADR.", vi: "Hãng đúc chip làm phần lớn chip AI, $ mỗi ADR." }, "$");
 const FPT = priceDef("yahoo:FPT.VN", { en: "FPT", vi: "FPT" }, "FPT", { en: "Vietnam's largest IT services group, ₫.", vi: "Tập đoàn dịch vụ CNTT lớn nhất Việt Nam, ₫." }, "₫", 0);
 
+/** Vietnam's 10-year government bond yield (lib/sources/ibrate.ts); history from 2026-10-15 only, so shown, never a gauge. */
+const VN_10Y: SeriesDef = {
+  id: VN_GB10Y,
+  name: { en: "Vietnam 10-year government bond yield", vi: "Lợi suất trái phiếu chính phủ 10 năm" },
+  short: "VN10Y",
+  unit: "%",
+  digits: 2,
+  polarity: "neutral",
+  delta: "abs",
+  explain: {
+    en: "Yield on Vietnam's 10-year government bond on the secondary market: what long-term borrowing costs in dong.",
+    vi: "Lợi suất trái phiếu chính phủ kỳ hạn 10 năm trên thị trường thứ cấp: chi phí vay dài hạn bằng VND.",
+  },
+};
+
 const FOREIGN_NET: SeriesDef = {
   id: VN_FOREIGN.net,
   name: { en: "Foreign net buying, 20 sessions (HOSE)", vi: "Khối ngoại mua ròng 20 phiên (HOSE)" },
@@ -160,16 +175,16 @@ export const THEMES: ThemeDef[] = [
       { series: "realYield", sign: 1, label: { en: "10Y real yield", vi: "Lợi suất thực 10 năm" } },
       { series: "dxy", sign: 1, label: { en: "Dollar index", vi: "Chỉ số USD" } },
     ],
+    // USD/VND and its distance to the ceiling belong to the "Foreign money and the dong" card; shown once.
     vietnam: {
       text: {
-        en: "Higher US rates and a strong dollar push USD/VND toward the State Bank's ceiling and make it harder to cut rates at home.",
-        vi: "Lãi suất Mỹ cao và đô la mạnh đẩy USD/VND về sát trần biên độ, khiến NHNN khó hạ lãi suất.",
+        en: "Higher US rates and a strong dollar make it harder for the State Bank to cut: dong rates stay up (the exchange rate is in \"Foreign money and the dong\").",
+        vi: "Lãi suất Mỹ cao và đô la mạnh khiến NHNN khó hạ lãi suất, lãi suất VND khó giảm (tỷ giá xem ở thẻ \"Vốn ngoại và tỷ giá\").",
       },
       gauges: [
-        { series: "usdvnd", sign: 1, label: { en: "USD/VND", vi: "USD/VND" } },
         { series: "vnIbOn", sign: 1, label: { en: "VND overnight", vi: "Liên ngân hàng qua đêm" } },
+        { series: VN_10Y, sign: 1, label: { en: "VN 10Y bond", vi: "Trái phiếu CP 10 năm" } },
       ],
-      facts: ["fxCeiling"],
     },
     news: {
       en: /\b(fed|federal reserve|powell|fomc|inflation|cpi|pce|interest rates?|rate (hike|cut|rise)s?|treasur(y|ies)|bond yields?|payrolls|jobs report)\b/i,
