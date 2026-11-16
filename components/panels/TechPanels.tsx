@@ -12,7 +12,7 @@ import type { HfModel, HfPaper } from "@/lib/sources/huggingface";
 import type { KevEntry, KevVendors } from "@/lib/sources/kev";
 import type { TwRevenue } from "@/lib/sources/twse";
 import type { EolRow } from "@/lib/sources/eol";
-import type { AiValue } from "@/lib/sources/arena";
+import type { AiUnrated, AiValue } from "@/lib/sources/arena";
 import type { LobstersItem } from "@/lib/sources/lobsters";
 import type { SpaceWeather } from "@/lib/sources/spaceweather";
 import type { ComputeSummary } from "@/lib/sources/epoch";
@@ -668,12 +668,20 @@ const median = (xs: number[]) => {
   return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
 };
 
-/** The best-rated models on LMArena that OpenRouter sells, by blended price (log scale) and rating. */
+/** Unrated new models named under the chart; the rest are counted. */
+const UNRATED_SHOWN = 6;
+
+/**
+ * The newest model of each line rated on LMArena and sold on OpenRouter, by blended price (log scale) and rating; under
+ * it, the models released too recently to have a rating.
+ */
 export async function AiValueBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);
   const t = d.tech;
-  const rows = (await getItems<AiValue>("ai_value", lang, 45)).map((i) => i.data);
+  const [items, unratedItems] = await Promise.all([getItems<AiValue>("ai_value", lang, 60), getItems<AiUnrated>("ai_value_new", lang, 40)]);
+  const rows = items.map((i) => i.data);
   if (rows.length < 5) return <EmptyState lang={lang} />;
+  const unrated = unratedItems.map((i) => i.data.name);
   const usd = (v: number) => `$${fmtNumber(v, lang, v < 1 ? 2 : v < 10 ? 1 : 0)}`;
   const best = rows
     .filter((r) => r.rating >= median(rows.map((x) => x.rating)))
@@ -702,6 +710,14 @@ export async function AiValueBody({ lang }: { lang: Locale }) {
         height={380}
         tableLabels={{ table: d.common.showTable, chart: d.common.showChart, name: t.valueModel }}
       />
+      {unrated.length > 0 && (
+        <p className="text-xs text-ink-2">
+          {t.valueUnrated.replace(
+            "{list}",
+            unrated.slice(0, UNRATED_SHOWN).join(", ") + (unrated.length > UNRATED_SHOWN ? t.valueUnratedMore.replace("{n}", String(unrated.length - UNRATED_SHOWN)) : ""),
+          )}
+        </p>
+      )}
       <p className="text-[10px] leading-snug text-muted">{t.valueNote.replace("{date}", rows[0].date ?? "—")}</p>
     </div>
   );

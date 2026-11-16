@@ -337,7 +337,7 @@
     },
     "techValue": {
       "title": "Model AI: chất lượng so với giá",
-      "subtitle": "Điểm LMArena và giá OpenRouter của các model được chấm cao nhất"
+      "subtitle": "Điểm LMArena và giá OpenRouter, bản mới nhất của mỗi dòng model"
     },
     "techSpace": {
       "title": "Không gian",
@@ -989,7 +989,9 @@
     "valueClosed": "Đóng trọng số",
     "valueOpen": "Mở trọng số",
     "valueModel": "Model",
-    "valueNote": "Điểm: bảng xếp hạng văn bản của LMArena, hạng chung, lấy biến thể tốt nhất của mỗi model (người dùng chọn giữa hai câu trả lời ẩn danh), {date}. Giá: giá niêm yết của OpenRouter; trục giá dạng logarit. Hai đường chia tại trung vị của các model trên hình. Model OpenRouter không bán thì không có mặt.",
+    "valueUnrated": "Mới lên OpenRouter, LMArena chưa chấm: {list}",
+    "valueUnratedMore": " và {n} model khác",
+    "valueNote": "Điểm: bảng xếp hạng văn bản của LMArena, hạng chung, top 300, lấy biến thể tốt nhất của mỗi model (người dùng chọn giữa hai câu trả lời ẩn danh), {date}. Model mới cần vài ngày gom phiếu mới có điểm. Mỗi dòng model chỉ giữ bản mới nhất (có Claude Opus 5.5 thì không hiện Opus 4.6), và bỏ model OpenRouter đã bán hơn một năm. Giá: giá niêm yết của OpenRouter; trục giá dạng logarit. Hai đường chia tại trung vị của các model trên hình. Model OpenRouter không bán thì không có mặt.",
     "noteEmpty": "Nhận định được viết mỗi tuần một lần (giờ Việt Nam) từ tin và số liệu trên trang này.",
     "noteCaveat": "AI viết chỉ từ tiêu đề tin và số liệu trên trang này; hãy mở bài gốc trước khi dựa vào.",
     "twMonth": "Doanh thu {m}, tỷ Đài tệ",

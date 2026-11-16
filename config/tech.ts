@@ -145,6 +145,8 @@ export const ARENA_ORGS: Record<string, string[]> = {
   meta: ["meta", "meta-llama"],
   stepfun: ["stepfun-ai", "stepfun"],
   mistral: ["mistralai"],
+  thinky: ["thinkingmachines"],
+  ibm: ["ibm-granite"],
 };
 
 // Weekly downloads of the main web frameworks and AI SDKs (lib/sources/pkgtrends.ts).

@@ -37,7 +37,7 @@ import { parseFredCalendar } from "@/lib/sources/releases";
 import { fmtDelta, fmtValue } from "@/lib/format";
 import { squarify } from "@/lib/treemap";
 import { logAxis, placeLabels } from "@/components/charts/QuadrantScatter";
-import { joinArena, modelKey } from "@/lib/sources/arena";
+import { joinArena, latestLines, modelKey, modelLine, unratedNew, type AiValue } from "@/lib/sources/arena";
 import { kpPoints } from "@/lib/sources/spaceweather";
 import { weeklyTotals } from "@/lib/sources/pkgtrends";
 import { computeModels, frontier, growthPerYear } from "@/lib/sources/epoch";
@@ -799,6 +799,82 @@ test("joinArena: arena names to OpenRouter models by organisation and name, best
       ["anthropic/claude-opus-5", 1506, 5, 5, 25, 10],
       ["qwen/qwen3.8-max-0902", 1480, 20, 1.2, 6, 2.4],
     ],
+  );
+});
+
+test("joinArena: an arena name led by its organisation matches OpenRouter's slug; listing date carried", () => {
+  const out = joinArena(
+    [{ row: { model_name: "NVIDIA-Nemotron-3-Ultra-550B-A55B (NVFP4)", organization: "nvidia", rating: 1445, rank: 63, category: "overall" } }],
+    [{ id: "nvidia/nemotron-3-ultra-550b-a55b", name: "NVIDIA: Nemotron 3 Ultra", created: 1_780_000_000, pricing: { prompt: "0.0000006", completion: "0.0000024" } }],
+  );
+  assert.deepEqual(
+    out.map((r) => [r.id, r.listed]),
+    [["nvidia/nemotron-3-ultra-550b-a55b", 1_780_000_000_000]],
+  );
+});
+
+test("modelLine: a model's name without its version, sizes kept", () => {
+  assert.equal(modelLine("Claude Opus 4.6"), "claude opus");
+  assert.equal(modelLine("Claude 3.5 Sonnet"), modelLine("Claude Sonnet 5.5"));
+  assert.equal(modelLine("Kimi K3.1 Pro"), "kimi k pro");
+  assert.equal(modelLine("GPT-6.1 Sol"), modelLine("GPT-5.6 Sol"));
+  assert.equal(modelLine("Qwen3.8 27B"), "qwen 27b");
+  assert.equal(modelLine("Qwen3.5 397B A17B"), "qwen 397b a17b");
+  assert.notEqual(modelLine("Gemini 3.8 Flash"), modelLine("Gemini 3.5 Flash Lite"));
+});
+
+test("latestLines: newest model of each line, nothing OpenRouter has listed for over a year, order kept", () => {
+  const v = (id: string, name: string, org: string, rating: number, listed: string | null): AiValue => ({
+    id,
+    name,
+    org,
+    rating,
+    rank: 0,
+    priceIn: 1,
+    priceOut: 1,
+    blended: 1,
+    open: false,
+    date: null,
+    listed: listed ? Date.parse(listed) : null,
+  });
+  const out = latestLines(
+    [
+      v("anthropic/claude-opus-5.5", "Claude Opus 5.5", "anthropic", 1514, "2026-09-22"),
+      v("anthropic/claude-opus-4.6", "Claude Opus 4.6", "anthropic", 1501, "2026-02-04"),
+      v("google/gemini-3.8-flash", "Gemini 3.8 Flash", "google", 1500, "2026-09-02"),
+      v("google/gemini-2.5-pro", "Gemini 2.5 Pro", "google", 1458, "2025-06-17"),
+      v("x-ai/grok-4.6", "Grok 4.6", "x-ai", 1430, "2026-08-12"),
+      v("x-ai/grok-4.7", "Grok 4.7", "x-ai", 1400, "2026-09-21"),
+      v("acme/unknown-1", "Unknown 1", "acme", 1390, null),
+    ],
+    NOW,
+  );
+  assert.deepEqual(
+    out.map((r) => r.id),
+    ["anthropic/claude-opus-5.5", "google/gemini-3.8-flash", "x-ai/grok-4.7", "acme/unknown-1"],
+  );
+});
+
+test("unratedNew: recent paid text models from labs on the chart that the leaderboard has not rated, newest first", () => {
+  const s = (iso: string) => Date.parse(iso) / 1000;
+  const paid = { prompt: "0.000001", completion: "0.000005" };
+  const out = unratedNew(
+    [
+      { id: "anthropic/claude-fable-5.2", name: "Anthropic: Claude Fable 5.2", created: s("2026-11-09"), pricing: paid },
+      { id: "qwen/qwen4-max", name: "Qwen: Qwen4 Max", created: s("2026-11-10"), pricing: paid },
+      { id: "google/gemini-4-hydrogen", name: "Google: Gemini 4 Hydrogen", created: s("2026-11-08"), pricing: paid },
+      { id: "google/nano-banana-3", name: "Google: Nano Banana 3", created: s("2026-11-08"), pricing: paid, architecture: { output_modalities: ["image"] } },
+      { id: "qwen/qwen4-max:free", name: "Qwen: Qwen4 Max (free)", created: s("2026-11-10"), pricing: { prompt: "0", completion: "0" } },
+      { id: "acme/new-model", name: "Acme: New Model", created: s("2026-11-09"), pricing: paid },
+      { id: "anthropic/claude-sonnet-5.5", name: "Anthropic: Claude Sonnet 5.5", created: s("2026-09-29"), pricing: paid },
+    ],
+    new Set(["google/gemini-4-hydrogen"]),
+    new Set(["anthropic", "google", "qwen"]),
+    NOW,
+  );
+  assert.deepEqual(
+    out.map((m) => m.name),
+    ["Qwen4 Max", "Claude Fable 5.2"],
   );
 });
 

@@ -337,7 +337,7 @@
     },
     "techValue": {
       "title": "AI models: quality against price",
-      "subtitle": "LMArena rating and OpenRouter price of the top-rated models"
+      "subtitle": "LMArena rating and OpenRouter price, newest model of each line"
     },
     "techSpace": {
       "title": "Space",
@@ -989,7 +989,9 @@
     "valueClosed": "Closed weights",
     "valueOpen": "Open weights",
     "valueModel": "Model",
-    "valueNote": "Rating: LMArena text leaderboard, overall, best variant of each model (people vote between two anonymous answers), {date}. Price: OpenRouter's list price; the axis is logarithmic. Lines split at the medians of the models shown. Models OpenRouter does not sell are left out.",
+    "valueUnrated": "New on OpenRouter, not rated on LMArena yet: {list}",
+    "valueUnratedMore": " and {n} more",
+    "valueNote": "Rating: LMArena text leaderboard, overall, top 300, best variant of each model (people vote between two anonymous answers), {date}. A new model needs a few days of votes to get a rating. Only the newest model of each line is shown (Claude Opus 5.5, not also Opus 4.6), and none OpenRouter has sold for over a year. Price: OpenRouter's list price; the axis is logarithmic. Lines split at the medians of the models shown. Models OpenRouter does not sell are left out.",
     "noteEmpty": "The note is written once a week (Vietnam time) from this page's stories and numbers.",
     "noteCaveat": "Written by AI from this page's headlines and numbers only; open the stories before relying on it.",
     "twMonth": "Revenue for {m}, NT$ billion",
