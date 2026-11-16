@@ -21,7 +21,7 @@ import { cpiIds, lastPoint } from "@/lib/data/macro";
 import { assetClassRows, commodityRows, ratioSeries, spreadHistory, worldIndexRows, type AssetClassRow, type CommodityRow, type SpreadHistory, type WorldIndexRow } from "@/lib/data/markets";
 import { imfId } from "@/config/macro";
 import { OZ_PER_LUONG, vnMarketDates } from "@/lib/data/vietnam";
-import { clusterStories } from "@/lib/data/news";
+import { clusterStories, sameTitleUrls } from "@/lib/data/news";
 import { btcLeverage, etfFlows, type BtcLeverage, type EtfFlows } from "@/lib/data/crypto";
 import { cotRows, type CotRow } from "@/lib/data/cot";
 import type { Point } from "@/lib/sources/store";
@@ -403,6 +403,11 @@ export interface BriefView {
   brief: StoredBrief;
   /** Article photo by source URL, for the bullets' thumbnails. */
   images: Record<string, string>;
+  /**
+   * The cited articles' URLs and those of every copy with the same title: reading the news keeps one URL per title,
+   * not necessarily the cited one. Lets the summary tab leave the brief's stories out of its "new since" list.
+   */
+  cited: string[];
 }
 
 export async function getLatestBrief(lang: Locale): Promise<{ view: BriefView | null; hasKey: boolean; requestedAt: number | null }> {
@@ -415,10 +420,15 @@ export async function getLatestBrief(lang: Locale): Promise<{ view: BriefView | 
   const requestedAt = req && (!row || req.updated_at > row.created_at) ? req.updated_at : null;
   const brief = row ? (JSON.parse(row.content) as StoredBrief) : null;
   return {
-    view: brief && row ? { date: row.date, createdAt: row.created_at, brief, images: articleImages(db, brief.bullets.flatMap((b) => b.sources.map((s) => s.url))) } : null,
+    view: brief && row ? briefView(db, row.date, row.created_at, brief) : null,
     hasKey: isAiConfigured(),
     requestedAt,
   };
+}
+
+function briefView(db: ReturnType<typeof getDb>, date: string, createdAt: number, brief: StoredBrief): BriefView {
+  const urls = brief.bullets.flatMap((b) => b.sources.map((s) => s.url));
+  return { date, createdAt, brief, images: articleImages(db, urls), cited: sameTitleUrls(db, urls) };
 }
 
 /** Photo of each cited article, by URL (brief sources are copied from `articles.url`). */

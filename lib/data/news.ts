@@ -1,3 +1,4 @@
+import type { DatabaseSync } from "node:sqlite";
 import type { Locale } from "@/lib/i18n";
 
 // Grouping headlines that tell the same story in different words ("Trump defends
@@ -80,4 +81,38 @@ export function clusterStories<T extends Story>(items: T[], lang: Locale, thresh
     }
     return lead;
   });
+}
+
+// ---------------------------------------------------------------- the overview's summary tab
+
+/**
+ * How long a brief leads the summary tab: a day, plus a few hours for the 06:00 run and its retries. Past that (the AI
+ * failing, no key) the tab shows the most widely carried stories instead of a brief from days ago.
+ */
+export const BRIEF_FRESH_MS = 30 * 3_600_000;
+
+/**
+ * Up to `n` stories published from `since`, the most widely carried first (newest breaking ties). Sports are left out,
+ * as in the brief's input, and so is any story with a headline in `exclude` (the brief's citations), which already has
+ * its row above.
+ */
+export function topStories<T extends Story & { publishedAt: number; topic: string | null }>(
+  items: T[],
+  since: number,
+  n: number,
+  exclude: ReadonlySet<string> = new Set(),
+): T[] {
+  return items
+    .filter((i) => i.publishedAt >= since && i.topic !== "sports" && !exclude.has(i.url) && !i.related.some((r) => exclude.has(r.url)))
+    .sort((a, b) => b.alsoIn.length - a.alsoIn.length || b.publishedAt - a.publishedAt)
+    .slice(0, n);
+}
+
+/** `urls` plus the URL of every article sharing a title with one of them (the same headline from another feed or outlet). */
+export function sameTitleUrls(db: DatabaseSync, urls: string[]): string[] {
+  if (!urls.length) return [];
+  const rows = db
+    .prepare(`SELECT url FROM articles WHERE title_key IN (SELECT title_key FROM articles WHERE url IN (${urls.map(() => "?").join(",")}))`)
+    .all(...urls) as unknown as { url: string }[];
+  return [...new Set([...urls, ...rows.map((r) => r.url)])];
 }

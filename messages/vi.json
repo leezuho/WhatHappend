@@ -145,7 +145,7 @@
     },
     "news": {
       "title": "Tin tức hôm nay",
-      "subtitle": "Bản tin AI mỗi ngày và tin mới nhất theo khu vực, chủ đề"
+      "subtitle": "Tin nổi bật trong ngày, luôn cập nhật, và mọi tin theo khu vực, chủ đề"
     },
     "calendar": {
       "title": "Sắp diễn ra",
@@ -582,8 +582,13 @@
     "pulse": "Nhấp nháy = cảnh báo hoặc động đất ≥ 6"
   },
   "news": {
-    "tabBrief": "Bản tin AI",
-    "tabLatest": "Tin mới nhất",
+    "tabSummary": "Tin nổi bật",
+    "tabAll": "Tất cả tin",
+    "briefAt": "Bản tin AI · {t}",
+    "briefOld": "Bản tin AI gần nhất ({t}) đã cũ.",
+    "sinceBrief": "Mới sau bản tin",
+    "top24h": "Được đưa tin nhiều nhất 24 giờ qua",
+    "topNote": "Xếp theo số báo cùng đưa một chuyện",
     "related": "+{n} bài cùng chuyện",
     "all": "Tất cả",
     "alsoIn": "cùng tin",

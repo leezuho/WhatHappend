@@ -145,7 +145,7 @@
     },
     "news": {
       "title": "Today's news",
-      "subtitle": "A daily AI brief and the latest headlines by region and topic"
+      "subtitle": "The day's top stories, kept current, and every headline by region and topic"
     },
     "calendar": {
       "title": "Upcoming",
@@ -582,8 +582,13 @@
     "pulse": "Pulsing = alert or M6+ quake"
   },
   "news": {
-    "tabBrief": "AI brief",
-    "tabLatest": "Latest",
+    "tabSummary": "Top stories",
+    "tabAll": "All news",
+    "briefAt": "AI brief · {t}",
+    "briefOld": "The last AI brief ({t}) is out of date.",
+    "sinceBrief": "New since the brief",
+    "top24h": "Most covered in the last 24 hours",
+    "topNote": "Ranked by how many outlets carry each story",
     "related": "+{n} more on this story",
     "all": "All",
     "alsoIn": "also",

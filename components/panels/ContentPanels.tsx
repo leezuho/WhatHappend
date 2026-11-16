@@ -2,33 +2,112 @@ import { Suspense } from "react";
 import clsx from "clsx";
 import type { SeriesKey } from "@/config/series";
 import { getDict, pick, type Locale } from "@/lib/i18n";
-import { fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtValue } from "@/lib/format";
-import { getLatestBrief, getMapEvents, getNews, getTiles, getVietnam, requestNow, type VietnamData } from "@/lib/queries";
+import { fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtRelative, fmtTime, fmtValue } from "@/lib/format";
+import { BRIEF_FRESH_MS, topStories } from "@/lib/data/news";
+import { getLatestBrief, getMapEvents, getNews, getTiles, getVietnam, requestNow, type NewsItem, type VietnamData } from "@/lib/queries";
 import { getForeignFlows } from "@/lib/queries-vietnam";
 import { EmptyState, PanelSkeleton } from "@/components/ui/Panel";
 import { Tabs } from "@/components/ui/Tabs";
 import { Thumb } from "@/components/ui/Thumb";
 import { MapView } from "./MapView";
-import { NewsList } from "./NewsList";
+import { NewsList, Related } from "./NewsList";
 import { BriefRefresh } from "./BriefRefresh";
 
-// ---------------------------------------------------------------- brief
+// ---------------------------------------------------------------- news
 
-/** Bullets shown before "Show more"; the brief has 5–6, a full wall of text above the fold. */
+/** Brief items shown before "Show more"; the brief has 5–7, a full wall of text above the fold. */
 const BRIEF_SHOWN = 3;
+/** Rows under "New since the brief". */
+const SINCE_SHOWN = 5;
+/** Stories in the list that stands in for a missing or old brief. */
+const TOP_SHOWN = 6;
 
-export async function BriefBody({ lang }: { lang: Locale }) {
+/**
+ * The overview's one news panel: "Top stories" (the day's picture, kept current) first, "All news" (the full list with
+ * its region and topic filters) a tab away. Until 2026-11-16 the tabs were "AI brief" and "Latest", split by who wrote
+ * them, and the first went stale by the evening, or for days when the AI call failed.
+ */
+export function NewsTabs({ lang }: { lang: Locale }) {
+  const t = getDict(lang).news;
+  return (
+    <Tabs
+      fill
+      tabs={[
+        {
+          key: "summary",
+          label: t.tabSummary,
+          content: (
+            <Suspense fallback={<PanelSkeleton />}>
+              <SummaryBody lang={lang} />
+            </Suspense>
+          ),
+        },
+        {
+          key: "all",
+          label: t.tabAll,
+          content: (
+            <div className="scroll-thin max-h-[560px] overflow-auto pr-1">
+              <Suspense fallback={<PanelSkeleton />}>
+                <NewsBody lang={lang} />
+              </Suspense>
+            </div>
+          ),
+        },
+      ]}
+    />
+  );
+}
+
+/**
+ * "Top stories": the AI brief's stories, then the most widely carried ones published since it was written (leaving out
+ * the brief's own). With no brief from the last 30 hours (`BRIEF_FRESH_MS`), the most widely carried stories of the
+ * last 24 hours take its place, so the tab never leads with days-old news.
+ */
+async function SummaryBody({ lang }: { lang: Locale }) {
   const d = getDict(lang);
-  const { view, hasKey, requestedAt } = await getLatestBrief(lang);
-  if (!view) {
+  const [{ view, hasKey, requestedAt }, items, now] = await Promise.all([getLatestBrief(lang), getNews(lang), requestNow()]);
+  const refresh = hasKey && <BriefRefresh label={d.brief.regenerate} requestedLabel={d.brief.requested} pending={requestedAt !== null} />;
+  const brief = view && now - view.createdAt < BRIEF_FRESH_MS ? view : null;
+
+  if (!brief) {
+    const top = topStories(items, now - 24 * 3_600_000, TOP_SHOWN);
+    const note = !hasKey ? d.brief.needsKey : view ? d.news.briefOld.replace("{t}", fmtDateTime(view.createdAt, lang)) : d.brief.empty;
     return (
-      <div className="flex flex-col items-start gap-3 py-4 text-sm text-ink-2">
-        <p>{hasKey ? d.brief.empty : d.brief.needsKey}</p>
-        {hasKey && <BriefRefresh label={d.brief.regenerate} requestedLabel={d.brief.requested} pending={requestedAt !== null} />}
-      </div>
+      <article className="flex flex-1 flex-col gap-3">
+        <div>
+          <p className="font-display text-base font-semibold leading-snug text-ink">{d.news.top24h}</p>
+          <p className="mt-0.5 text-[11px] text-muted">{d.news.topNote}</p>
+        </div>
+        {top.length ? (
+          <ol className="flex flex-col gap-3">
+            {top.map((n) => (
+              <li key={n.id} className="flex items-start gap-3 text-sm leading-snug">
+                <div className="min-w-0 flex-1">
+                  <a href={n.url} target="_blank" rel="noreferrer" className="font-semibold text-ink hover:underline">
+                    {n.title}
+                  </a>
+                  <p className="mt-0.5 text-[11px] text-muted">
+                    <Outlets n={n} /> · {fmtRelative(n.publishedAt, now, lang)}
+                  </p>
+                  <Related n={n} label={d.news.related} />
+                </div>
+                <Thumb src={n.image} className="mt-0.5 h-14 w-20" />
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <EmptyState lang={lang} />
+        )}
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-2 text-[11px] text-muted">
+          <span>{note}</span>
+          {refresh}
+        </div>
+      </article>
     );
   }
-  const b = view.brief;
+
+  const b = brief.brief;
+  const since = topStories(items, brief.createdAt, SINCE_SHOWN, new Set(brief.cited)).sort((x, y) => y.publishedAt - x.publishedAt);
   const bullet = (x: (typeof b.bullets)[number], i: number) => (
     <li key={i} className="flex items-start gap-3 text-sm leading-snug">
       <div className="min-w-0 flex-1">
@@ -43,13 +122,16 @@ export async function BriefBody({ lang }: { lang: Locale }) {
           </span>
         )}
       </div>
-      <Thumb src={x.sources.map((s) => view.images[s.url]).find(Boolean)} className="mt-0.5 h-14 w-20" />
+      <Thumb src={x.sources.map((s) => brief.images[s.url]).find(Boolean)} className="mt-0.5 h-14 w-20" />
     </li>
   );
   const rest = b.bullets.slice(BRIEF_SHOWN);
   return (
     <article className="flex flex-1 flex-col gap-3">
-      <p className="font-display text-base font-semibold leading-snug text-ink">{b.headline}</p>
+      <div>
+        <p className="font-display text-base font-semibold leading-snug text-ink">{b.headline}</p>
+        <p className="mt-0.5 text-[11px] text-muted">{d.news.briefAt.replace("{t}", fmtDateTime(brief.createdAt, lang))}</p>
+      </div>
       <ol className="flex flex-col gap-3">{b.bullets.slice(0, BRIEF_SHOWN).map(bullet)}</ol>
       {rest.length > 0 && (
         <details className="group">
@@ -59,6 +141,24 @@ export async function BriefBody({ lang }: { lang: Locale }) {
           </summary>
           <ol className="mt-3 flex flex-col gap-3">{rest.map((x, i) => bullet(x, i + BRIEF_SHOWN))}</ol>
         </details>
+      )}
+      {since.length > 0 && (
+        <section>
+          <h3 className="mb-1 text-xs font-semibold text-ink-2">{d.news.sinceBrief}</h3>
+          <ul className="flex flex-col">
+            {since.map((n) => (
+              <li key={n.id} className="flex items-baseline gap-2 border-t border-line py-1.5 first:border-t-0">
+                <span className="tabular min-w-[2.75rem] shrink-0 text-[11px] text-muted">{clock(n.publishedAt, now, lang)}</span>
+                <a href={n.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 text-sm leading-snug text-ink hover:underline">
+                  {n.title}
+                </a>
+                <span className="shrink-0 text-[11px] text-muted">
+                  <Outlets n={n} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {b.watch.length > 0 && (
         <div>
@@ -72,49 +172,27 @@ export async function BriefBody({ lang }: { lang: Locale }) {
       )}
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-2 text-[11px] text-muted">
         <span>
-          {d.brief.basedOn.replace("{n}", String(b.headlineCount))} · {fmtDateTime(view.createdAt, lang)} · {b.model}
+          {d.brief.basedOn.replace("{n}", String(b.headlineCount))} · {b.model}
         </span>
-        {hasKey && <BriefRefresh label={d.brief.regenerate} requestedLabel={d.brief.requested} pending={requestedAt !== null} />}
+        {refresh}
       </div>
     </article>
   );
 }
 
-// ---------------------------------------------------------------- news
-
-/**
- * The overview's one news panel: the AI brief first, the latest headlines a tab away. They used to be two panels, and
- * the brief's stories came back in the headline list further down the page.
- */
-export function NewsTabs({ lang }: { lang: Locale }) {
-  const t = getDict(lang).news;
+/** "Reuters +4": the outlet, and how many others carry the story (named in the tooltip). */
+function Outlets({ n }: { n: NewsItem }) {
   return (
-    <Tabs
-      fill
-      tabs={[
-        {
-          key: "brief",
-          label: t.tabBrief,
-          content: (
-            <Suspense fallback={<PanelSkeleton />}>
-              <BriefBody lang={lang} />
-            </Suspense>
-          ),
-        },
-        {
-          key: "latest",
-          label: t.tabLatest,
-          content: (
-            <div className="scroll-thin max-h-[560px] overflow-auto pr-1">
-              <Suspense fallback={<PanelSkeleton />}>
-                <NewsBody lang={lang} />
-              </Suspense>
-            </div>
-          ),
-        },
-      ]}
-    />
+    <span title={[n.source, ...n.alsoIn].join(", ")}>
+      <span className="font-medium text-ink-2">{n.source}</span>
+      {n.alsoIn.length > 0 && ` +${n.alsoIn.length}`}
+    </span>
   );
+}
+
+/** Clock time today (Vietnam time); weekday and time for an earlier day. */
+function clock(ts: number, now: number, lang: Locale): string {
+  return fmtDate(ts, lang) === fmtDate(now, lang) ? fmtTime(ts, lang) : fmtDate(ts, lang, { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 export async function NewsBody({ lang }: { lang: Locale }) {

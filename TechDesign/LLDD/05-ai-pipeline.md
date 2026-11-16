@@ -182,7 +182,7 @@ Một lần gọi sinh cả hai ngôn ngữ: `{ vi: BriefLang, en: BriefLang }`,
 - Giọng văn trung lập. Với chủ đề nhạy cảm, nêu theo nguồn ("theo BBC…").
 - Chân panel ghi "Dựa trên N tin · thời điểm · model" để người đọc biết đây là tóm tắt tự động.
 
-**Khi lỗi:** panel hiện brief gần nhất (theo `created_at`) kèm badge stale (theo `source_status` của `brief`). Chưa cấu hình AI thì hiện hướng dẫn đặt `AI_API_KEY` (Gemini hoặc Claude) trong `.env.local`. Chưa có brief nhưng đã có key thì hiện lời giải thích lịch 06:00 và nút "Viết lại".
+**Khi lỗi:** tab Tin nổi bật (LLDD 04, Hàng 1) hiện brief gần nhất (theo `created_at`) nếu nó viết trong 30 giờ qua, quá hạn đó thì thay bằng các chuyện được nhiều báo đưa nhất 24 giờ qua; panel có badge stale (theo `source_status` của `brief`). Chưa cấu hình AI thì hiện hướng dẫn đặt `AI_API_KEY` (Gemini hoặc Claude) trong `.env.local`. Chưa có brief nhưng đã có key thì hiện lời giải thích lịch 06:00 và nút "Viết lại".
 
 ## 3a. Diễn giải chỉ số (`insights`)
 

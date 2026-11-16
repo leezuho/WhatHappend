@@ -138,6 +138,7 @@
 **Trạng thái:** Done. Ngày 2026-10-31 đã chạy thật với Gemini (`gemini-3.8-flash` qua alias `gemini-flash-latest`):
 - Có đủ: 06:00, song ngữ, trích nguồn (mỗi báo một chip), nút "Viết lại" end-to-end, hướng dẫn khi thiếu key.
 - Prompt cấm tự thêm chức danh hay mô tả không có trong tiêu đề, sau khi phát hiện một lỗi kiểu này ở lần chạy đầu.
+- Trên trang Tổng quan, bản tin mở đầu tab "Tin nổi bật" của panel "Tin tức hôm nay" (BR-08). Quá 30 giờ không có bản tin mới (AI lỗi, thiếu key) thì tab hiện các chuyện được nhiều báo đưa nhất 24 giờ, không để bản tin cũ đứng đầu trang.
 
 **Mô tả:** Bản tóm tắt "Hôm nay thế giới có gì" gồm 1 tiêu đề và khoảng 5 gạch đầu dòng. Bản tóm tắt:
 - tự tạo lúc 06:00 giờ Việt Nam;
@@ -155,7 +156,7 @@
 
 ## BR-08 — Tin tức thế giới · M · M3
 
-**Trạng thái:** Done. Tin lấy từ RSS (GDELT chỉ dùng cho bản đồ). Bộ lọc chủ đề và bản dịch tiêu đề cần AI đã cấu hình; đã chạy thật với Gemini. Thiếu key thì hiện tiêu đề gốc. Từ 2026-11-13, trên trang Tổng quan, danh sách tin là tab "Tin mới nhất" trong cùng panel "Tin tức hôm nay" với bản tin AI (BR-07), không còn là panel riêng nhắc lại các chuyện bản tin vừa tóm tắt.
+**Trạng thái:** Done. Tin lấy từ RSS (GDELT chỉ dùng cho bản đồ). Bộ lọc chủ đề và bản dịch tiêu đề cần AI đã cấu hình; đã chạy thật với Gemini. Thiếu key thì hiện tiêu đề gốc. Trên trang Tổng quan, tin và bản tin AI (BR-07) chung một panel "Tin tức hôm nay" (từ 2026-11-13, trước đó là hai panel nhắc lại cùng các chuyện). Từ 2026-11-16 tab đầu là "Tin nổi bật": các chuyện của bản tin, cộng những chuyện được nhiều báo đưa sau giờ viết bản tin; không có bản tin trong 30 giờ qua thì là các chuyện được nhiều báo đưa nhất 24 giờ. Tab "Tất cả tin" là danh sách đầy đủ có lọc khu vực, chủ đề.
 
 **Mô tả:** Tin lấy từ RSS của các báo lớn và từ GDELT, đã loại trùng, phân loại theo khu vực và chủ đề, hiển thị theo tab. Tiêu đề được dịch sang ngôn ngữ đang chọn.
 
