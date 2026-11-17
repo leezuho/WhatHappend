@@ -272,6 +272,7 @@ Cùng TopBar, Ticker, lưới và `AutoRefresh` với dashboard. Bảng cổ phi
 ```
 Hàng 1  Cổ phiếu công nghệ [xl:8]        │ cột [xl:4]: Dịch vụ nào đang trục trặc? + Dân lập trình đang đọc gì
         Công nghệ tuần này [xl:12] (AI, mỗi tuần một lần)
+        Quỹ lớn mua gì, bán gì [xl:12]: 4 ô số │ Mua nhiều nhất │ Bán nhiều nhất (2 cột từ lg)
 Hàng 2  Model AI mới [xl:7]              │ Nghiên cứu AI [xl:5]
         Model AI: chất lượng so với giá [xl:8] │ Lượng tính toán huấn luyện [xl:4]
         Chuỗi phần cứng AI Đài Loan [xl:7] │ Tuyển dụng công nghệ [xl:5]
@@ -289,6 +290,7 @@ Hàng 4  Tin công nghệ [xl:12] (2 cột từ md)
 | Model AI mới | `NewModels`: dòng tổng (số model 30 ngày, số mở trọng số), bảng tên + hãng + nhãn "mở", ngày lên, giá vào/ra (USD/1 triệu token, "Miễn phí" khi cả hai bằng 0), ngữ cảnh (128K, 1M); cao tối đa 420px, cuộn | `openrouter` |
 | Nghiên cứu AI | `AiResearch`: `Tabs` Bài nghiên cứu (tiêu đề đã dịch, tooltip là tiêu đề gốc, lượt bình chọn, tổ chức hoặc tác giả, GitHub) / Model đang hot (task, lượt thích, lượt tải) | `huggingface`, `translate` |
 | Công nghệ tuần này | `TechNoteBody` → `WeeklyNote` (dùng chung với `MacroNoteBody`): nhận định tuần do `technote` viết; chưa có thì một câu giải thích (chưa đến lượt hoặc thiếu `AI_API_KEY`) | `technote` |
+| Quỹ lớn mua gì, bán gì | `FundMovesBody` → `FundView` (một tab mỗi quỹ khi `FUNDS_13F` có nhiều quỹ): dòng đầu tên quỹ, quý, ngày danh mục, ngày nộp, link báo cáo trên SEC; 4 ô: danh mục (USD, số mã), mua vào (USD, số mã mới, số mã mua thêm), bán ra (USD, số mã bán hết, số mã bán bớt), vòng quay = min(mua, bán) / danh mục bình quân hai quý; hai bảng `MovesTable` 15 dòng Mua nhiều nhất / Bán nhiều nhất: mã (link Yahoo, tên nhỏ bên cạnh, nhãn Put/Call), số cổ phiếu thay đổi (nhãn "Mới"/"Bán hết", còn lại %; dưới −99% ghi một số lẻ để không đọc nhầm thành bán hết; dấu * khi đã điều chỉnh chia tách), giá trị (thay đổi × giá cuối quý), tỷ trọng hiện tại, % giá từ cuối quý đến nay (trống với mã đã bán hết); dòng 10 mã nắm giữ lớn nhất; chú thích: kiểu quỹ (`style` trong config), giới hạn của 13F, hạn nộp báo cáo quý tới (cuối quý sau + 45 ngày) | `sec13f` |
 | Model AI: chất lượng so với giá | `AiValueBody` → `QuadrantScatter` với trục x logarit (`AxisSpec.log`, `logAxis`: hai đầu là mốc 1 hoặc 3 × 10ⁿ gần nhất): tối đa 60 model điểm cao nhất (kind `ai_value`, mỗi dòng model một bản mới nhất), x = giá gộp $/triệu token, y = điểm Arena, chia bốn góc tại trung vị, góc "đắt so với điểm" tô đỏ nhạt; xanh = đóng trọng số, cam = mở; dòng trên ghi 3 model rẻ nhất trong nửa điểm cao; dòng dưới hình nêu tối đa 6 model mới lên OpenRouter mà LMArena chưa chấm (kind `ai_value_new`) | `arena` |
 | Lượng tính toán huấn luyện | `ComputeBody`: dòng tốc độ tăng của các lần huấn luyện tiên phong, 12 lần lớn nhất (model, tổ chức, tháng, FLOP dạng "9,4 × 10²⁶") với thanh tuyến tính so với lần lớn nhất | `epoch` |
 | Chuỗi phần cứng AI Đài Loan | `TwRevenueBody`: bảng 7 công ty (`TW_REVENUE`, kèm vai trò), doanh thu tháng (tỷ Đài tệ), so tháng trước, so cùng kỳ, luỹ kế năm; công ty chưa có tháng mới nhất ghi kèm tháng của nó | `twse` |

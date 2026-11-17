@@ -12,6 +12,7 @@ import {
   ComputeBody,
   EolBody,
   ExploitedVulns,
+  FundMovesBody,
   KevVendorsBody,
   NewModels,
   PackagesBody,
@@ -70,6 +71,11 @@ export default async function TechPage({ params }: PageProps<"/[lang]/tech">) {
         {/* Row 1b: the week in words (AI, once a week, from this page's stories and numbers) */}
         <Panel lang={lang} title={p.techNote.title} subtitle={p.techNote.subtitle} sources={["technote"]} className="md:col-span-2 xl:col-span-12">
           <TechNoteBody lang={lang} />
+        </Panel>
+
+        {/* Row 1c: what a big fund bought and sold last quarter (13F) */}
+        <Panel lang={lang} title={p.techFund.title} subtitle={p.techFund.subtitle} sources={["sec13f"]} className="md:col-span-2 xl:col-span-12">
+          <FundMovesBody lang={lang} />
         </Panel>
 
         {/* Row 2: AI, what ships and what researchers read */}

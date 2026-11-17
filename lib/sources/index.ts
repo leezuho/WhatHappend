@@ -44,6 +44,7 @@ import { twse } from "./twse";
 import { hnhiring } from "./hnhiring";
 import { eol } from "./eol";
 import { arena } from "./arena";
+import { sec13f } from "./sec13f";
 import { lobsters } from "./lobsters";
 import { gtrends } from "./gtrends";
 import { vnexpress } from "./vnexpress";
@@ -155,4 +156,5 @@ export const sources: Source[] = [
   spaceweather,
   pkgtrends,
   epoch,
+  sec13f,
 ];

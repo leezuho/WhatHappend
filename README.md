@@ -50,6 +50,7 @@ Dừng `npm run worker` và `npm run dev` trước khi chạy: mỗi DB chỉ m�
 | `AI_MODEL_FAST` | Model dịch và gắn nhãn tiêu đề. Mặc định `gemini-flash-lite-latest` / `claude-haiku-5-5` |
 | `AI_DAILY_LIMIT_BRIEF`, `AI_DAILY_LIMIT_FAST` | Số lần gọi tối đa mỗi ngày cho từng model. Mặc định 20 cho model brief của Gemini (gói miễn phí); `0` = không giới hạn |
 | `COINGECKO_API_KEY` | Không thuộc AI, tùy chọn. Key Demo miễn phí của CoinGecko, nên đặt khi chạy trên cloud (IP dùng chung dễ bị 429) |
+| `SEC_USER_AGENT` | Không thuộc AI. Tên và email liên hệ, ví dụ `WhatHappend ten@email.com`: kho hồ sơ của SEC từ chối client không ghi người liên hệ. Thiếu thì panel "Quỹ lớn mua gì, bán gì" (báo cáo 13F của Renaissance) không chạy |
 
 Với key Gemini miễn phí, dòng Pro không có hạn mức (lỗi 429 `limit: 0`). Muốn dùng `gemini-pro-latest` cho bản tin thì cần gói trả phí. Sau khi sửa `.env.local`, khởi động lại cả worker lẫn web.
 

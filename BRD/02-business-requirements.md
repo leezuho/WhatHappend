@@ -387,6 +387,7 @@
 - Nghiên cứu AI (Hugging Face): bài nổi bật 3 ngày qua theo lượt bình chọn (tiêu đề được dịch khi có AI) và model đang hot, đã bỏ các bản đóng gói lại.
 - Lỗ hổng đang bị khai thác (CISA KEV) trong 30 ngày: hãng, sản phẩm, CVE, hạn vá, đánh dấu ransomware.
 - Hacker News và tin công nghệ (The Verge, Ars Technica, TechCrunch, MIT Technology Review, VnExpress Khoa học công nghệ). Tin của các báo công nghệ không vào danh sách tin thế giới và Brief, giống báo crypto.
+- Quỹ lớn mua gì, bán gì (thêm 2026-11-17, để theo dõi và cân nhắc copy trade Renaissance Technologies): từ hai báo cáo 13F gần nhất gửi SEC, các mã mua nhiều nhất và bán nhiều nhất theo giá trị (mua mới, mua thêm, bán bớt, bán hết) với mã giao dịch, % số cổ phiếu thay đổi, tỷ trọng, % giá từ cuối quý đến nay; tổng mua, bán, vòng quay; ngày danh mục, ngày nộp và hạn nộp báo cáo tới. Ghi rõ giới hạn: trễ tới 45 ngày, chỉ vị thế mua cổ phiếu Mỹ, không thấy giao dịch trong quý. Nguồn này cần `SEC_USER_AGENT` (tên và email liên hệ), không phải key.
 
 **Ngoài phạm vi:** dữ liệu cần key (Cloudflare Radar, Product Hunt, Artificial Analysis); bảng xếp hạng chất lượng model (chưa tìm được nguồn không cần key); giá DRAM và GPU cho thuê (chỉ có nguồn trả phí).
 

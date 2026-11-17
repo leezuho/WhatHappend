@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { TECH_GROUPS, TW_REVENUE } from "@/config/tech";
+import { FUNDS_13F, type Fund13FDef } from "@/config/funds";
 import { TECH_JOBS, TECH_SIGNS } from "@/config/series";
 import { getDict, intlLocale, pick, type Locale } from "@/lib/i18n";
 import { fmtCompact, fmtDate, fmtDateTime, fmtNumber, fmtPct, fmtPeriod } from "@/lib/format";
@@ -16,6 +17,7 @@ import type { AiUnrated, AiValue } from "@/lib/sources/arena";
 import type { LobstersItem } from "@/lib/sources/lobsters";
 import type { SpaceWeather } from "@/lib/sources/spaceweather";
 import type { ComputeSummary } from "@/lib/sources/epoch";
+import type { Fund13F, Move } from "@/lib/sources/sec13f";
 import { QuadrantScatter } from "@/components/charts/QuadrantScatter";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { BarList } from "@/components/charts/BarList";
@@ -577,6 +579,160 @@ export async function TwRevenueBody({ lang }: { lang: Locale }) {
       <p className="text-[10px] leading-snug text-muted">{t.twNote}</p>
     </div>
   );
+}
+
+// ---------------------------------------------------------------- fund moves (13F)
+
+/** A 13F period end ("2026-09-30") as noon UTC, so it formats as the same day everywhere. */
+const periodTs = (iso: string) => Date.parse(`${iso}T12:00:00Z`);
+
+/** The next quarter's end and its 13F deadline, 45 days later. */
+function nextReport(period: string): { end: number; due: number } {
+  const [y, m] = period.split("-").map(Number);
+  const end = Date.UTC(y, m + 3, 0, 12);
+  return { end, due: end + 45 * 24 * 3600_000 };
+}
+
+const fmtDay = (ts: number, lang: Locale, year = false) => fmtDate(ts, lang, { day: "numeric", month: "numeric", ...(year ? { year: "numeric" } : {}) });
+
+function FundStat({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="flex flex-col gap-0.5 rounded-lg bg-surface-2/60 px-2.5 py-1.5">
+      <span className="text-[11px] text-muted">{label}</span>
+      <span className="tabular text-sm font-semibold text-ink">{value}</span>
+      <span className="text-[11px] text-ink-2">{detail}</span>
+    </div>
+  );
+}
+
+function MovesTable({ title, rows, end, lang }: { title: string; rows: Move[]; end: number; lang: Locale }) {
+  const t = getDict(lang).tech;
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <h3 className="text-xs font-semibold text-ink">{title}</h3>
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="tabular w-full min-w-[440px] text-xs">
+          <thead className="text-muted">
+            <tr>
+              <th className="py-1 text-left font-normal">{t.fundStock}</th>
+              <th className="py-1 text-right font-normal">{t.fundChange}</th>
+              <th className="py-1 text-right font-normal">{t.fundValue}</th>
+              <th className="py-1 text-right font-normal">{t.fundWeight}</th>
+              <th className="py-1 text-right font-normal">{t.fundSince.replace("{end}", fmtDay(end, lang))}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((m) => (
+              <tr key={`${m.cusip}:${m.putCall}`} className="border-t border-line">
+                <td className="max-w-[220px] py-1">
+                  <div className="flex min-w-0 items-baseline gap-1.5">
+                    {m.ticker && (
+                      <a href={`https://finance.yahoo.com/quote/${m.ticker}`} target="_blank" rel="noreferrer" className="shrink-0 font-semibold text-ink hover:underline">
+                        {m.ticker}
+                      </a>
+                    )}
+                    {m.putCall && <span className="shrink-0 rounded bg-surface-2 px-1 text-[10px] text-ink-2">{m.putCall}</span>}
+                    <span title={`${m.name} · ${m.cls} · CUSIP ${m.cusip}`} className={clsx("truncate", m.ticker ? "text-[10px] text-muted" : "text-ink")}>
+                      {m.name}
+                    </span>
+                  </div>
+                </td>
+                <td className="py-1 text-right" title={m.split ? t.fundSplit.replace("{r}", fmtNumber(m.split, lang, 0)) : undefined}>
+                  {m.kind === "new" ? (
+                    <span className="rounded bg-up/15 px-1 text-[10px] font-medium text-up">{t.fundNew}</span>
+                  ) : m.kind === "exit" ? (
+                    <span className="rounded bg-down/15 px-1 text-[10px] font-medium text-down">{t.fundExit}</span>
+                  ) : (
+                    // A stake cut to a sliver shows −99.6%, not a rounded −100% that reads as sold out.
+                    <Pct v={(m.shares / m.prevShares - 1) * 100} lang={lang} digits={m.shares / m.prevShares < 0.01 ? 1 : 0} />
+                  )}
+                  {m.split && <sup className="text-muted">*</sup>}
+                </td>
+                <td className={clsx("py-1 text-right font-medium", m.flow > 0 ? "text-up" : "text-down")}>
+                  {m.flow > 0 ? "+" : "−"}${fmtCompact(Math.abs(m.flow), lang)}
+                </td>
+                <td className="py-1 text-right text-ink-2">{m.shares ? `${fmtNumber(m.weight * 100, lang, 2)}%` : "—"}</td>
+                <td className="py-1 text-right">
+                  <Pct v={m.sinceEnd === null ? null : m.sinceEnd * 100} lang={lang} digits={1} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function FundView({ def, d, lang }: { def: Fund13FDef; d: Fund13F; lang: Locale }) {
+  const t = getDict(lang).tech;
+  const end = periodTs(d.period);
+  const q = Math.floor((Number(d.period.slice(5, 7)) - 1) / 3) + 1;
+  const next = nextReport(d.period);
+  const turnover = Math.min(d.bought, d.sold) / ((d.total + d.prevTotal) / 2);
+  const money = (v: number) => `$${fmtCompact(v, lang)}`;
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs text-ink-2">
+        <span className="font-semibold text-ink">{pick(def.name, lang)}</span>
+        {" · "}
+        {t.fundReport
+          .replace("{q}", t.fundQuarter.replace("{q}", String(q)).replace("{y}", d.period.slice(0, 4)))
+          .replace("{end}", fmtDay(end, lang, true))
+          .replace("{filed}", fmtDay(periodTs(d.filed), lang, true))}
+        {" · "}
+        <a href={d.url} target="_blank" rel="noreferrer" className="hover:underline">
+          {t.fundFiling}
+        </a>
+      </p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <FundStat label={t.fundBook} value={money(d.total)} detail={t.fundPositions.replace("{n}", fmtNumber(d.positions, lang, 0))} />
+        <FundStat
+          label={t.fundBought}
+          value={money(d.bought)}
+          detail={t.fundBoughtDetail.replace("{new}", fmtNumber(d.counts.new, lang, 0)).replace("{add}", fmtNumber(d.counts.add, lang, 0))}
+        />
+        <FundStat
+          label={t.fundSold}
+          value={money(d.sold)}
+          detail={t.fundSoldDetail.replace("{exit}", fmtNumber(d.counts.exit, lang, 0)).replace("{trim}", fmtNumber(d.counts.trim, lang, 0))}
+        />
+        <FundStat label={t.fundTurnover} value={`${fmtNumber(turnover * 100, lang, 0)}%`} detail={t.fundTurnoverDetail} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <MovesTable title={t.fundBuys} rows={d.buys} end={end} lang={lang} />
+        <MovesTable title={t.fundSells} rows={d.sells} end={end} lang={lang} />
+      </div>
+      <p className="text-xs text-ink-2">
+        <span className="text-muted">{t.fundTop}: </span>
+        {d.top.map((m, i) => (
+          <span key={`${m.cusip}:${m.putCall}`} className="tabular">
+            {i > 0 && " · "}
+            <span title={m.name} className="text-ink">
+              {m.ticker ?? m.name}
+            </span>{" "}
+            {fmtNumber(m.weight * 100, lang, 1)}%
+          </span>
+        ))}
+      </p>
+      <p className="text-[10px] leading-snug text-muted">
+        {pick(def.style, lang)} {t.fundNote.replace("{next}", fmtDay(next.end, lang, true)).replace("{due}", fmtDay(next.due, lang, true))}
+      </p>
+    </div>
+  );
+}
+
+/** What the funds in `FUNDS_13F` bought and sold between their last two 13F reports; one tab per fund when there are several. */
+export async function FundMovesBody({ lang }: { lang: Locale }) {
+  const items = await getItems<Fund13F>("fund13f", lang, FUNDS_13F.length);
+  const byId = new Map(items.map((i) => [i.id, i.data]));
+  const funds = FUNDS_13F.flatMap((def) => {
+    const d = byId.get(def.id);
+    return d ? [{ def, d }] : [];
+  });
+  if (!funds.length) return <EmptyState lang={lang} />;
+  if (funds.length === 1) return <FundView def={funds[0].def} d={funds[0].d} lang={lang} />;
+  return <Tabs tabs={funds.map(({ def, d }) => ({ key: def.id, label: pick(def.name, lang), content: <FundView def={def} d={d} lang={lang} /> }))} />;
 }
 
 // ---------------------------------------------------------------- hiring

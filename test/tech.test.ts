@@ -10,6 +10,7 @@ import { topPapers, trendingModels } from "@/lib/sources/huggingface";
 import { recentKev } from "@/lib/sources/kev";
 import { replaceItems, upsertQuotes, upsertSeries } from "@/lib/sources/store";
 import { changeSince, techStockRows, thin } from "@/lib/data/tech";
+import { diffHoldings, infoTableName, latestReports, parseInfoTable, splitFactor, splitLike, withSplit } from "@/lib/sources/sec13f";
 
 const DAY = 24 * 3600_000;
 const NOW = Date.UTC(2026, 10, 9, 8);
@@ -215,4 +216,81 @@ test("techStockRows: changes from stored closes, caps converted to dollars", () 
   assert.equal(rows.find((r) => r.symbol === "0700.HK")!.capUsd, null, "no HKD rate stored: no dollar cap rather than a wrong one");
   assert.equal(rows.find((r) => r.symbol === "FPT.VN")!.price, null);
   db.close();
+});
+
+// ---------------------------------------------------------------- 13F fund moves
+
+const row = (name: string, cusip: string, value: number, shares: number, extra = "") =>
+  `<infoTable><nameOfIssuer>${name}</nameOfIssuer><titleOfClass>COM</titleOfClass><cusip>${cusip}</cusip><value>${value}</value>` +
+  `<shrsOrPrnAmt><sshPrnamt>${shares}</sshPrnamt><sshPrnamtType>${extra.includes("PRN") ? "PRN" : "SH"}</sshPrnamtType></shrsOrPrnAmt>${extra.replace("PRN", "")}</infoTable>`;
+
+test("latestReports: the two newest quarters of original 13F-HR, a re-filed original replacing the earlier one", () => {
+  const out = latestReports({
+    accessionNumber: ["a5", "a4", "a3", "a2", "a1"],
+    form: ["SCHEDULE 13G/A", "13F-HR/A", "13F-HR", "13F-HR", "13F-HR"],
+    filingDate: ["2026-11-12", "2026-11-20", "2026-11-12", "2026-08-13", "2026-08-01"],
+    reportDate: ["", "2026-09-30", "2026-09-30", "2026-06-30", "2026-06-30"],
+  });
+  assert.deepEqual(
+    out.map((r) => [r.accession, r.period]),
+    [
+      ["a3", "2026-09-30"],
+      ["a2", "2026-06-30"],
+    ],
+  );
+});
+
+test("infoTableName: the holdings XML, not the cover page", () => {
+  assert.equal(infoTableName(["0001-index.html", "primary_doc.xml", "renaissance13Fq32026_holding.xml"]), "renaissance13Fq32026_holding.xml");
+  assert.equal(infoTableName(["primary_doc.xml", "x.txt"]), null);
+});
+
+test("parseInfoTable: rows summed per CUSIP and option side, namespaces and entities read, bonds only in the total", () => {
+  const xml = `<ns1:informationTable xmlns:ns1="x">${[
+    row("AT&amp;T INC", "00206r102", 1000, 100),
+    row("AT&amp;T INC", "00206R102", 500, 50),
+    row("AT&amp;T INC", "00206R102", 300, 30, "<putCall>Put</putCall>"),
+    row("ACME CONV NOTE", "000000AA1", 2000, 2000, "PRN"),
+  ]
+    .join("")
+    .replace(/<(\/?)infoTable>/g, "<$1ns1:infoTable>")
+    .replace(/<(\/?)(\w+)>/g, (all, slash: string, t: string) => (t.startsWith("ns1:") ? all : `<${slash}ns1:${t}>`))}</ns1:informationTable>`;
+  const { positions, total } = parseInfoTable(xml);
+  assert.equal(total, 3800);
+  assert.deepEqual([...positions.keys()], ["00206R102", "00206R102:Put"]);
+  const t = positions.get("00206R102")!;
+  assert.deepEqual([t.name, t.value, t.shares, t.putCall], ["AT&T INC", 1500, 150, null]);
+  assert.equal(parseInfoTable(row("OLD", "1", 7, 1), 1000).total, 7000, "pre-2023 values are in thousands");
+  assert.throws(() => parseInfoTable(row("BAD", "1", Number.NaN, 1)), /unreadable/);
+});
+
+test("diffHoldings: new, added, trimmed, sold out and unchanged, valued at the quarter-end price", () => {
+  const prev = parseInfoTable(row("A", "A", 1000, 100) + row("B", "B", 1000, 100) + row("C", "C", 500, 50) + row("D", "D", 200, 20)).positions;
+  const cur = parseInfoTable(row("A", "A", 3000, 150) + row("B", "B", 400, 40) + row("D", "D", 300, 20) + row("E", "E", 900, 30)).positions;
+  const m = new Map(diffHoldings(cur, prev, 4600, 2700).map((x) => [x.cusip, x]));
+  assert.deepEqual([m.get("A")!.kind, m.get("A")!.flow, m.get("A")!.price], ["add", 1000, 20], "50 more shares at $20");
+  assert.deepEqual([m.get("B")!.kind, m.get("B")!.flow], ["trim", -600]);
+  assert.deepEqual([m.get("C")!.kind, m.get("C")!.flow, m.get("C")!.weight], ["exit", -500, 500 / 2700], "sold out: last quarter's price and weight");
+  assert.deepEqual([m.get("D")!.kind, m.get("D")!.flow], ["hold", 0], "price rose, shares did not: no trade");
+  assert.deepEqual([m.get("E")!.kind, m.get("E")!.flow, m.get("E")!.weight], ["new", 900, 900 / 4600]);
+});
+
+test("splits: a split-like price move is checked, and last quarter's shares restated by Yahoo's split", () => {
+  assert.equal(splitLike(1000 / 101), true, "10-for-1");
+  assert.equal(splitLike(20 / 41), true, "1-for-2 reverse");
+  assert.equal(splitLike(1.37), false);
+  assert.equal(splitLike(Number.NaN), false);
+  const splits = [
+    { date: new Date("2026-08-10T13:30:00Z"), numerator: 10, denominator: 1 },
+    { date: new Date("2026-10-20T13:30:00Z"), numerator: 1, denominator: 4 },
+  ];
+  const q2 = Date.parse("2026-06-30T21:00:00Z");
+  const q3 = Date.parse("2026-09-30T21:00:00Z");
+  assert.equal(splitFactor(splits, q2, q3), 10);
+  assert.equal(splitFactor(splits, q3, NOW + 30 * DAY), 0.25);
+  // Held 1,000 shares at $1,000, now 10,500 at $100: a 10-for-1 split and 500 shares bought, not 9,500.
+  const [m] = diffHoldings(parseInfoTable(row("N", "N", 1_050_000, 10_500)).positions, parseInfoTable(row("N", "N", 1_000_000, 1000)).positions, 1, 1);
+  assert.equal(m.flow, 9500 * 100);
+  const adj = withSplit(m, 10);
+  assert.deepEqual([adj.prevShares, adj.flow, adj.kind, adj.split], [10_000, 500 * 100, "add", 10]);
 });

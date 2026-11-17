@@ -93,6 +93,9 @@ export const SOURCE_META = {
   spaceweather: { intervalMs: HOUR },
   pkgtrends: { intervalMs: 24 * HOUR },
   epoch: { intervalMs: 24 * HOUR },
+  // 13F holdings of the funds in config/funds.ts: filed quarterly, 45 days after the quarter; the SEC's archive refuses
+  // clients that do not name a contact, hence the env var.
+  sec13f: { intervalMs: 6 * HOUR, requiresEnv: ["SEC_USER_AGENT"] },
 } satisfies Record<string, SourceMeta>;
 
 export type SourceId = keyof typeof SOURCE_META;
